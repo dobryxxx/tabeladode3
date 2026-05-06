@@ -1,0 +1,60 @@
+﻿backend:
+  name: git-gateway
+  branch: main
+
+local_backend: true
+
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+
+publish_mode: editorial_workflow
+
+slug:
+  encoding: "ascii"
+  clean_accents: true
+  sanitize_replacement: "-"
+
+collections:
+  - name: "posts"
+    label: "Posts"
+    label_singular: "Post"
+    folder: "content/posts"
+    create: true
+    extension: "md"
+    format: "frontmatter"
+    slug: "{{slug}}"
+    summary: "{{title}} — {{category}}"
+    sortable_fields: ["date", "title", "category", "author"]
+    view_filters:
+      - label: "NBA"
+        field: "category"
+        pattern: "nba"
+      - label: "Auto-Falante"
+        field: "category"
+        pattern: "auto-falante"
+      - label: "Últimas"
+        field: "category"
+        pattern: "ultimas"
+    fields:
+      - { label: "Título", name: "title", widget: "string" }
+      - { label: "Slug", name: "slug", widget: "string", hint: "Nome curto sem espaços. Exemplo: brasileiros-no-college" }
+      - { label: "Data", name: "date", widget: "datetime", date_format: "DD/MM/YYYY", time_format: false, format: "YYYY-MM-DD" }
+      - label: "Categoria"
+        name: "category"
+        widget: "select"
+        options:
+          - { label: "NBA", value: "nba" }
+          - { label: "Auto-Falante", value: "auto-falante" }
+          - { label: "Últimas", value: "ultimas" }
+          - { label: "In English", value: "in-english" }
+          - { label: "Extensos", value: "extensos" }
+          - { label: "Lapsos", value: "lapsos" }
+          - { label: "Mastigado", value: "mastigado" }
+      - { label: "Tags", name: "tags", widget: "list", required: false, hint: "Opcional. Uma tag por linha." }
+      - { label: "Resumo", name: "excerpt", widget: "text", hint: "Resumo curto usado nos cards." }
+      - { label: "Imagem principal", name: "image", widget: "image", required: false }
+      - { label: "Autor", name: "author", widget: "string", default: "Arthur Salazar" }
+      - { label: "Tempo de leitura", name: "readingTime", widget: "string", required: false, default: "5 min de leitura" }
+      - { label: "Destaque principal", name: "featured", widget: "boolean", required: false, default: false, hint: "Se ligado, pode aparecer no card principal do topo." }
+      - { label: "Card lateral do topo", name: "side", widget: "boolean", required: false, default: false, hint: "Use em no máximo dois posts." }
+      - { label: "Corpo do texto", name: "body", widget: "markdown" }

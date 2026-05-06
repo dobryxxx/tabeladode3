@@ -1,0 +1,19 @@
+# Pastas de trabalho e assets brutos que não devem ir para o GitHub
+ASSETS t3-20260505T175233Z-3-001/
+midias/
+www.tabeladode3.com/
+C My Web Sites/
+GUIA+DO+DRAFT.csv
+tabelado-de-3.html
+
+# Arquivos fonte pesados
+*.psd
+*.ai
+*.zip
+*.rar
+*.7z
+
+# Sistema/editor
+.DS_Store
+Thumbs.db
+.vscode/
