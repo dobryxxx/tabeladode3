@@ -208,6 +208,7 @@ function renderHeroLaterais() {
 
   area.innerHTML = draftCard + postCard;
 }
+
 function postCombinaComBusca(post, termoBusca) {
   if (!termoBusca) return true;
 
