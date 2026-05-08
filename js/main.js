@@ -336,6 +336,52 @@ function iniciarHeaderSticky() {
   window.addEventListener("scroll", atualizarHeader, { passive: true });
 }
 
+function iniciarMenuMobile() {
+  const botao = document.querySelector(".menu-toggle");
+  const menu = document.querySelector("#mobile-menu");
+  if (!botao || !menu) return;
+
+  function abrirMenu() {
+    menu.classList.add("is-open");
+    botao.classList.add("is-open");
+    botao.setAttribute("aria-expanded", "true");
+    botao.setAttribute("aria-label", "Fechar menu");
+  }
+
+  function fecharMenu() {
+    menu.classList.remove("is-open");
+    botao.classList.remove("is-open");
+    botao.setAttribute("aria-expanded", "false");
+    botao.setAttribute("aria-label", "Abrir menu");
+  }
+
+  botao.addEventListener("click", () => {
+    if (menu.classList.contains("is-open")) {
+      fecharMenu();
+      return;
+    }
+
+    abrirMenu();
+  });
+
+  menu.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", fecharMenu);
+  });
+
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && menu.classList.contains("is-open")) {
+      fecharMenu();
+      botao.focus();
+    }
+  });
+
+  document.addEventListener("click", (evento) => {
+    if (!menu.classList.contains("is-open")) return;
+    if (menu.contains(evento.target) || botao.contains(evento.target)) return;
+    fecharMenu();
+  });
+}
+
 function renderArtigo() {
   const area = document.querySelector("#artigo");
   if (!area) return;
@@ -375,3 +421,4 @@ renderArtigo();
 iniciarFiltroCategorias();
 iniciarBusca();
 iniciarHeaderSticky();
+iniciarMenuMobile();
