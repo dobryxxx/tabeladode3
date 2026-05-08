@@ -140,22 +140,25 @@ function imagemRanking(ranking) {
 
 function renderHeroPrincipal() {
   const area = document.querySelector("#hero-principal");
-  const post = postsDoSite().find((item) => item.destaque);
-  if (!area || !post) return;
-
-  const categoria = categoriaDoPost(post);
+  if (!area) return;
 
   area.outerHTML = `
-    <a class="hero__main editorial-card editorial-card--hero" href="${linkDoPost(post)}">
-      ${imagemOuPlaceholder(post, "hero__main-img", "hero")}
-      <div class="hero__main-content editorial-card__content">
-        <div class="hero__main-tag tag ${categoria.tagClasse}">${categoria.nome}</div>
-        <h1 class="hero__main-title">${post.titulo}</h1>
-        <p class="hero__main-excerpt">${post.excerpt}</p>
-        <div class="meta meta--flush">
-          <span>${post.data}</span>
-          <span>·</span>
-          <span>${post.tempoLeitura}</span>
+    <a class="hero__main home-hero-card home-hero-card--draft editorial-card editorial-card--hero" href="guia-do-draft.html">
+      <div class="home-hero-card__art" aria-hidden="true">
+        <span>01</span>
+        <span>BIG BOARD</span>
+        <span>2026</span>
+      </div>
+      <div class="hero__main-content home-hero-card__content editorial-card__content">
+        <div class="home-hero-card__eyebrow">
+          <span class="tag tag--red">Draft Guide</span>
+          <span>especial premium</span>
+        </div>
+        <h1 class="hero__main-title">Guia do Draft</h1>
+        <p class="hero__main-excerpt">Big board, perfis, tiers e contexto dos principais prospectos da classe.</p>
+        <div class="home-hero-card__footer">
+          <span>Explorar guia</span>
+          <span>scouting / ranking / projeção</span>
         </div>
       </div>
     </a>
@@ -166,31 +169,45 @@ function renderHeroLaterais() {
   const area = document.querySelector("#hero-laterais");
   if (!area) return;
 
-  area.innerHTML = postsDoSite()
-    .filter((post) => post.lateral)
-    .slice(0, 2)
-    .map((post, indice) => {
-      const categoria = categoriaDoPost(post);
+  const post = postsDoSite().find((item) => item.destaque) || postsDoSite()[0];
+  const categoria = post ? categoriaDoPost(post) : null;
+  const prospects = typeof draftProspects !== "undefined" ? draftProspects.slice(0, 3) : [];
 
-      return `
-        <a class="card-side editorial-card editorial-card--compact" href="${linkDoPost(post)}">
-          ${imagemOuPlaceholder(post, "card-side__img", "lateral", indice)}
-          <div class="card-side__badge ${categoria.badgeClasse}">
-            ${iconeBasquete()}
+  const draftCard = `
+    <a class="card-side home-hero-card home-hero-card--prospects editorial-card editorial-card--compact" href="guia-do-draft.html">
+      <div class="home-hero-prospects">
+        ${prospects.map((prospect) => `
+          <div>
+            <strong>#${prospect.rank}</strong>
+            <span>${prospect.nome}</span>
           </div>
-          <div class="card-side__content editorial-card__content">
-            <div class="tag ${categoria.tagClasse}">${categoria.nome}</div>
-            <h2 class="card-side__title">${post.titulo}</h2>
-            <div class="meta meta--spaced">
-              <span>${post.data}</span><span>·</span><span>${post.tempoLeitura}</span>
-            </div>
-          </div>
-        </a>
-      `;
-    })
-    .join("");
+        `).join("")}
+      </div>
+      <div class="card-side__content editorial-card__content">
+        <div class="tag tag--red">Top prospects</div>
+        <h2 class="card-side__title">Os nomes para acompanhar</h2>
+        <div class="meta meta--spaced">
+          <span>board 2026</span><span>·</span><span>guia completo</span>
+        </div>
+      </div>
+    </a>
+  `;
+
+  const postCard = post ? `
+    <a class="card-side home-hero-card home-hero-card--feature editorial-card editorial-card--compact" href="${linkDoPost(post)}">
+      ${imagemOuPlaceholder(post, "card-side__img", "lateral", 1)}
+      <div class="card-side__content editorial-card__content">
+        <div class="tag ${categoria.tagClasse}">${categoria.nome}</div>
+        <h2 class="card-side__title">${post.titulo}</h2>
+        <div class="meta meta--spaced">
+          <span>${post.data}</span><span>·</span><span>${post.tempoLeitura}</span>
+        </div>
+      </div>
+    </a>
+  ` : "";
+
+  area.innerHTML = draftCard + postCard;
 }
-
 function postCombinaComBusca(post, termoBusca) {
   if (!termoBusca) return true;
 
