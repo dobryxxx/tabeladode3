@@ -266,7 +266,7 @@
       align-items: center;
       min-height: 100vh;
       overflow: hidden;
-      padding: clamp(94px, 12vh, 128px) clamp(22px, 5vw, 72px) clamp(220px, 27vh, 260px);
+      padding: clamp(94px, 12vh, 128px) clamp(22px, 5vw, 72px) clamp(40px, 6vh, 72px);
       position: relative;
     }
 
@@ -340,7 +340,7 @@
     }
 
     .splash-hero__content {
-      max-width: 980px;
+      max-width: min(700px, 52vw);
       position: relative;
       z-index: 2;
     }
@@ -376,10 +376,6 @@
       transform: translateY(34px);
     }
 
-    .splash-hero h1 span {
-      white-space: nowrap;
-    }
-
     .splash-hero h1 span:nth-child(1) {
       animation-delay: .32s;
     }
@@ -398,13 +394,14 @@
     }
 
     .splash-entries {
-      bottom: clamp(24px, 4vh, 44px);
       display: grid;
-      gap: 16px;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      left: clamp(22px, 5vw, 72px);
+      gap: 18px;
+      grid-template-columns: repeat(2, minmax(210px, 1fr));
+      max-width: min(500px, 38vw);
       position: absolute;
-      right: clamp(22px, 5vw, 72px);
+      right: clamp(20px, 3.8vw, 56px);
+      top: 54%;
+      transform: translateY(-34%);
       z-index: 3;
     }
 
@@ -414,25 +411,47 @@
         linear-gradient(145deg, rgba(244,244,241,.075), rgba(244,244,241,.018)),
         rgba(10,10,10,.68);
       border: 1px solid rgba(244,244,241,.12);
+      border-radius: 18px;
+      box-shadow: 0 18px 44px rgba(0,0,0,.26);
       color: var(--white);
       display: flex;
       flex-direction: column;
-      min-height: 162px;
+      min-height: 226px;
       opacity: 0;
       overflow: hidden;
-      padding: 22px;
+      padding: 24px;
       position: relative;
       transform: translateY(26px);
       transition: border-color .28s ease, background .28s ease, box-shadow .28s ease, transform .28s ease;
     }
 
+    .splash-entry:nth-child(1) {
+      animation-name: splashCardInOffsetLarge;
+      transform: translate(-46px, 26px);
+    }
+
+    .splash-entry:nth-child(3) {
+      animation-name: splashCardInOffsetSmall;
+      transform: translate(-20px, 26px);
+    }
+
+    .splash-entry:nth-child(1):hover,
+    .splash-entry:nth-child(1):focus-visible {
+      transform: translate(-46px, -8px);
+    }
+
+    .splash-entry:nth-child(3):hover,
+    .splash-entry:nth-child(3):focus-visible {
+      transform: translate(-20px, -8px);
+    }
+
     .splash-entry::before {
       background:
-        radial-gradient(circle at 16% 0%, rgba(186,78,37,.22), transparent 42%),
-        linear-gradient(180deg, transparent, rgba(0,0,0,.36));
+        radial-gradient(circle at 18% 0%, rgba(186,78,37,.26), transparent 44%),
+        linear-gradient(180deg, rgba(244,244,241,.035), rgba(0,0,0,.42));
       content: '';
       inset: 0;
-      opacity: 0;
+      opacity: .35;
       pointer-events: none;
       position: absolute;
       transition: opacity .28s ease;
@@ -442,13 +461,13 @@
       background: var(--laranja);
       bottom: 0;
       content: '';
-      height: 2px;
-      left: 22px;
+      height: 3px;
+      left: 26px;
       position: absolute;
       transform: scaleX(.18);
       transform-origin: left;
       transition: transform .28s ease;
-      width: calc(100% - 44px);
+      width: calc(100% - 52px);
     }
 
     .splash-entry:hover,
@@ -457,9 +476,9 @@
         linear-gradient(145deg, rgba(244,244,241,.10), rgba(244,244,241,.024)),
         rgba(14,14,14,.82);
       border-color: rgba(186,78,37,.60);
-      box-shadow: 0 24px 54px rgba(0,0,0,.42);
+      box-shadow: 0 28px 64px rgba(0,0,0,.46), 0 0 38px rgba(186,78,37,.10);
       outline: none;
-      transform: translateY(-6px);
+      transform: translateY(-8px);
     }
 
     .splash-entry:hover::before,
@@ -474,7 +493,8 @@
 
     .splash-entry__number,
     .splash-entry__label,
-    .splash-entry strong {
+    .splash-entry strong,
+    .splash-entry__cta {
       position: relative;
       z-index: 1;
     }
@@ -482,26 +502,60 @@
     .splash-entry__number {
       color: rgba(244,244,241,.34);
       font-family: var(--font-display);
-      font-size: 28px;
+      font-size: 34px;
+      font-weight: 700;
       line-height: 1;
       margin-bottom: auto;
     }
 
     .splash-entry__label {
       color: var(--laranja);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 900;
       letter-spacing: .14em;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       text-transform: uppercase;
     }
 
     .splash-entry strong {
       color: rgba(244,244,241,.86);
-      font-family: var(--font-serif);
-      font-size: clamp(16px, 1.25vw, 21px);
-      font-weight: 400;
-      line-height: 1.2;
+      font-family: var(--font-display);
+      font-size: clamp(20px, 1.55vw, 26px);
+      font-weight: 650;
+      line-height: 1.05;
+      max-width: 13em;
+    }
+
+    .splash-entry__cta {
+      align-items: center;
+      color: rgba(244,244,241,.62);
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 900;
+      gap: 8px;
+      letter-spacing: .12em;
+      margin-top: 24px;
+      text-transform: uppercase;
+      transition: color .28s ease, transform .28s ease;
+    }
+
+    .splash-entry__cta::after {
+      content: '→';
+      color: var(--laranja);
+      font-size: 14px;
+      line-height: 1;
+      transition: transform .28s ease;
+    }
+
+    .splash-entry:hover .splash-entry__cta,
+    .splash-entry:focus-visible .splash-entry__cta {
+      color: var(--white);
+      transform: translateX(3px);
+    }
+
+    .splash-entry:hover .splash-entry__cta::after,
+    .splash-entry:focus-visible .splash-entry__cta::after {
+      transform: translateX(5px);
     }
 
     .splash-body.is-leaving .splash-header,
@@ -529,6 +583,14 @@
 
     @keyframes splashCardIn {
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes splashCardInOffsetLarge {
+      to { opacity: 1; transform: translateX(-46px); }
+    }
+
+    @keyframes splashCardInOffsetSmall {
+      to { opacity: 1; transform: translateX(-20px); }
     }
 
     @keyframes splashDrift {
@@ -2746,11 +2808,23 @@
       .splash-entries {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         left: auto;
+        max-width: none;
         position: relative;
         right: auto;
+        top: auto;
+        transform: none;
       }
       .splash-entry {
-        min-height: 170px;
+        min-height: 210px;
+      }
+      .splash-entry:nth-child(1),
+      .splash-entry:nth-child(3),
+      .splash-entry:nth-child(1):hover,
+      .splash-entry:nth-child(1):focus-visible,
+      .splash-entry:nth-child(3):hover,
+      .splash-entry:nth-child(3):focus-visible {
+        animation-name: splashCardIn;
+        transform: translateY(26px);
       }
     }
 
@@ -2774,7 +2848,9 @@
         right: -24vw;
       }
       .splash-hero h1 {
-        font-size: clamp(48px, 15vw, 76px);
+        font-size: clamp(40px, 11.4vw, 52px);
+        max-width: 330px;
+        overflow-wrap: normal;
       }
       .splash-hero h1 span {
         white-space: normal;
@@ -2784,8 +2860,14 @@
         grid-template-columns: 1fr;
       }
       .splash-entry {
-        min-height: 148px;
+        min-height: 176px;
         padding: 20px;
+      }
+      .splash-entry strong {
+        font-size: 22px;
+      }
+      .splash-entry__cta {
+        margin-top: 18px;
       }
     }
 
@@ -2802,6 +2884,8 @@
         transform: none;
       }
       .splash-entry,
+      .splash-entry__cta,
+      .splash-entry__cta::after,
       .splash-entry::before,
       .splash-entry::after {
         transition: none;
