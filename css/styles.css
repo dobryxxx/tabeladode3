@@ -1,4 +1,20 @@
 /* ─── RESET & VARIABLES ─────────────────────────────────────────── */
+@font-face {
+  font-display: swap;
+  font-family: 'Syne';
+  font-style: normal;
+  font-weight: 400 800;
+  src: url('../fonts/Syne-VariableFont_wght.ttf') format('truetype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Lexend Deca';
+  font-style: normal;
+  font-weight: 100 900;
+  src: url('../fonts/LexendDeca-VariableFont_wght.ttf') format('truetype');
+}
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -14,9 +30,9 @@
       --gray-500: #555555;
       --gray-300: #999999;
 
-      --font-display: 'Bebas Neue', sans-serif;
-      --font-serif:   'DM Serif Display', serif;
-      --font-body:    'DM Sans', sans-serif;
+      --font-display: 'Syne', sans-serif;
+      --font-serif:   'Lexend Deca', sans-serif;
+      --font-body:    'Lexend Deca', sans-serif;
 
       --max-w: 1200px;
       --nav-h: 68px;
@@ -344,9 +360,9 @@
     .splash-hero h1 {
       color: var(--white);
       font-family: var(--font-display);
-      font-size: clamp(72px, 9.4vw, 132px);
+      font-size: clamp(50px, 6.7vw, 86px);
       letter-spacing: .005em;
-      line-height: .82;
+      line-height: .92;
       margin: 0;
       max-width: 1100px;
       text-transform: uppercase;
@@ -2758,7 +2774,7 @@
         right: -24vw;
       }
       .splash-hero h1 {
-        font-size: clamp(64px, 20vw, 94px);
+        font-size: clamp(48px, 15vw, 76px);
       }
       .splash-hero h1 span {
         white-space: normal;
