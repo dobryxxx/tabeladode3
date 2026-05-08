@@ -63,113 +63,82 @@
     </div>
   </nav>
 
-  <main class="home-page">
+  <main>
 
-    <!-- --- CAPA EDITORIAL ----------------------------------------- -->
-    <section class="home-cover">
+    <!-- --- HERO --------------------------------------------------- -->
+    <section class="hero">
       <div class="container">
-        <div class="home-cover__masthead">
-          <span class="home-kicker">revista digital de basquete</span>
-          <h1>Tabelado de 3</h1>
-          <p>Leitura independente sobre NBA, base, scouting, draft, rankings e a linguagem do jogo.</p>
-        </div>
-        <div class="hero__grid home-cover__grid">
+        <div class="hero__grid">
           <div id="hero-principal"></div>
           <div id="hero-laterais" class="hero__side"></div>
         </div>
       </div>
     </section>
 
-    <!-- --- COMEÇE POR AQUI ---------------------------------------- -->
-    <section class="home-start">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Comece por aqui</h2>
-          <span class="home-section-note">atalhos para entrar no site pelo melhor caminho</span>
-        </div>
-        <div class="home-start__grid">
-          <a class="home-start-card" href="index.html">
-            <span>01</span>
-            <h3>Por escrito</h3>
-            <p>Ensaios, análises, entrevistas e textos longos sobre o jogo.</p>
-          </a>
-          <a class="home-start-card" href="glossario.html">
-            <span>02</span>
-            <h3>Glossário</h3>
-            <p>Termos, posições e conceitos para falar basquete com mais precisão.</p>
-          </a>
-          <a class="home-start-card home-start-card--accent" href="guia-do-draft.html">
-            <span>03</span>
-            <h3>Guia do Draft</h3>
-            <p>Big board, perfis e contexto dos principais prospectos da classe.</p>
-          </a>
-          <a class="home-start-card" href="rankings.html">
-            <span>04</span>
-            <h3>Rankings</h3>
-            <p>As maiores promessas do basquete brasileiro por geração.</p>
-          </a>
-          <a class="home-start-card" href="#">
-            <span>05</span>
-            <h3>Dicas</h3>
-            <p>Referências rápidas para acompanhar, estudar e entender melhor o jogo.</p>
-          </a>
-        </div>
-      </div>
-    </section>
-
     <!-- --- ÚLTIMAS PUBLICAÇÕES ------------------------------------ -->
-    <section class="ultimas home-latest">
+    <section class="ultimas">
       <div class="container">
         <div class="section-header">
-          <div>
-            <span class="home-kicker">por escrito</span>
-            <h2 class="section-title">Últimas Publicações</h2>
-          </div>
-          <a href="#ultimas-posts" class="section-link">ver todas</a>
+          <h2 class="section-title">Últimas Publicações</h2>
+          <a href="#" class="section-link">ver todas</a>
         </div>
-        <div id="ultimas-posts" class="ultimas__grid ultimas__grid--editorial home-latest__grid"></div>
+        <div id="ultimas-posts" class="ultimas__grid ultimas__grid--editorial"></div>
       </div>
     </section>
 
-    <!-- --- GUIA DO DRAFT ------------------------------------------ -->
-    <section class="home-draft">
-      <div class="container home-draft__inner">
-        <div class="home-draft__copy">
-          <span class="tag tag--red">especial</span>
-          <h2>Guia do Draft</h2>
-          <p>Uma leitura de classe com ordem, perfis, contexto físico, arquétipos e espelhos para acompanhar os nomes antes de todo mundo.</p>
-          <a href="guia-do-draft.html" class="home-cta">abrir guia completo</a>
-        </div>
-        <div class="home-draft__board">
-          <div class="home-draft__label">topo do board</div>
-          <div id="home-draft-prospects" class="home-draft__prospects"></div>
-        </div>
-      </div>
-    </section>
+    <!-- --- BOTTOM GRID --------------------------------------------- -->
+    <section class="bottom-grid">
 
-    <!-- --- EDITORIAS + CONTATO ------------------------------------ -->
-    <section class="home-directory">
-      <div class="container home-directory__grid">
-        <div class="home-editorias">
-          <div class="section-header section-header--flush">
-            <h2 class="section-title">Editorias</h2>
-          </div>
-          <div class="home-editorias__chips">
-            <a href="#" data-categoria="auto-falante">Auto-Falante</a>
-            <a href="#" data-categoria="nba">NBA</a>
-            <a href="#" data-categoria="ultimas">Últimas</a>
-            <a href="#" data-categoria="in-english">In English</a>
-            <a href="#" data-categoria="extensos">Extensos</a>
-            <a href="#" data-categoria="mastigado">Mastigado</a>
-          </div>
+      <!-- Rankings -->
+      <div class="bottom-col">
+        <div class="section-header section-header--flush">
+          <h2 class="section-title">Rankings</h2>
+          <a href="rankings.html" class="section-link">ver todos</a>
         </div>
-        <div class="home-contact">
-          <span class="home-kicker">vamos conversar</span>
-          <h2>Tem pauta, projeto ou convite?</h2>
-          <p>O contato segue aberto para propostas, parcerias, entrevistas e conversas sobre basquete.</p>
-          <a href="contato.html" class="home-cta">falar com o tabelado</a>
-        </div>
+        <div id="ranking-destaque"></div>
       </div>
+
+      <!-- Glossário -->
+      <div class="bottom-col">
+        <div class="section-header section-header--flush">
+          <h2 class="section-title">Glossário</h2>
+          <a href="glossario.html" class="section-link">ver todos</a>
+        </div>
+        <ul class="glossario-list">
+          <li class="glossario-item">
+            <div class="glossario-item__text">
+              <div class="glossario-item__term">Shot maker</div>
+              <div class="glossario-item__def">O jogador capaz de criar seu próprio arremesso.</div>
+            </div>
+            <span class="glossario-item__arrow">→</span>
+          </li>
+          <li class="glossario-item">
+            <div class="glossario-item__text">
+              <div class="glossario-item__term">Two-way player</div>
+              <div class="glossario-item__def">Jogador que impacta nos dois lados da quadra.</div>
+            </div>
+            <span class="glossario-item__arrow">→</span>
+          </li>
+          <li class="glossario-item">
+            <div class="glossario-item__text">
+              <div class="glossario-item__term">Spacing</div>
+              <div class="glossario-item__def">Conceito ofensivo que abre espaços para o ataque.</div>
+            </div>
+            <span class="glossario-item__arrow">→</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Manifesto -->
+      <div class="bottom-col">
+        <div class="manifesto-quote">
+          Falo de basquete de base, masculino e feminino; do Brasil, da Europa, da NBA e da WNBA.
+        </div>
+        <div class="manifesto-divider"></div>
+        <div class="manifesto-since">Desde 2020</div>
+        <div class="manifesto-desc">Conteúdo independente sobre formação, desenvolvimento e cultura.</div>
+      </div>
+
     </section>
 
   </main>
@@ -222,7 +191,6 @@
   <script src="js/conteudo.js"></script>
     <script src="js/cms-posts.js"></script>
 <script src="js/rankings.js"></script>
-  <script src="js/draft-data.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

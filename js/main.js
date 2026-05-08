@@ -221,10 +221,9 @@ function renderUltimas(busca = "", categoriaAtiva = "") {
   area.innerHTML = postsFiltrados
     .map((post, indice) => {
       const categoria = categoriaDoPost(post);
-      const destaqueHome = area.classList.contains("home-latest__grid") && indice === 0 ? " card-ultimas--home-feature" : "";
 
       return `
-        <a class="card-ultimas editorial-card editorial-card--latest${destaqueHome}" href="${linkDoPost(post)}">
+        <a class="card-ultimas editorial-card editorial-card--latest" href="${linkDoPost(post)}">
           <div class="card-ultimas__img-wrap">
             ${imagemOuPlaceholder(post, "card-ultimas__img", "ultimas", indice)}
           </div>
@@ -265,28 +264,6 @@ function renderRankingDestaque() {
       </div>
     </div>
   `;
-}
-
-function iniciaisDraftHome(nome = "") {
-  return nome.split(/\s+/).filter(Boolean).slice(0, 2).map((parte) => parte[0]).join("");
-}
-
-function renderHomeDraftProspects() {
-  const area = document.querySelector("#home-draft-prospects");
-  if (!area || typeof draftProspects === "undefined") return;
-
-  area.innerHTML = draftProspects.slice(0, 4).map((prospect) => `
-    <a class="home-draft-prospect" href="guia-do-draft.html">
-      <div class="home-draft-prospect__rank">#${prospect.rank}</div>
-      <div class="home-draft-prospect__photo">
-        ${prospect.foto ? `<img src="${prospect.foto}" alt="${prospect.nome}" loading="lazy" />` : `<span>${iniciaisDraftHome(prospect.nome)}</span>`}
-      </div>
-      <div>
-        <h3>${prospect.nome}</h3>
-        <p>${[prospect.posicao, prospect.time].filter(Boolean).join(" / ")}</p>
-      </div>
-    </a>
-  `).join("");
 }
 
 function iniciarFiltroCategorias() {
@@ -440,7 +417,6 @@ renderHeroPrincipal();
 renderHeroLaterais();
 renderUltimas();
 renderRankingDestaque();
-renderHomeDraftProspects();
 renderArtigo();
 iniciarFiltroCategorias();
 iniciarBusca();
