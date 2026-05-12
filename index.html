@@ -8,6 +8,28 @@
 </head>
 <body class="splash-body">
 
+  <script>
+    (function () {
+      var hash = window.location.hash || "";
+      var identityTokens = [
+        "invite_token",
+        "confirmation_token",
+        "recovery_token",
+        "email_change_token"
+      ];
+
+      var hasIdentityToken = identityTokens.some(function (token) {
+        return hash.indexOf(token + "=") !== -1;
+      });
+
+      var isAlreadyAdmin = window.location.pathname.replace(/\/+$/, "") === "/admin";
+
+      if (hasIdentityToken && !isAlreadyAdmin) {
+        window.location.replace("/admin/" + hash);
+      }
+    })();
+  </script>
+
   <header class="splash-header" aria-label="Entrada principal">
     <a href="index.html" class="splash-logo" aria-label="Tabelado de 3">
       <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
