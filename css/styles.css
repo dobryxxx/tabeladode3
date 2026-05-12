@@ -115,6 +115,7 @@
     .meta--spaced { margin-top: 8px; }
 
     .editorial-card {
+      display: block;
       isolation: isolate;
       position: relative;
       border: 1px solid rgba(244,244,241,.10);

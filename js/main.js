@@ -43,14 +43,64 @@ const placeholdersUltimas = [
   '<ellipse cx="140" cy="390" rx="105" ry="215" fill="#2a2a2a" opacity=".9"/>'
 ];
 
+let postsJson = [];
+
+function formatarDataPost(data) {
+  if (!data) return "";
+  const valor = String(data);
+  if (!/^\d{4}-\d{2}-\d{2}/.test(valor)) return valor;
+
+  const date = new Date(`${valor.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return valor;
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  }).format(date).replace(".", ".");
+}
+
+function normalizarCorpo(corpo) {
+  if (Array.isArray(corpo)) return corpo;
+  if (typeof corpo !== "string") return [];
+  return corpo
+    .split(/\n{2,}/)
+    .map((paragrafo) => paragrafo.trim())
+    .filter(Boolean);
+}
+
+function normalizarPost(post = {}) {
+  const titulo = post.titulo || post.title || "";
+  const resumo = post.resumo || post.excerpt || post.description || "";
+
+  return {
+    ...post,
+    titulo,
+    categoria: post.categoria || post.category || "ultimas",
+    data: formatarDataPost(post.data || post.date || ""),
+    tempoLeitura: post.tempoLeitura || post.readingTime || "",
+    imagem: post.imagem || post.image || "",
+    excerpt: resumo,
+    autor: post.autor || post.author || "",
+    slug: post.slug || post.link || "",
+    corpo: normalizarCorpo(post.corpo || post.body),
+    destaque: Boolean(post.destaque ?? post.featured),
+    lateral: Boolean(post.lateral ?? post.side)
+  };
+}
+
 function postsDoSite() {
   const postsCms = typeof cmsPosts !== "undefined" ? cmsPosts : [];
   const postsBase = typeof posts !== "undefined" ? posts : [];
-  const slugsCms = new Set(postsCms.map((post) => post.slug));
-  return [
-    ...postsCms,
-    ...postsBase.filter((post) => !slugsCms.has(post.slug))
-  ];
+  const todos = [...postsJson, ...postsCms, ...postsBase].map(normalizarPost);
+  const slugs = new Set();
+
+  return todos.filter((post) => {
+    if (!post.slug) return false;
+    if (slugs.has(post.slug)) return false;
+    slugs.add(post.slug);
+    return true;
+  });
 }
 
 function categoriaDoPost(post) {
@@ -63,7 +113,7 @@ function categoriaDoPost(post) {
 
 function imagemOuPlaceholder(post, classe, tipo, indice = 0) {
   if (post.imagem) {
-    return `<img class="${classe}" src="${post.imagem}" alt="${post.titulo}" />`;
+    return `<img class="${classe}" src="${post.imagem}" alt="${post.titulo || "Imagem do artigo"}" loading="lazy" onerror="this.remove()" />`;
   }
 
   if (tipo === "hero") {
@@ -146,7 +196,7 @@ function renderHeroPrincipal() {
 
   const categoria = categoriaDoPost(post);
 
-  area.outerHTML = `
+  area.innerHTML = `
     <a class="hero__main editorial-card editorial-card--hero" href="${linkDoPost(post)}">
       ${imagemOuPlaceholder(post, "hero__main-img", "hero")}
       <div class="hero__main-content editorial-card__content">
@@ -405,6 +455,37 @@ function iniciarSplashHome() {
   });
 }
 
+function markdownBasico(texto) {
+  return String(texto)
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/__(.*?)__/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>");
+}
+
+function renderConteudoDinamico() {
+  renderHeroPrincipal();
+  renderHeroLaterais();
+  renderUltimas();
+  renderRankingDestaque();
+  renderArtigo();
+}
+
+async function carregarPostsJson() {
+  const usaPosts = document.querySelector("#hero-principal, #hero-laterais, #ultimas-posts, #artigo");
+  if (!usaPosts) return;
+
+  try {
+    const resposta = await fetch("data/posts.json", { cache: "no-store" });
+    if (!resposta.ok) throw new Error("posts.json indisponível");
+
+    const dados = await resposta.json();
+    postsJson = Array.isArray(dados) ? dados : (dados.posts || []);
+    renderConteudoDinamico();
+  } catch (erro) {
+    console.warn("Não foi possível carregar data/posts.json. Usando posts locais.", erro);
+  }
+}
+
 function renderArtigo() {
   const area = document.querySelector("#artigo");
   if (!area) return;
@@ -431,16 +512,13 @@ function renderArtigo() {
       ${imagemOuPlaceholder(post, "artigo__capa-img", "hero")}
     </div>
     <div class="artigo__corpo">
-      ${(post.corpo || []).map((paragrafo) => `<p>${paragrafo}</p>`).join("")}
+      ${(post.corpo.length ? post.corpo : ["Texto em atualização."]).map((paragrafo) => `<p>${markdownBasico(paragrafo)}</p>`).join("")}
     </div>
   `;
 }
 
-renderHeroPrincipal();
-renderHeroLaterais();
-renderUltimas();
-renderRankingDestaque();
-renderArtigo();
+renderConteudoDinamico();
+carregarPostsJson();
 iniciarFiltroCategorias();
 iniciarBusca();
 iniciarHeaderSticky();
