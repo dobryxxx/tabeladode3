@@ -11,20 +11,12 @@
   <script>
     (function () {
       var hash = window.location.hash || "";
-      var identityTokens = [
-        "invite_token",
-        "confirmation_token",
-        "recovery_token",
-        "email_change_token"
-      ];
+      var pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+      var isAdmin = pathname === "/admin";
 
-      var hasIdentityToken = identityTokens.some(function (token) {
-        return hash.indexOf(token + "=") !== -1;
-      });
+      var identityTokenPattern = /(?:invite_token|confirmation_token|recovery_token|email_change_token)=/;
 
-      var isAlreadyAdmin = window.location.pathname.replace(/\/+$/, "") === "/admin";
-
-      if (hasIdentityToken && !isAlreadyAdmin) {
+      if (!isAdmin && identityTokenPattern.test(hash)) {
         window.location.replace("/admin/" + hash);
       }
     })();
