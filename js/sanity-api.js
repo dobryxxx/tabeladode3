@@ -3,22 +3,30 @@
   const projectId = config.projectId || "";
   const dataset = config.dataset || "production";
   const apiVersion = config.apiVersion || "2025-05-13";
-  const useCdn = config.useCdn !== false;
   const enabled = Boolean(projectId && projectId !== "SEU_PROJECT_ID");
-  const host = useCdn ? "apicdn.sanity.io" : "api.sanity.io";
   const devMode = ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
+  const useCdn = devMode ? false : config.useCdn !== false;
+  const host = useCdn ? "apicdn.sanity.io" : "api.sanity.io";
 
   const queries = {
     posts: `*[_type == "post" && status == "publicado"] | order(dataPublicacao desc) {
+      _id,
       "titulo": titulo,
+      "title": titulo,
       "slug": slug.current,
       "resumo": resumo,
       "excerpt": resumo,
       "imagem": coalesce(imagem.asset->url, imageUrl, localImagePath),
+      "image": coalesce(imagem.asset->url, imageUrl, localImagePath),
       "imagemAlt": imagem.alt,
       "categoria": coalesce(categoria->slug.current, "ultimas"),
+      "category": coalesce(categoria->slug.current, "ultimas"),
       "categoriaNome": coalesce(categoria->nome, "Últimas"),
       "autor": autor->nome,
+      "author": autor->nome,
+      dataPublicacao,
+      "publishedAt": dataPublicacao,
+      "date": dataPublicacao,
       "data": dataPublicacao,
       "tempoLeitura": tempoLeitura,
       "tags": tags,
@@ -27,21 +35,67 @@
       "corpo": corpo
     }`,
     postBySlug: `*[_type == "post" && status == "publicado" && slug.current == $slug][0] {
+      _id,
       "titulo": titulo,
+      "title": titulo,
       "slug": slug.current,
       "resumo": resumo,
       "excerpt": resumo,
       "imagem": coalesce(imagem.asset->url, imageUrl, localImagePath),
+      "image": coalesce(imagem.asset->url, imageUrl, localImagePath),
       "imagemAlt": imagem.alt,
       "categoria": coalesce(categoria->slug.current, "ultimas"),
+      "category": coalesce(categoria->slug.current, "ultimas"),
       "categoriaNome": coalesce(categoria->nome, "Últimas"),
       "autor": autor->nome,
+      "author": autor->nome,
+      dataPublicacao,
+      "publishedAt": dataPublicacao,
+      "date": dataPublicacao,
       "data": dataPublicacao,
       "tempoLeitura": tempoLeitura,
       "tags": tags,
       "destaque": posicaoDestaque == "principal" || destaqueHome == true,
       "lateral": posicaoDestaque == "lateral",
       "corpo": corpo
+    }`,
+    tips: `*[_type == "tip" && status == "publicado"] | order(featured desc, coalesce(order, 9999) asc, publishedAt desc) {
+      _id,
+      title,
+      "slug": slug.current,
+      excerpt,
+      category,
+      "mainImage": coalesce(mainImage.asset->url, imageUrl, localImagePath),
+      "image": coalesce(mainImage.asset->url, imageUrl, localImagePath),
+      "imageAlt": mainImage.alt,
+      imageUrl,
+      localImagePath,
+      externalUrl,
+      linkLabel,
+      body,
+      tags,
+      publishedAt,
+      featured,
+      order
+    }`,
+    tipBySlug: `*[_type == "tip" && status == "publicado" && slug.current == $slug][0] {
+      _id,
+      title,
+      "slug": slug.current,
+      excerpt,
+      category,
+      "mainImage": coalesce(mainImage.asset->url, imageUrl, localImagePath),
+      "image": coalesce(mainImage.asset->url, imageUrl, localImagePath),
+      "imageAlt": mainImage.alt,
+      imageUrl,
+      localImagePath,
+      externalUrl,
+      linkLabel,
+      body,
+      tags,
+      publishedAt,
+      featured,
+      order
     }`,
     draftProspects: `*[_type == "draftProspect" && status == "publicado"] | order(rankingGeral asc) {
       "nome": nome,
@@ -216,6 +270,8 @@
     fetchNamed,
     fetchPosts: () => fetchNamed("posts"),
     fetchPostBySlug: (slug) => fetchNamed("postBySlug", {slug}),
+    fetchTips: () => fetchNamed("tips"),
+    fetchTipBySlug: (slug) => fetchNamed("tipBySlug", {slug}),
     fetchDraftProspects: () => fetchNamed("draftProspects"),
     fetchProspectBySlug: (slug) => fetchNamed("prospectBySlug", {slug}),
     fetchRankings: () => fetchNamed("rankings"),

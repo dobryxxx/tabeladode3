@@ -12,6 +12,7 @@ const previewPath = path.join(studioDir, 'migration-preview.json')
 const warnings = []
 const skipped = []
 const duplicates = []
+const neutralOldDate = '2000-01-01T00:00:00.000Z'
 
 function readEnvFile(filePath) {
   return fs.readFile(filePath, 'utf8')
@@ -157,12 +158,51 @@ function dedupeById(docs, label) {
   return [...map.values()]
 }
 
-function normalizeDate(value) {
-  if (!value) return new Date().toISOString()
-  if (/^\d{4}-\d{2}-\d{2}/.test(String(value))) return new Date(`${String(value).slice(0, 10)}T12:00:00Z`).toISOString()
-  const parsed = new Date(value)
+function parseDate(value) {
+  if (!value) return null
+  const raw = String(value).trim()
+  if (!raw) return null
+
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (iso) return new Date(`${iso[1]}-${iso[2]}-${iso[3]}T12:00:00.000Z`).toISOString()
+
+  const brNumeric = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (brNumeric) {
+    const [, day, month, year] = brNumeric
+    return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T12:00:00.000Z`).toISOString()
+  }
+
+  const months = {
+    jan: '01', janeiro: '01',
+    fev: '02', fevereiro: '02',
+    mar: '03', marco: '03', março: '03',
+    abr: '04', abril: '04',
+    mai: '05', maio: '05',
+    jun: '06', junho: '06',
+    jul: '07', julho: '07',
+    ago: '08', agosto: '08',
+    set: '09', setembro: '09',
+    out: '10', outubro: '10',
+    nov: '11', novembro: '11',
+    dez: '12', dezembro: '12'
+  }
+  const normalized = raw
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\./g, '')
+  const textual = normalized.match(/^(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})$/)
+  if (textual && months[textual[2]]) {
+    return new Date(`${textual[3]}-${months[textual[2]]}-${textual[1].padStart(2, '0')}T12:00:00.000Z`).toISOString()
+  }
+
+  const parsed = new Date(raw)
   if (!Number.isNaN(parsed.getTime())) return parsed.toISOString()
-  return new Date().toISOString()
+  return null
+}
+
+function normalizeDate(value, fallback = neutralOldDate) {
+  return parseDate(value) || fallback
 }
 
 function preparePosts(posts) {
@@ -186,6 +226,10 @@ function preparePosts(posts) {
     const categoria = post.categoria || post.category || 'ultimas'
     const autor = post.autor || post.author || 'Tabelado de 3'
     const posicaoDestaque = post.destaque ? 'principal' : post.lateral ? 'lateral' : 'none'
+    const dataPublicacao = parseDate(post.data || post.date || post.publishedAt || post.createdAt || post.originalDate || post.pubDate)
+    if (!dataPublicacao) {
+      warnings.push(`post ${slug} sem data original confiavel; usando fallback neutro ${neutralOldDate}`)
+    }
 
     categories.push(makeCategory(categoria, 'blog'))
     authors.push(makeAuthor(autor))
@@ -199,7 +243,7 @@ function preparePosts(posts) {
       ...imageFields(post.imagem || post.image || post.mainImage),
       categoria: {_type: 'reference', _ref: `category-${slugify(categoria)}`},
       autor: {_type: 'reference', _ref: `author-${slugify(autor)}`},
-      dataPublicacao: normalizeDate(post.data || post.date || post.publishedAt),
+      dataPublicacao: dataPublicacao || neutralOldDate,
       tempoLeitura: post.tempoLeitura || post.readingTime,
       tags: Array.isArray(post.tags) ? post.tags : [],
       destaqueHome: Boolean(post.destaque),
@@ -369,10 +413,56 @@ function prepareRankings(rankingsDisponiveis = [], rankings = []) {
   }
 }
 
+function prepareTips(tips = []) {
+  const docs = []
+  const categories = []
+
+  tips.forEach((tip, index) => {
+    const title = tip.title || tip.titulo
+    if (!title) {
+      skipped.push(`dica sem titulo no indice ${index}`)
+      return
+    }
+
+    const slug = slugify(tip.slug || title)
+    const category = tip.category || tip.categoria || 'Geral'
+    categories.push(makeCategory(category, 'dicas'))
+
+    const url = tip.externalUrl || tip.link || tip.url
+    if (url && !/^https?:\/\//i.test(String(url))) {
+      warnings.push(`dica ${slug} usa link interno/local (${url}); mantenha esse link no fallback local ou troque por URL completa no Sanity`)
+    }
+
+    docs.push(compactObject({
+      _id: `tip-${slug}`,
+      _type: 'tip',
+      title,
+      slug: {_type: 'slug', current: slug},
+      excerpt: tip.excerpt || tip.resumo || tip.description || tip.descricao,
+      category,
+      ...imageFields(tip.mainImage || tip.image || tip.imagem || tip.imageUrl || tip.localImagePath),
+      externalUrl: url && /^https?:\/\//i.test(String(url)) ? String(url) : undefined,
+      linkLabel: tip.linkLabel || tip.cta || 'Acessar dica',
+      body: portableTextFrom(tip.body || tip.corpo || tip.content || tip.description || tip.descricao),
+      tags: Array.isArray(tip.tags) ? tip.tags : [],
+      publishedAt: normalizeDate(tip.publishedAt || tip.data || tip.date),
+      featured: Boolean(tip.featured || tip.destaque),
+      order: Number.isFinite(Number(tip.order || tip.ordem)) ? Number(tip.order || tip.ordem) : index + 1,
+      status: 'publicado'
+    }))
+  })
+
+  return {
+    docs: dedupeById(docs, 'dicas'),
+    categories: dedupeById(categories.filter(Boolean), 'categorias de dicas')
+  }
+}
+
 async function loadLocalData() {
   const postsJson = await readJson('data/posts.json', {posts: []})
   const conteudoExports = await readJsExports('js/conteudo.js', ['posts'])
   const draftExports = await readJsExports('js/draft-data.js', ['draftProspects'])
+  const tipExports = await readJsExports('js/dicas-data.js', ['dicasLocais'])
   const rankingExports = await readJsExports('js/rankings.js', ['rankingsDisponiveis', 'rankings'])
   const glossary = await readGlossary()
 
@@ -385,6 +475,7 @@ async function loadLocalData() {
   return {
     posts,
     draftProspects: draftExports.draftProspects || [],
+    tips: tipExports.dicasLocais || [],
     glossary,
     rankingsDisponiveis: rankingExports.rankingsDisponiveis || [],
     rankings: rankingExports.rankings || []
@@ -394,12 +485,14 @@ async function loadLocalData() {
 async function buildMigration() {
   const local = await loadLocalData()
   const preparedPosts = preparePosts(local.posts)
+  const preparedTips = prepareTips(local.tips)
   const preparedDraft = prepareDraftProspects(local.draftProspects)
   const preparedGlossary = prepareGlossaryTerms(local.glossary)
   const preparedRankings = prepareRankings(local.rankingsDisponiveis, local.rankings)
 
   const categories = dedupeById([
     ...preparedPosts.categories,
+    ...preparedTips.categories,
     ...preparedGlossary.categories,
     ...preparedRankings.categories
   ], 'categorias')
@@ -410,6 +503,7 @@ async function buildMigration() {
     ...categories,
     ...authors,
     ...preparedPosts.docs,
+    ...preparedTips.docs,
     ...preparedDraft,
     ...preparedGlossary.docs,
     ...preparedRankings.docs
@@ -421,6 +515,7 @@ async function buildMigration() {
       categories,
       authors,
       posts: preparedPosts.docs,
+      tips: preparedTips.docs,
       draftProspects: preparedDraft,
       glossaryTerms: preparedGlossary.docs,
       rankings: preparedRankings.docs
@@ -458,6 +553,7 @@ function printSummary(migration) {
     mode: writeMode ? 'write' : 'dry-run',
     found: {
       posts: local.posts.length,
+      tips: local.tips.length,
       draftProspects: local.draftProspects.length,
       glossaryTerms: local.glossary.length,
       rankingMetas: local.rankingsDisponiveis.length,
@@ -467,6 +563,7 @@ function printSummary(migration) {
       categories: groups.categories.length,
       authors: groups.authors.length,
       posts: groups.posts.length,
+      tips: groups.tips.length,
       draftProspects: groups.draftProspects.length,
       glossaryTerms: groups.glossaryTerms.length,
       rankings: groups.rankings.length,
@@ -500,6 +597,7 @@ await fs.writeFile(previewPath, JSON.stringify({
     categories: migration.groups.categories.length,
     authors: migration.groups.authors.length,
     posts: migration.groups.posts.length,
+    tips: migration.groups.tips.length,
     draftProspects: migration.groups.draftProspects.length,
     glossaryTerms: migration.groups.glossaryTerms.length,
     rankings: migration.groups.rankings.length

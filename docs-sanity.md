@@ -36,6 +36,7 @@ Não marque `Allow credentials`, porque o front público usa apenas dados públi
 ## Tipos de conteúdo
 
 - Publicações: posts do Blog / Por Escrito.
+- Dicas: curadoria de links, materiais, videos, referencias e guias praticos.
 - Prospectos do Draft: jogadores do Guia do Draft.
 - Rankings: listas editoriais com itens ordenados.
 - Termos do Glossário: termos, categorias, níveis e exemplos.
@@ -48,6 +49,7 @@ Não marque `Allow credentials`, porque o front público usa apenas dados públi
 
 - `/`: busca `homeSettings` e atualiza headline, subheadline e cards da splash.
 - `/por-escrito.html`: busca posts publicados e ordena por data.
+- `/dicas.html`: busca dicas publicadas, mescla fallback local e organiza destaques, busca e filtros.
 - `/artigo.html?post=slug`: usa a lista de posts do Sanity quando disponível.
 - `/guia-do-draft.html`: busca prospectos publicados e ordena por `rankingGeral`.
 - `/rankings.html`: busca rankings publicados e monta a grade.
@@ -84,8 +86,35 @@ Principais nomes:
 - `rankings`
 - `rankingBySlug`
 - `glossaryTerms`
+- `tips`
+- `tipBySlug`
 - `homeSettings`
 - `siteSettings`
+
+## Como criar uma Dica
+
+1. Acesse `https://tabeladode3.sanity.studio/`.
+2. Clique em `Dicas` no menu lateral.
+3. Clique para criar uma nova dica.
+4. Preencha `Titulo`, `Resumo`, `Categoria`, `Imagem principal` e, se existir, `Link externo`.
+5. Use `Texto do botao/link` para controlar o CTA do card, como `Acessar`, `Ver video` ou `Ler material`.
+6. Adicione tags para melhorar a busca da pagina.
+7. Marque `Destaque` quando a dica deve aparecer no topo de `dicas.html`.
+8. Use `Ordem` para controlar a prioridade: numeros menores aparecem primeiro.
+9. Clique em `Publish`.
+
+Na pagina publica `dicas.html`, as dicas aparecem em cards editoriais com busca e filtro por categoria. Links externos abrem em nova aba; links internos como `glossario.html` ou `guia-do-draft.html` abrem no proprio site.
+
+Para trocar uma imagem, abra a dica no Studio e substitua `Imagem principal`. Se a imagem ainda estiver fora do Sanity, use `URL da imagem` temporariamente. Para ocultar uma dica sem apagar, altere `Status` para `Rascunho/oculto`.
+
+Como foi criado um schema novo, depois de publicar o codigo rode:
+
+```bash
+cd sanity
+npx sanity deploy --yes
+```
+
+Isso atualiza o painel publicado em `https://tabeladode3.sanity.studio/`.
 
 ## Como convidar o cliente
 
@@ -104,6 +133,7 @@ Ele lê:
 - `data/posts.json`
 - `js/conteudo.js`
 - `js/draft-data.js`
+- `js/dicas-data.js`
 - `js/glossario.js`
 - `js/rankings.js`
 
@@ -150,6 +180,7 @@ node scripts/migrate-local-data-to-sanity.mjs --write
 O script usa `createOrReplace`, então pode ser reexecutado sem duplicar documentos. Os IDs são estáveis:
 
 - `post-slug`
+- `tip-slug`
 - `draftProspect-slug`
 - `glossaryTerm-slug`
 - `ranking-slug`
@@ -169,6 +200,44 @@ Depois, se fizer sentido, um segundo script pode transformar esses caminhos em a
 3. Publique/ajuste qualquer documento necessário.
 4. Abra o site local ou Netlify.
 5. Confira os logs do console: `Sanity + fallback local`.
+
+## Correção de datas de publicações importadas
+
+As publicações usam o campo `dataPublicacao` no Sanity. A migração foi ajustada para nunca usar a data atual como fallback automático em posts antigos.
+
+Regra atual:
+
+- se houver data original em `data/posts.json`, `js/conteudo.js` ou outro campo equivalente, ela é convertida para ISO;
+- datas em `YYYY-MM-DD`, `DD/MM/YYYY` e textos como `25 de abr. de 2026` são aceitas;
+- se não houver data confiável, o post recebe `2000-01-01T00:00:00.000Z`, para ficar no fim da listagem;
+- o log da migração avisa quando precisou usar essa data neutra.
+
+Para auditar posts já importados no Sanity sem alterar nada:
+
+```bash
+cd sanity
+node scripts/fix-post-dates.mjs
+```
+
+O dry-run compara os posts locais com os documentos publicados no Sanity e mostra:
+
+- total de posts encontrados no Sanity;
+- total de posts locais com data válida;
+- posts locais sem data original;
+- quais posts seriam corrigidos;
+- antes/depois de cada data;
+- posts que exigem revisão manual.
+
+Para corrigir de verdade, depois de revisar o dry-run:
+
+```bash
+cd sanity
+node scripts/fix-post-dates.mjs --write
+```
+
+Esse script altera somente `dataPublicacao`. Ele não muda título, texto, imagem, slug, categoria ou qualquer outro campo. Também evita sobrescrever datas que parecem ter sido editadas manualmente: por padrão, só corrige datas ausentes, a data neutra antiga ou datas claramente vindas da importação incorreta.
+
+Se alguma publicação não tiver fonte local confiável, edite a data manualmente no Studio.
 
 ## Limitações da solução sem build
 

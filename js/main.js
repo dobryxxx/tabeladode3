@@ -45,6 +45,115 @@ const placeholdersUltimas = [
 
 let postsJson = [];
 let postsSanity = [];
+const prefixosDataImportacaoIndevida = ["2026-05-13T18:26:59"];
+const devModePosts = ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
+
+function slugPost(post = {}) {
+  return post.slug || post.link || "";
+}
+
+function parseDataEditorial(data) {
+  if (!data) return null;
+  const valor = String(data).trim();
+  if (!valor) return null;
+
+  const iso = valor.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const date = new Date(`${iso[1]}-${iso[2]}-${iso[3]}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const brNumerica = valor.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (brNumerica) {
+    const [, dia, mes, ano] = brNumerica;
+    const date = new Date(`${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const meses = {
+    jan: 0, janeiro: 0,
+    fev: 1, fevereiro: 1,
+    mar: 2, marco: 2, março: 2,
+    abr: 3, abril: 3,
+    mai: 4, maio: 4,
+    jun: 5, junho: 5,
+    jul: 6, julho: 6,
+    ago: 7, agosto: 7,
+    set: 8, setembro: 8,
+    out: 9, outubro: 9,
+    nov: 10, novembro: 10,
+    dez: 11, dezembro: 11
+  };
+
+  const normalizada = valor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\./g, "");
+  const textual = normalizada.match(/^(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})$/);
+  if (textual && Object.prototype.hasOwnProperty.call(meses, textual[2])) {
+    return new Date(Number(textual[3]), meses[textual[2]], Number(textual[1]), 12);
+  }
+
+  const parsed = new Date(valor);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function dataIsoDia(data) {
+  const parsed = parseDataEditorial(data);
+  if (!parsed) return "";
+  const ano = parsed.getFullYear();
+  const mes = String(parsed.getMonth() + 1).padStart(2, "0");
+  const dia = String(parsed.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function timestampData(data) {
+  const parsed = parseDataEditorial(data);
+  return parsed ? parsed.getTime() : Number.NEGATIVE_INFINITY;
+}
+
+function dataBrutaPost(post = {}) {
+  return post.dataPublicacao || post.publishedAt || post.date || post.data || null;
+}
+
+function dataSanityInvalidaOuImportada(dataSanity) {
+  if (!dataSanity) return true;
+  const dia = dataIsoDia(dataSanity);
+  if (!dia) return true;
+  return prefixosDataImportacaoIndevida.some((prefixo) => String(dataSanity).startsWith(prefixo));
+}
+
+function escolherDataPost(post = {}, fallbackLocal) {
+  const dataSanity = post.dataPublicacao || post.publishedAt || post.date || null;
+  const dataLocal = fallbackLocal ? dataBrutaPost(fallbackLocal) : null;
+
+  if (post._fonte === "sanity" && dataLocal && dataSanityInvalidaOuImportada(dataSanity)) {
+    return {
+      valor: dataLocal,
+      origem: "fallback local",
+      dataSanity,
+      dataLocal
+    };
+  }
+
+  if (post._fonte === "sanity" && dataSanityInvalidaOuImportada(dataSanity) && !dataLocal) {
+    return {
+      valor: null,
+      origem: "sem data confiável",
+      dataSanity,
+      dataLocal
+    };
+  }
+
+  const dataPreferida = post.dataPublicacao || post.publishedAt || post.date || dataLocal || null;
+  return {
+    valor: dataPreferida,
+    origem: dataPreferida === dataLocal && post._fonte === "sanity" ? "fallback local" : (post._fonte || "local"),
+    dataSanity,
+    dataLocal
+  };
+}
 
 function formatarDataPost(data) {
   if (!data) return "";
@@ -78,15 +187,22 @@ function normalizarCorpo(corpo) {
     .filter(Boolean);
 }
 
-function normalizarPost(post = {}) {
+function normalizarPost(post = {}, fallbackLocal) {
   const titulo = post.titulo || post.title || "";
   const resumo = post.resumo || post.excerpt || post.description || "";
+  const dataEscolhida = escolherDataPost(post, fallbackLocal);
 
   return {
     ...post,
     titulo,
     categoria: post.categoria || post.category || "ultimas",
-    data: formatarDataPost(post.data || post.date || ""),
+    data: formatarDataPost(dataEscolhida.valor),
+    dataPublicacao: dataEscolhida.valor,
+    _dataTimestamp: timestampData(dataEscolhida.valor),
+    _dataPublicacaoSanity: dataEscolhida.dataSanity || "",
+    _dataLocalOriginal: dataEscolhida.dataLocal || "",
+    _dataFinal: dataEscolhida.valor || "",
+    _origemData: dataEscolhida.origem,
     tempoLeitura: post.tempoLeitura || post.readingTime || "",
     imagem: post.imagem || post.image || "",
     excerpt: resumo,
@@ -102,15 +218,43 @@ function normalizarPost(post = {}) {
 function postsDoSite() {
   const postsCms = typeof cmsPosts !== "undefined" ? cmsPosts : [];
   const postsBase = typeof posts !== "undefined" ? posts : [];
-  const todos = [...postsSanity, ...postsJson, ...postsCms, ...postsBase].map(normalizarPost);
-  const slugs = new Set();
+  const locais = [...postsJson, ...postsCms, ...postsBase]
+    .map((post) => ({...post, _fonte: post._fonte || "local"}))
+    .filter((post) => slugPost(post));
+  const locaisPorSlug = new Map();
 
-  return todos.filter((post) => {
-    if (!post.slug) return false;
-    if (slugs.has(post.slug)) return false;
-    slugs.add(post.slug);
-    return true;
+  locais.forEach((post) => {
+    if (!locaisPorSlug.has(slugPost(post))) locaisPorSlug.set(slugPost(post), post);
   });
+
+  const mesclados = new Map();
+  locais.forEach((post) => {
+    mesclados.set(slugPost(post), normalizarPost(post));
+  });
+
+  postsSanity.forEach((post) => {
+    const postSanity = {...post, _fonte: "sanity"};
+    const slug = slugPost(postSanity);
+    if (!slug) return;
+    mesclados.set(slug, normalizarPost(postSanity, locaisPorSlug.get(slug)));
+  });
+
+  return [...mesclados.values()].sort((a, b) => {
+    if (a._dataTimestamp !== b._dataTimestamp) return b._dataTimestamp - a._dataTimestamp;
+    return a.titulo.localeCompare(b.titulo, "pt-BR");
+  });
+}
+
+function logDebugDatasPosts() {
+  if (!devModePosts || !postsSanity.length) return;
+  console.table(postsDoSite().slice(0, 5).map((post) => ({
+    titulo: post.titulo,
+    slug: post.slug,
+    dataPublicacaoSanity: post._dataPublicacaoSanity || null,
+    dataLocal: post._dataLocalOriginal || null,
+    dataFinal: post._dataFinal || null,
+    origemFinalDaData: post._origemData
+  })));
 }
 
 function categoriaDoPost(post) {
@@ -561,6 +705,7 @@ async function carregarPostsFontePrincipal() {
     postsSanity = Array.isArray(dados) ? dados : [];
     if (!postsSanity.length) throw new Error("Sanity sem posts publicados");
     window.T3Sanity?.devLog?.("Fonte de posts: Sanity + fallback local");
+    logDebugDatasPosts();
     renderConteudoDinamico();
   } catch (erro) {
     window.T3Sanity?.devLog?.("Fonte de posts: fallback local");
