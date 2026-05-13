@@ -8,6 +8,52 @@
 </head>
 <body>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script src="https://unpkg.com/decap-cms@^3.6.0/dist/decap-cms.js"></script>
+  <script>
+    (function () {
+      var cmsLoaded = false;
+      var hash = window.location.hash || "";
+      var identityTokens = [
+        "invite_token",
+        "confirmation_token",
+        "recovery_token",
+        "email_change_token"
+      ];
+
+      function hasIdentityToken() {
+        return identityTokens.some(function (token) {
+          return hash.indexOf(token + "=") !== -1;
+        });
+      }
+
+      function loadCms() {
+        if (cmsLoaded) return;
+        cmsLoaded = true;
+        var script = document.createElement("script");
+        script.src = "https://unpkg.com/decap-cms@^3.6.0/dist/decap-cms.js";
+        document.body.appendChild(script);
+      }
+
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on("init", function (user) {
+          if (hasIdentityToken() && !user) {
+            window.netlifyIdentity.open(hash.indexOf("invite_token=") !== -1 ? "signup" : undefined);
+            return;
+          }
+
+          loadCms();
+        });
+
+        window.netlifyIdentity.on("login", function () {
+          document.location.href = "/admin/";
+        });
+
+        window.netlifyIdentity.on("close", function () {
+          if (!cmsLoaded && !hasIdentityToken()) loadCms();
+        });
+      } else {
+        loadCms();
+      }
+    })();
+  </script>
 </body>
 </html>

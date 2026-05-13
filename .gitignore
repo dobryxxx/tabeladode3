@@ -18,3 +18,14 @@ tabelado-de-3/
 .DS_Store
 Thumbs.db
 .vscode/
+.env
+*.env
+sanity/.env
+*.log
+node_modules/
+sanity/node_modules/
+.env
+.env.local
+sanity/.env
+*.log
+server.log

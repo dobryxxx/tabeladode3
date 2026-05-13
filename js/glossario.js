@@ -47,6 +47,12 @@ const estadoGlossario = {
   letra: "Todos"
 };
 
+let glossarioSanity = [];
+
+function glossarioDados() {
+  return mesclarGlossario(glossario, glossarioSanity);
+}
+
 const nivelLabel = {
   basico: "Essencial",
   intermediario: "Intermediario",
@@ -67,11 +73,66 @@ function classeDaCategoria(categoria) {
   return categoriaClasse[categoria] || "glossario-color-default";
 }
 
+function categoriaEhPosicao(categoria = "") {
+  return normalizarGlossario(categoria) === "posicoes";
+}
+
 function normalizarGlossario(texto) {
-  return texto
+  return String(texto || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function chaveTermo(item = {}) {
+  if (item.slug) return `slug:${normalizarGlossario(item.slug)}`;
+  return `termo:${normalizarGlossario(item.termo)}`;
+}
+
+function normalizarTermoSanity(item = {}) {
+  return {
+    ...item,
+    termo: item.termo || "Termo sem nome",
+    definicao: item.definicao || item.definicaoCurta || item.explicacaoCompleta || "",
+    categoria: item.categoria || "Termos avancados",
+    nivel: item.nivel || "basico",
+    tags: Array.isArray(item.tags) ? item.tags : [],
+    destaque: Boolean(item.destaque)
+  };
+}
+
+function mesclarGlossario(locais = [], sanity = []) {
+  const mapa = new Map();
+  const aliases = new Map();
+
+  function registrar(alias, chave) {
+    if (alias) aliases.set(alias, chave);
+  }
+
+  locais.forEach((item) => {
+    if (!item?.termo) return;
+    const chave = chaveTermo(item);
+    mapa.set(chave, item);
+    registrar(chave, chave);
+    registrar(item.slug ? `slug:${normalizarGlossario(item.slug)}` : "", chave);
+    registrar(`termo:${normalizarGlossario(item.termo)}`, chave);
+  });
+
+  sanity.map(normalizarTermoSanity).forEach((item) => {
+    const chavesPossiveis = [
+      item.slug ? `slug:${normalizarGlossario(item.slug)}` : "",
+      `termo:${normalizarGlossario(item.termo)}`
+    ].filter(Boolean);
+    const chave = chavesPossiveis.map((alias) => aliases.get(alias)).find(Boolean) || chaveTermo(item);
+
+    mapa.set(chave, {
+      ...(mapa.get(chave) || {}),
+      ...item
+    });
+    chavesPossiveis.forEach((alias) => registrar(alias, chave));
+  });
+
+  return [...mapa.values()];
 }
 
 function resumoDefinicao(definicao) {
@@ -79,7 +140,7 @@ function resumoDefinicao(definicao) {
 }
 
 function categoriasGlossario() {
-  return ["Todos", ...new Set(glossario.map((item) => item.categoria))].sort((a, b) => {
+  return ["Todos", ...new Set(glossarioDados().map((item) => item.categoria))].sort((a, b) => {
     if (a === "Todos") return -1;
     if (b === "Todos") return 1;
     return a.localeCompare(b);
@@ -91,7 +152,7 @@ function niveisGlossario() {
 }
 
 function letrasDisponiveis() {
-  return new Set(glossario.map((item) => normalizarGlossario(item.termo).charAt(0).toUpperCase()));
+  return new Set(glossarioDados().map((item) => normalizarGlossario(item.termo).charAt(0).toUpperCase()));
 }
 
 function termoCombina(item) {
@@ -100,7 +161,7 @@ function termoCombina(item) {
     item.definicao,
     item.categoria,
     item.nivel,
-    item.tags.join(" ")
+    (item.tags || []).join(" ")
   ].join(" "));
   const primeiraLetra = normalizarGlossario(item.termo).charAt(0).toUpperCase();
 
@@ -111,8 +172,8 @@ function termoCombina(item) {
 }
 
 function termosFiltrados() {
-  return glossario
-    .filter((item) => item.categoria !== "Posicoes")
+  return glossarioDados()
+    .filter((item) => !categoriaEhPosicao(item.categoria))
     .filter(termoCombina)
     .sort((a, b) => a.termo.localeCompare(b.termo));
 }
@@ -128,7 +189,7 @@ function renderFiltros() {
 
   if (categorias) {
     categorias.innerHTML = categoriasGlossario()
-      .filter((categoria) => categoria !== "Posicoes")
+      .filter((categoria) => !categoriaEhPosicao(categoria))
       .map((categoria) => botaoFiltro(categoria, estadoGlossario.categoria === categoria, `data-categoria="${categoria}"`))
       .join("");
   }
@@ -145,8 +206,8 @@ function renderPosicoesDestaque() {
   const area = document.querySelector("#glossario-posicoes-destaque");
   if (!area) return;
 
-  area.innerHTML = glossario
-    .filter((item) => item.categoria === "Posicoes")
+  area.innerHTML = glossarioDados()
+    .filter((item) => categoriaEhPosicao(item.categoria))
     .map((item) => `
       <article class="glossario-position-card">
         <span class="glossario-position-card__number">${item.termo.match(/\((.*?)\)/)?.[1] || ""}</span>
@@ -168,7 +229,7 @@ function renderLista() {
   if (!lista) return;
 
   const filtrados = termosFiltrados();
-  if (total) total.textContent = glossario.length;
+  if (total) total.textContent = glossarioDados().length;
   if (contagem) contagem.textContent = `${filtrados.length} resultado${filtrados.length === 1 ? "" : "s"}`;
 
   lista.innerHTML = filtrados.map((item) => {
@@ -183,7 +244,7 @@ function renderLista() {
         <p class="glossario-card__summary">${resumoDefinicao(item.definicao)}</p>
         <p class="glossario-card__full" hidden>${item.definicao}</p>
         <div class="glossario-card__tags">
-          ${item.tags.slice(0, 4).map((tag) => `<span>${tag}</span>`).join("")}
+          ${(item.tags || []).slice(0, 4).map((tag) => `<span>${tag}</span>`).join("")}
         </div>
         ${longa ? '<button class="glossario-more" type="button">ver mais</button>' : ""}
       </article>
@@ -248,5 +309,28 @@ function iniciarEventosGlossario() {
   }
 }
 
-renderGlossario();
 iniciarEventosGlossario();
+
+async function iniciarFonteGlossario() {
+  if (!document.querySelector("#glossario-lista")) return;
+
+  if (!window.T3Sanity?.enabled) {
+    window.T3Sanity?.devLog?.("Fonte do glossário: fallback local");
+    renderGlossario();
+    return;
+  }
+
+  try {
+    const dados = await window.T3Sanity.fetchGlossaryTerms();
+    glossarioSanity = Array.isArray(dados) ? dados : [];
+    if (!glossarioSanity.length) throw new Error("Sanity sem termos publicados");
+    window.T3Sanity?.devLog?.("Fonte do glossário: Sanity + fallback local");
+    renderGlossario();
+  } catch (erro) {
+    window.T3Sanity?.devLog?.("Fonte do glossário: fallback local");
+    console.warn("Não foi possível carregar glossário do Sanity. Usando dados locais.", erro);
+    renderGlossario();
+  }
+}
+
+iniciarFonteGlossario();

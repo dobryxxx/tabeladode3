@@ -44,6 +44,7 @@ const placeholdersUltimas = [
 ];
 
 let postsJson = [];
+let postsSanity = [];
 
 function formatarDataPost(data) {
   if (!data) return "";
@@ -61,6 +62,14 @@ function formatarDataPost(data) {
 }
 
 function normalizarCorpo(corpo) {
+  if (Array.isArray(corpo) && corpo.some((bloco) => bloco && bloco._type === "block")) {
+    return corpo
+      .filter((bloco) => bloco._type === "block")
+      .map((bloco) => (bloco.children || []).map((child) => child.text || "").join(""))
+      .map((paragrafo) => paragrafo.trim())
+      .filter(Boolean);
+  }
+
   if (Array.isArray(corpo)) return corpo;
   if (typeof corpo !== "string") return [];
   return corpo
@@ -83,6 +92,7 @@ function normalizarPost(post = {}) {
     excerpt: resumo,
     autor: post.autor || post.author || "",
     slug: post.slug || post.link || "",
+    categoriaNome: post.categoriaNome || post.categoryName || "",
     corpo: normalizarCorpo(post.corpo || post.body),
     destaque: Boolean(post.destaque ?? post.featured),
     lateral: Boolean(post.lateral ?? post.side)
@@ -92,7 +102,7 @@ function normalizarPost(post = {}) {
 function postsDoSite() {
   const postsCms = typeof cmsPosts !== "undefined" ? cmsPosts : [];
   const postsBase = typeof posts !== "undefined" ? posts : [];
-  const todos = [...postsJson, ...postsCms, ...postsBase].map(normalizarPost);
+  const todos = [...postsSanity, ...postsJson, ...postsCms, ...postsBase].map(normalizarPost);
   const slugs = new Set();
 
   return todos.filter((post) => {
@@ -105,7 +115,7 @@ function postsDoSite() {
 
 function categoriaDoPost(post) {
   return categorias[post.categoria] || {
-    nome: post.categoria,
+    nome: post.categoriaNome || post.categoria || "Últimas",
     tagClasse: "tag--gray",
     badgeClasse: "card-side__badge--green"
   };
@@ -455,6 +465,52 @@ function iniciarSplashHome() {
   });
 }
 
+function renderHomeSettings(settings) {
+  if (!settings) return;
+
+  const headline = document.querySelector('[data-sanity-home="headline"]');
+  const subheadline = document.querySelector('[data-sanity-home="subheadline"]');
+  const cards = document.querySelector('[data-sanity-home="cards"]');
+
+  if (headline && settings.headline) {
+    const partes = String(settings.headline).split(/\s*\/\s*|\n+/).filter(Boolean);
+    headline.innerHTML = partes.length > 1
+      ? partes.map((parte) => `<span>${parte}</span>`).join("")
+      : `<span>${settings.headline}</span>`;
+  }
+
+  if (subheadline && settings.subheadline) {
+    subheadline.textContent = settings.subheadline;
+  }
+
+  if (cards && Array.isArray(settings.cards) && settings.cards.length) {
+    cards.innerHTML = settings.cards
+      .slice()
+      .sort((a, b) => (a.ordem || 99) - (b.ordem || 99))
+      .map((card, index) => `
+        <a class="splash-entry" href="${card.link || "#"}" style="--entry-index: ${index + 1}">
+          <span class="splash-entry__number">${card.numero || String(index + 1).padStart(2, "0")}</span>
+          <span class="splash-entry__label">${card.titulo || "Área"}</span>
+          <strong>${card.descricao || ""}</strong>
+          <span class="splash-entry__cta">${card.cta || "Entrar"}</span>
+        </a>
+      `)
+      .join("");
+  }
+}
+
+async function carregarHomeSanity() {
+  if (!document.querySelector(".splash-page") || !window.T3Sanity?.enabled) return;
+
+  try {
+    const settings = await window.T3Sanity.fetchHomeSettings();
+    renderHomeSettings(settings);
+    iniciarSplashHome();
+  } catch (erro) {
+    console.warn("Não foi possível carregar configurações da home no Sanity. Usando conteúdo local.", erro);
+  }
+}
+
 function markdownBasico(texto) {
   return String(texto)
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
@@ -470,7 +526,7 @@ function renderConteudoDinamico() {
   renderArtigo();
 }
 
-async function carregarPostsJson() {
+async function carregarPostsJson(logarFonte = true) {
   const usaPosts = document.querySelector("#hero-principal, #hero-laterais, #ultimas-posts, #artigo");
   if (!usaPosts) return;
 
@@ -480,9 +536,36 @@ async function carregarPostsJson() {
 
     const dados = await resposta.json();
     postsJson = Array.isArray(dados) ? dados : (dados.posts || []);
+    if (logarFonte) window.T3Sanity?.devLog?.("Fonte de posts: fallback local");
     renderConteudoDinamico();
   } catch (erro) {
+    if (logarFonte) window.T3Sanity?.devLog?.("Fonte de posts: fallback local");
     console.warn("Não foi possível carregar data/posts.json. Usando posts locais.", erro);
+  }
+}
+
+async function carregarPostsFontePrincipal() {
+  const usaPosts = document.querySelector("#hero-principal, #hero-laterais, #ultimas-posts, #artigo");
+  if (!usaPosts) return;
+
+  await carregarPostsJson(false);
+
+  if (!window.T3Sanity?.enabled) {
+    window.T3Sanity?.devLog?.("Fonte de posts: fallback local");
+    renderConteudoDinamico();
+    return;
+  }
+
+  try {
+    const dados = await window.T3Sanity.fetchPosts();
+    postsSanity = Array.isArray(dados) ? dados : [];
+    if (!postsSanity.length) throw new Error("Sanity sem posts publicados");
+    window.T3Sanity?.devLog?.("Fonte de posts: Sanity + fallback local");
+    renderConteudoDinamico();
+  } catch (erro) {
+    window.T3Sanity?.devLog?.("Fonte de posts: fallback local");
+    console.warn("Não foi possível carregar posts do Sanity. Usando fallback local.", erro);
+    renderConteudoDinamico();
   }
 }
 
@@ -518,9 +601,10 @@ function renderArtigo() {
 }
 
 renderConteudoDinamico();
-carregarPostsJson();
+carregarPostsFontePrincipal();
 iniciarFiltroCategorias();
 iniciarBusca();
 iniciarHeaderSticky();
 iniciarMenuMobile();
 iniciarSplashHome();
+carregarHomeSanity();

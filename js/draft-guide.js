@@ -6,11 +6,82 @@ const draftState = {
   sort: "rank"
 };
 
+let draftSanityProspects = [];
+let draftEventosIniciados = false;
+
+function draftData() {
+  const locais = typeof draftProspects !== "undefined" ? draftProspects : [];
+  return mesclarProspects(locais, draftSanityProspects)
+    .sort((a, b) => (Number(a.rank) || 9999) - (Number(b.rank) || 9999));
+}
+
 function normalizarDraft(valor = "") {
-  return valor
+  return String(valor || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+function chaveProspect(prospect = {}) {
+  if (prospect.slug) return `slug:${normalizarDraft(prospect.slug)}`;
+  if (prospect.nome) return `nome:${normalizarDraft(prospect.nome)}`;
+  return `composto:${normalizarDraft([prospect.nome, prospect.posicao].join("-"))}`;
+}
+
+function normalizarProspectSanity(prospect = {}) {
+  const rank = Number(prospect.rank || prospect.rankingGeral || prospect.ordem || 9999);
+
+  return {
+    ...prospect,
+    rank,
+    slug: prospect.slug || normalizarDraft(prospect.nome).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
+    nome: prospect.nome || "Prospecto sem nome",
+    foto: prospect.foto || "",
+    posicao: prospect.posicao || "",
+    time: prospect.time || "",
+    altura: prospect.altura || "",
+    idade: prospect.idade || "",
+    tier: prospect.tier || prospect.alcance || "",
+    alcance: prospect.alcance || prospect.tier || "",
+    bio: prospect.bio || prospect.resumo || "",
+    tags: Array.isArray(prospect.tags) ? prospect.tags : []
+  };
+}
+
+function mesclarProspects(locais = [], sanity = []) {
+  const mapa = new Map();
+  const aliases = new Map();
+
+  function registrar(alias, chave) {
+    if (alias) aliases.set(alias, chave);
+  }
+
+  locais.forEach((prospect) => {
+    if (!prospect) return;
+    const chave = chaveProspect(prospect);
+    mapa.set(chave, prospect);
+    registrar(chave, chave);
+    registrar(prospect.slug ? `slug:${normalizarDraft(prospect.slug)}` : "", chave);
+    registrar(prospect.nome ? `nome:${normalizarDraft(prospect.nome)}` : "", chave);
+    registrar(`composto:${normalizarDraft([prospect.nome, prospect.posicao].join("-"))}`, chave);
+  });
+
+  sanity.map(normalizarProspectSanity).forEach((prospect) => {
+    const chavesPossiveis = [
+      prospect.slug ? `slug:${normalizarDraft(prospect.slug)}` : "",
+      prospect.nome ? `nome:${normalizarDraft(prospect.nome)}` : "",
+      `composto:${normalizarDraft([prospect.nome, prospect.posicao].join("-"))}`
+    ].filter(Boolean);
+    const chave = chavesPossiveis.map((item) => aliases.get(item)).find(Boolean) || chaveProspect(prospect);
+
+    mapa.set(chave, {
+      ...(mapa.get(chave) || {}),
+      ...prospect
+    });
+    chavesPossiveis.forEach((alias) => registrar(alias, chave));
+  });
+
+  return [...mapa.values()];
 }
 
 function iniciais(nome = "") {
@@ -25,7 +96,7 @@ function dataCurta(valor) {
 }
 
 function opcoesUnicas(campo) {
-  return [...new Set(draftProspects.map((item) => item[campo]).filter(Boolean))]
+  return [...new Set(draftData().map((item) => item[campo]).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
@@ -37,12 +108,12 @@ function preencherSelect(id, label, opcoes) {
 
 function renderDraftStats() {
   const area = document.querySelector("#draft-guide-stats");
-  if (!area || typeof draftProspects === "undefined") return;
+  if (!area || draftData().length === 0) return;
 
-  const total = draftProspects.length;
+  const total = draftData().length;
   const posicoes = opcoesUnicas("posicao").length;
   const times = opcoesUnicas("time").length;
-  const ultimaAtualizacao = draftProspects
+  const ultimaAtualizacao = draftData()
     .map((item) => item.updatedAt)
     .filter(Boolean)
     .sort()
@@ -58,7 +129,7 @@ function renderDraftStats() {
 
 function fotoOuPlaceholder(prospect, classe = "") {
   if (prospect.foto) {
-    return `<img class="${classe}" src="${prospect.foto}" alt="${prospect.nome}" loading="lazy" />`;
+    return `<img class="${classe}" src="${prospect.foto}" alt="${prospect.nome || "Foto do prospecto"}" loading="lazy" onerror="this.remove()" />`;
   }
 
   return `
@@ -72,7 +143,7 @@ function renderFeatured() {
   const area = document.querySelector("#draft-featured");
   if (!area) return;
 
-  area.innerHTML = draftProspects.slice(0, 3).map((prospect) => `
+  area.innerHTML = draftData().slice(0, 3).map((prospect) => `
     <article class="draft-feature-card">
       <div class="draft-feature-card__rank">#${prospect.rank}</div>
       <div class="draft-feature-card__photo">${fotoOuPlaceholder(prospect, "draft-feature-card__img")}</div>
@@ -166,7 +237,7 @@ function renderDraftList() {
   const contador = document.querySelector("#draft-count");
   if (!lista || !contador) return;
 
-  const filtrados = ordenarProspects(draftProspects.filter(prospectCombina));
+  const filtrados = ordenarProspects(draftData().filter(prospectCombina));
   contador.textContent = `${filtrados.length} ${filtrados.length === 1 ? "prospect encontrado" : "prospects encontrados"}`;
 
   if (filtrados.length === 0) {
@@ -193,7 +264,7 @@ function debounce(fn, delay = 160) {
 }
 
 function iniciarDraftGuide() {
-  if (typeof draftProspects === "undefined") return;
+  if (draftData().length === 0) return;
 
   preencherSelect("#draft-position", "todas", opcoesUnicas("posicao"));
   preencherSelect("#draft-team", "todos", opcoesUnicas("time"));
@@ -202,6 +273,9 @@ function iniciarDraftGuide() {
   renderDraftStats();
   renderFeatured();
   renderDraftList();
+
+  if (draftEventosIniciados) return;
+  draftEventosIniciados = true;
 
   const busca = document.querySelector("#draft-search");
   const posicao = document.querySelector("#draft-position");
@@ -230,4 +304,26 @@ function iniciarDraftGuide() {
   });
 }
 
-iniciarDraftGuide();
+async function iniciarFonteDraftGuide() {
+  if (!document.querySelector("#draft-list")) return;
+
+  if (!window.T3Sanity?.enabled) {
+    window.T3Sanity?.devLog?.("Fonte do guia do draft: fallback local");
+    iniciarDraftGuide();
+    return;
+  }
+
+  try {
+    const dados = await window.T3Sanity.fetchDraftProspects();
+    draftSanityProspects = Array.isArray(dados) ? dados : [];
+    if (!draftSanityProspects.length) throw new Error("Sanity sem prospectos publicados");
+    window.T3Sanity?.devLog?.("Fonte do guia do draft: Sanity + fallback local");
+    iniciarDraftGuide();
+  } catch (erro) {
+    window.T3Sanity?.devLog?.("Fonte do guia do draft: fallback local");
+    console.warn("Não foi possível carregar Guia do Draft do Sanity. Usando CSV local.", erro);
+    iniciarDraftGuide();
+  }
+}
+
+iniciarFonteDraftGuide();

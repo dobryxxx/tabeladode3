@@ -10,15 +10,28 @@
 
   <script>
     (function () {
-      var hash = window.location.hash || "";
-      var pathname = window.location.pathname.replace(/\/+$/, "") || "/";
-      var isAdmin = pathname === "/admin";
+      function redirectIdentityToken() {
+        var hash = window.location.hash || "";
+        var identityTokens = [
+          "invite_token",
+          "confirmation_token",
+          "recovery_token",
+          "email_change_token"
+        ];
 
-      var identityTokenPattern = /(?:invite_token|confirmation_token|recovery_token|email_change_token)=/;
+        var hasIdentityToken = identityTokens.some(function (token) {
+          return hash.indexOf(token + "=") !== -1;
+        });
 
-      if (!isAdmin && identityTokenPattern.test(hash)) {
-        window.location.replace("/admin/" + hash);
+        var isAlreadyAdmin = window.location.pathname.replace(/\/+$/, "") === "/admin";
+
+        if (hasIdentityToken && !isAlreadyAdmin) {
+          window.location.replace("/admin/" + hash);
+        }
       }
+
+      redirectIdentityToken();
+      window.addEventListener("hashchange", redirectIdentityToken);
     })();
   </script>
 
@@ -44,14 +57,14 @@
 
       <div class="splash-hero__content">
         <p class="splash-kicker">Tabelado de 3</p>
-        <h1 id="splash-title">
+        <h1 id="splash-title" data-sanity-home="headline">
           <span>Feito com amor,</span>
           <span>suor e basquete.</span>
         </h1>
-        <p class="splash-subtitle">Por quem vive o jogo.</p>
+        <p class="splash-subtitle" data-sanity-home="subheadline">Por quem vive o jogo.</p>
       </div>
 
-      <nav class="splash-entries" aria-label="&Aacute;reas do site">
+      <nav class="splash-entries" aria-label="&Aacute;reas do site" data-sanity-home="cards">
         <a class="splash-entry" href="por-escrito.html" style="--entry-index: 1">
           <span class="splash-entry__number">01</span>
           <span class="splash-entry__label">Blog</span>
@@ -80,6 +93,8 @@
     </section>
   </main>
 
+  <script src="js/sanity-config.js"></script>
+  <script src="js/sanity-api.js"></script>
   <script src="js/main.js?v=splash-home"></script>
 </body>
 </html>

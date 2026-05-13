@@ -4,19 +4,51 @@ function slugRankingAtual() {
   return params.get("ranking") || area?.dataset.ranking || "t25m";
 }
 
-function renderRankingIndividual() {
-  const area = document.querySelector("#ranking-individual");
-  if (!area || typeof rankings === "undefined" || typeof rankingsDisponiveis === "undefined") return;
+let rankingSanityAtual = null;
+
+function dadosRankingAtual() {
+  if (rankingSanityAtual) {
+    return {
+      meta: {
+        slug: rankingSanityAtual.slug,
+        titulo: rankingSanityAtual.titulo,
+        descricao: rankingSanityAtual.descricao,
+        categoria: rankingSanityAtual.categoria
+      },
+      jogadores: (rankingSanityAtual.itens || [])
+        .map((item) => ({
+          ...item,
+          posicao: `#${item.posicao || item.ordem || ""}`,
+          ordem: item.ordem || item.posicao || 999,
+          estrelas: item.nota || 0
+        }))
+        .sort((a, b) => a.ordem - b.ordem)
+    };
+  }
+
+  if (typeof rankings === "undefined" || typeof rankingsDisponiveis === "undefined") {
+    return {meta: null, jogadores: []};
+  }
 
   const slug = slugRankingAtual();
-  const meta = rankingsDisponiveis.find((item) => item.slug === slug);
-  const jogadores = rankings
-    .filter((jogador) => jogador.rankingSlug === slug)
-    .sort((a, b) => a.ordem - b.ordem);
+  return {
+    meta: rankingsDisponiveis.find((item) => item.slug === slug),
+    jogadores: rankings
+      .filter((jogador) => jogador.rankingSlug === slug)
+      .sort((a, b) => a.ordem - b.ordem)
+  };
+}
+
+function renderRankingIndividual() {
+  const area = document.querySelector("#ranking-individual");
+  if (!area) return;
+
+  const slug = slugRankingAtual();
+  const {meta, jogadores} = dadosRankingAtual();
   if (!meta || jogadores.length === 0) return;
 
   document.title = `${meta.titulo} | Tabelado de 3`;
-  const tipoRanking = slug === "t20f" ? "ranking feminino" : "ranking masculino";
+  const tipoRanking = slug === "t20f" || meta.categoria === "feminino" ? "ranking feminino" : "ranking masculino";
 
   area.innerHTML = `
     <header class="ranking-detail__hero">
@@ -130,6 +162,7 @@ function renderEstrelas(estrelas) {
 }
 
 function quantidadeEstrelas(estrelas = "") {
+  if (typeof estrelas === "number") return Math.max(0, Math.min(5, Math.round(estrelas)));
   return Math.min(5, (estrelas.match(/★/g) || []).length);
 }
 
@@ -157,3 +190,18 @@ function ordemPosicao(posicao) {
 }
 
 renderRankingIndividual();
+
+async function carregarRankingSanity() {
+  if (!window.T3Sanity?.enabled || !document.querySelector("#ranking-individual")) return;
+
+  try {
+    const dados = await window.T3Sanity.fetchRankingBySlug(slugRankingAtual());
+    if (!dados) return;
+    rankingSanityAtual = dados;
+    renderRankingIndividual();
+  } catch (erro) {
+    console.warn("Não foi possível carregar ranking do Sanity. Usando dados locais.", erro);
+  }
+}
+
+carregarRankingSanity();
