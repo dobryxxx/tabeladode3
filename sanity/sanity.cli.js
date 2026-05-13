@@ -2,7 +2,11 @@ import {defineCliConfig} from 'sanity/cli'
 
 export default defineCliConfig({
   api: {
-    projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'seu_project_id',
-    dataset: process.env.SANITY_STUDIO_DATASET || 'production'
+    projectId: 'eaeyiq4k',
+    dataset: 'production'
+  },
+  studioHost: 'tabeladode3',
+  deployment: {
+    appId: 'xqmg2uft3sgt1jus6ogbxkjh'
   }
 })
