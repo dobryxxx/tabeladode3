@@ -314,6 +314,25 @@ function prepareDraftProspects(prospects) {
   return [...map.values()].sort((a, b) => a.rankingGeral - b.rankingGeral)
 }
 
+function prepareDraftGuideSettings(prospects) {
+  return {
+    _id: 'draftGuideSettings',
+    _type: 'draftGuideSettings',
+    titulo: 'Ordem do Guia do Draft',
+    draftBoard: prospects
+      .slice()
+      .sort((a, b) => a.rankingGeral - b.rankingGeral)
+      .map((prospect, index) => ({
+        _key: stableKey('draftBoardItem', index),
+        _type: 'draftBoardItem',
+        prospecto: {
+          _type: 'reference',
+          _ref: prospect._id
+        }
+      }))
+  }
+}
+
 function prepareGlossaryTerms(terms) {
   const docs = []
   const categories = []
@@ -487,6 +506,7 @@ async function buildMigration() {
   const preparedPosts = preparePosts(local.posts)
   const preparedTips = prepareTips(local.tips)
   const preparedDraft = prepareDraftProspects(local.draftProspects)
+  const preparedDraftSettings = prepareDraftGuideSettings(preparedDraft)
   const preparedGlossary = prepareGlossaryTerms(local.glossary)
   const preparedRankings = prepareRankings(local.rankingsDisponiveis, local.rankings)
 
@@ -505,6 +525,7 @@ async function buildMigration() {
     ...preparedPosts.docs,
     ...preparedTips.docs,
     ...preparedDraft,
+    preparedDraftSettings,
     ...preparedGlossary.docs,
     ...preparedRankings.docs
   ], 'documentos')
@@ -517,6 +538,7 @@ async function buildMigration() {
       posts: preparedPosts.docs,
       tips: preparedTips.docs,
       draftProspects: preparedDraft,
+      draftGuideSettings: [preparedDraftSettings],
       glossaryTerms: preparedGlossary.docs,
       rankings: preparedRankings.docs
     },
@@ -565,6 +587,7 @@ function printSummary(migration) {
       posts: groups.posts.length,
       tips: groups.tips.length,
       draftProspects: groups.draftProspects.length,
+      draftGuideSettings: groups.draftGuideSettings.length,
       glossaryTerms: groups.glossaryTerms.length,
       rankings: groups.rankings.length,
       totalDocuments: documents.length
@@ -599,6 +622,7 @@ await fs.writeFile(previewPath, JSON.stringify({
     posts: migration.groups.posts.length,
     tips: migration.groups.tips.length,
     draftProspects: migration.groups.draftProspects.length,
+    draftGuideSettings: migration.groups.draftGuideSettings.length,
     glossaryTerms: migration.groups.glossaryTerms.length,
     rankings: migration.groups.rankings.length
   },

@@ -246,3 +246,83 @@ Se alguma publicação não tiver fonte local confiável, edite a data manualmen
 - Conteúdos privados/rascunhos não aparecem no site público.
 - SEO de posts dinâmicos por query string é limitado em comparação com um build estático.
 - O fallback local permanece útil durante a migração e para segurança.
+
+## Ordem do Guia do Draft
+
+No Studio, acesse `Guia do Draft > Ordem do Guia`.
+
+A lista `Prospectos em ordem` pode ser reorganizada por drag and drop. O site publico usa essa ordem como fonte principal para mostrar a posicao `#1`, `#2`, `#3` etc. Se essa lista estiver vazia, o site volta a ordenar pelo campo `rankingGeral` de cada prospecto.
+
+Para criar a lista ordenada a partir dos dados locais, rode primeiro a migracao em dry-run e depois, quando aprovado:
+
+```bash
+cd sanity
+node scripts/migrate-local-data-to-sanity.mjs --write
+```
+
+Essa migracao tambem cria/atualiza o documento singleton `draftGuideSettings`.
+
+Se depois de arrastar a lista voce quiser sincronizar o campo numerico `rankingGeral` dos documentos de prospectos com a ordem visual:
+
+```bash
+cd sanity
+node scripts/sync-draft-board-ranking.mjs
+node scripts/sync-draft-board-ranking.mjs --write
+```
+
+O primeiro comando e dry-run. O segundo altera somente `rankingGeral`. Ele exige `SANITY_AUTH_TOKEN` valido no `sanity/.env`.
+
+## Visibilidade de Guia do Draft e Rankings
+
+No Studio, acesse `Configuracoes gerais` e use os campos:
+
+- `Exibir pagina Guia do Draft`
+- `Mensagem quando o Guia estiver oculto`
+- `Exibir pagina Rankings`
+- `Mensagem quando Rankings estiver oculto`
+
+Quando uma pagina estiver desativada, o site tenta esconder o link da navegacao e mostra uma tela editorial de indisponibilidade se alguem acessar a URL diretamente. Se o Sanity falhar, as paginas permanecem visiveis por seguranca.
+
+## Times da NBA e encaixes do Guia
+
+No Studio, acesse `Times da NBA`.
+
+Cadastre cada time com nome, sigla e logo. Depois abra um prospecto em `Guia do Draft > Prospectos` e preencha `Melhores encaixes com logo`. O site exibe badges com as logos; se a logo nao existir, ele mostra uma sigla/iniciais como fallback.
+
+O campo antigo `Melhores encaixes (texto antigo)` continua existindo para compatibilidade com os dados ja migrados.
+
+## Posts com tweet incorporado
+
+No corpo de uma Publicacao, adicione o bloco `Tweet incorporado`.
+
+Campos:
+
+- `URL do tweet`
+- `Comentario editorial`
+- `Texto alternativo`
+
+O site renderiza um card editorial com link para abrir o tweet no X. A primeira versao nao depende de API paga nem de token privado. Caso o embed externo falhe ou o X bloqueie pre-visualizacao, o card com link continua funcionando.
+
+## Favicon / logo da aba
+
+O favicon atual usa os arquivos:
+
+- `favicon.ico`
+- `img/favicon.png`
+- `apple-touch-icon.png`
+
+As paginas principais apontam para esses arquivos com `?v=2` para reduzir cache antigo do navegador. Para trocar no futuro, substitua esses tres arquivos mantendo os nomes.
+
+## Contato e Netlify Forms
+
+A pagina `contato.html` usa Netlify Forms com:
+
+- `name="contato"`
+- `method="POST"`
+- `data-netlify="true"`
+- honeypot `bot-field`
+- input hidden `form-name=contato`
+
+Os campos `nome`, `sobrenome`, `email` e `mensagem` possuem `name` e `required`. O envio e feito por `js/contato.js`; em caso de sucesso, o formulario some e aparece `Obrigado pelo envio!`.
+
+Para verificar mensagens no Netlify, acesse o painel do site e abra `Forms > contato`.

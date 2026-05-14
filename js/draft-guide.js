@@ -11,6 +11,12 @@ let draftEventosIniciados = false;
 
 function draftData() {
   const locais = typeof draftProspects !== "undefined" ? draftProspects : [];
+  const sanityOrdenado = draftSanityProspects.some((prospect) => prospect?._rankOrigem === "draftBoard");
+
+  if (sanityOrdenado) {
+    return mesclarProspectsOrdenados(locais, draftSanityProspects);
+  }
+
   return mesclarProspects(locais, draftSanityProspects)
     .sort((a, b) => (Number(a.rank) || 9999) - (Number(b.rank) || 9999));
 }
@@ -44,6 +50,8 @@ function normalizarProspectSanity(prospect = {}) {
     tier: prospect.tier || prospect.alcance || "",
     alcance: prospect.alcance || prospect.tier || "",
     bio: prospect.bio || prospect.resumo || "",
+    encaixes: Array.isArray(prospect.encaixes) ? prospect.encaixes.filter(Boolean) : [],
+    encaixesTimes: Array.isArray(prospect.encaixesTimes) ? prospect.encaixesTimes.filter(Boolean) : [],
     tags: Array.isArray(prospect.tags) ? prospect.tags : []
   };
 }
@@ -82,6 +90,50 @@ function mesclarProspects(locais = [], sanity = []) {
   });
 
   return [...mapa.values()];
+}
+
+function mesclarProspectsOrdenados(locais = [], sanity = []) {
+  const locaisPorChave = new Map();
+  locais.forEach((prospect) => {
+    if (!prospect) return;
+    locaisPorChave.set(chaveProspect(prospect), prospect);
+    if (prospect.slug) locaisPorChave.set(`slug:${normalizarDraft(prospect.slug)}`, prospect);
+    if (prospect.nome) locaisPorChave.set(`nome:${normalizarDraft(prospect.nome)}`, prospect);
+  });
+
+  const usados = new Set();
+  const ordenados = sanity.map(normalizarProspectSanity).map((prospect, index) => {
+    const chaves = [
+      prospect.slug ? `slug:${normalizarDraft(prospect.slug)}` : "",
+      prospect.nome ? `nome:${normalizarDraft(prospect.nome)}` : "",
+      chaveProspect(prospect)
+    ].filter(Boolean);
+    const local = chaves.map((chave) => locaisPorChave.get(chave)).find(Boolean);
+    chaves.forEach((chave) => usados.add(chave));
+
+    return {
+      ...(local || {}),
+      ...prospect,
+      rank: index + 1
+    };
+  });
+
+  const restantes = locais
+    .filter((prospect) => {
+      const chaves = [
+        chaveProspect(prospect),
+        prospect.slug ? `slug:${normalizarDraft(prospect.slug)}` : "",
+        prospect.nome ? `nome:${normalizarDraft(prospect.nome)}` : ""
+      ].filter(Boolean);
+      return !chaves.some((chave) => usados.has(chave));
+    })
+    .sort((a, b) => (Number(a.rank) || 9999) - (Number(b.rank) || 9999))
+    .map((prospect, index) => ({
+      ...prospect,
+      rank: ordenados.length + index + 1
+    }));
+
+  return [...ordenados, ...restantes];
 }
 
 function iniciais(nome = "") {
@@ -186,6 +238,40 @@ function dadoDraft(label, valor) {
   return valor ? `<div><span>${label}</span><strong>${valor}</strong></div>` : "";
 }
 
+function renderEncaixes(prospect = {}) {
+  const timesComLogo = Array.isArray(prospect.encaixesTimes) ? prospect.encaixesTimes : [];
+  const timesTexto = Array.isArray(prospect.encaixes) ? prospect.encaixes : [];
+  const itens = [
+    ...timesComLogo.map((time) => ({
+      nome: time.nome || time.name || time.sigla || "",
+      sigla: time.sigla || "",
+      logo: time.logo || time.logoUrl || "",
+      alt: time.logoAlt || `Logo ${time.nome || time.sigla || "time"}`
+    })),
+    ...timesTexto
+      .filter((nome) => !timesComLogo.some((time) => normalizarDraft(time.nome || time.sigla) === normalizarDraft(nome)))
+      .map((nome) => ({ nome, sigla: "", logo: "", alt: "" }))
+  ].filter((time) => time.nome || time.sigla || time.logo);
+
+  if (!itens.length) return "";
+
+  return `
+    <div class="draft-fit-list" aria-label="Melhores encaixes">
+      ${itens.map((time) => {
+        const label = time.sigla || time.nome;
+        return `
+          <span class="draft-fit" title="${time.nome || label}">
+            ${time.logo
+              ? `<img src="${time.logo}" alt="${time.alt}" loading="lazy" onerror="this.remove()" />`
+              : `<span class="draft-fit__fallback">${iniciais(label || time.nome)}</span>`}
+            <span>${label}</span>
+          </span>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 function renderProspectCard(prospect) {
   const detalhes = [
     ["Arquétipo ofensivo", prospect.arquetipoOfensivo],
@@ -218,6 +304,7 @@ function renderProspectCard(prospect) {
       </div>
       <div class="draft-prospect-card__aside">
         ${prospect.tetoPiso ? `<div><span>teto/piso</span><strong>${prospect.tetoPiso}</strong></div>` : ""}
+        ${renderEncaixes(prospect)}
         <button type="button" class="draft-prospect-card__toggle" ${detalhes.length ? "" : "disabled"}>ver perfil</button>
       </div>
       <div class="draft-prospect-card__details">

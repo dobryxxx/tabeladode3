@@ -36,7 +36,22 @@ export const draftProspect = defineType({
     defineField({name: 'teto', title: 'Teto', type: 'string', group: 'scouting'}),
     defineField({name: 'piso', title: 'Piso', type: 'string', group: 'scouting'}),
     defineField({name: 'funcaoProjetada', title: 'Função projetada', type: 'string', group: 'scouting'}),
-    defineField({name: 'encaixes', title: 'Melhores encaixes', type: 'array', group: 'scouting', of: [defineArrayMember({type: 'string'})]}),
+    defineField({
+      name: 'encaixesTimes',
+      title: 'Melhores encaixes com logo',
+      type: 'array',
+      group: 'scouting',
+      description: 'Selecione os times cadastrados para exibir logos no site.',
+      of: [defineArrayMember({type: 'reference', to: [{type: 'nbaTeam'}]})]
+    }),
+    defineField({
+      name: 'encaixes',
+      title: 'Melhores encaixes (texto antigo)',
+      type: 'array',
+      group: 'scouting',
+      description: 'Compatibilidade com dados antigos. Prefira o campo acima quando houver logo do time.',
+      of: [defineArrayMember({type: 'string'})]
+    }),
     defineField({name: 'stats', title: 'Estatísticas', type: 'text', rows: 3, group: 'scouting'}),
     defineField({name: 'observacoes', title: 'Observações', type: 'text', rows: 3, group: 'scouting'}),
     defineField({name: 'resumo', title: 'Resumo/scouting curto', type: 'text', rows: 3, group: 'scouting'}),

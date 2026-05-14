@@ -7,6 +7,26 @@ GUIA+DO+DRAFT.csv
 tabelado-de-3.html
 tabelado-de-3/
 
+# Dependências
+node_modules/
+sanity/node_modules/
+sanity/.sanity/
+sanity/dist/
+sanity/.env.migration
+
+# Variáveis de ambiente / tokens
+.env
+.env.local
+*.env
+sanity/.env
+sanity/.sanity/
+sanity/dist/
+sanity/.env.migration
+
+# Logs
+*.log
+server.log
+
 # Arquivos fonte pesados
 *.psd
 *.ai
@@ -18,14 +38,3 @@ tabelado-de-3/
 .DS_Store
 Thumbs.db
 .vscode/
-.env
-*.env
-sanity/.env
-*.log
-node_modules/
-sanity/node_modules/
-.env
-.env.local
-sanity/.env
-*.log
-server.log

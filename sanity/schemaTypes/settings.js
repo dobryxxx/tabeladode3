@@ -79,6 +79,34 @@ export const siteSettings = defineType({
       type: 'array',
       of: [defineArrayMember({type: 'homeCard'})]
     }),
+    defineField({
+      name: 'mostrarGuiaDoDraft',
+      title: 'Exibir página Guia do Draft',
+      type: 'boolean',
+      initialValue: true,
+      description: 'Desative para esconder o link e mostrar uma tela de indisponibilidade no site.'
+    }),
+    defineField({
+      name: 'mensagemGuiaOculto',
+      title: 'Mensagem quando o Guia estiver oculto',
+      type: 'text',
+      rows: 2,
+      initialValue: 'O Guia do Draft está temporariamente indisponível.'
+    }),
+    defineField({
+      name: 'mostrarRankings',
+      title: 'Exibir página Rankings',
+      type: 'boolean',
+      initialValue: true,
+      description: 'Desative para esconder o link e mostrar uma tela de indisponibilidade no site.'
+    }),
+    defineField({
+      name: 'mensagemRankingsOculto',
+      title: 'Mensagem quando Rankings estiver oculto',
+      type: 'text',
+      rows: 2,
+      initialValue: 'Os rankings estão temporariamente indisponíveis.'
+    }),
     defineField({name: 'emailContato', title: 'E-mail de contato', type: 'email'}),
     defineField({
       name: 'redesSociais',
@@ -89,5 +117,32 @@ export const siteSettings = defineType({
   ],
   preview: {
     select: {title: 'nomeSite', subtitle: 'emailContato', media: 'logo'}
+  }
+})
+
+export const draftGuideSettings = defineType({
+  name: 'draftGuideSettings',
+  title: 'Ordem do Guia do Draft',
+  type: 'document',
+  fields: [
+    defineField({
+      name: 'titulo',
+      title: 'Título interno',
+      type: 'string',
+      initialValue: 'Ordem do Guia do Draft',
+      validation: (Rule) => Rule.required()
+    }),
+    defineField({
+      name: 'draftBoard',
+      title: 'Prospectos em ordem',
+      type: 'array',
+      description: 'Arraste os prospectos para alterar a ordem exibida no site. A posição # usa esta ordem como fonte principal.',
+      of: [defineArrayMember({type: 'draftBoardItem'})]
+    })
+  ],
+  preview: {
+    prepare() {
+      return {title: 'Ordem do Guia do Draft'}
+    }
   }
 })

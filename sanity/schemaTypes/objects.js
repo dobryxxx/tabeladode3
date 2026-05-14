@@ -51,8 +51,87 @@ export const blockContent = defineType({
     }),
     defineArrayMember({
       type: 'imageWithAlt'
+    }),
+    defineArrayMember({
+      type: 'tweetEmbed'
     })
   ]
+})
+
+export const tweetEmbed = defineType({
+  name: 'tweetEmbed',
+  title: 'Tweet incorporado',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'tweetUrl',
+      title: 'URL do tweet',
+      type: 'url',
+      description: 'Cole a URL pública do tweet/X post citado no texto.',
+      validation: (Rule) => Rule.required()
+    }),
+    defineField({
+      name: 'comentario',
+      title: 'Comentário editorial',
+      type: 'text',
+      rows: 3,
+      description: 'Texto opcional para contextualizar o tweet dentro da matéria.'
+    }),
+    defineField({
+      name: 'textoAlternativo',
+      title: 'Texto alternativo',
+      type: 'string',
+      description: 'Resumo curto para acessibilidade ou caso o embed externo não carregue.'
+    })
+  ],
+  preview: {
+    select: {
+      title: 'comentario',
+      subtitle: 'tweetUrl'
+    },
+    prepare({title, subtitle}) {
+      return {
+        title: title || 'Tweet citado',
+        subtitle
+      }
+    }
+  }
+})
+
+export const draftBoardItem = defineType({
+  name: 'draftBoardItem',
+  title: 'Prospecto ordenado',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'prospecto',
+      title: 'Prospecto',
+      type: 'reference',
+      to: [{type: 'draftProspect'}],
+      validation: (Rule) => Rule.required()
+    }),
+    defineField({
+      name: 'observacao',
+      title: 'Observação interna',
+      type: 'string',
+      description: 'Opcional. Não aparece no site; serve só para organização editorial.'
+    })
+  ],
+  preview: {
+    select: {
+      title: 'prospecto.nome',
+      rank: 'prospecto.rankingGeral',
+      position: 'prospecto.posicao',
+      media: 'prospecto.foto'
+    },
+    prepare({title, rank, position, media}) {
+      return {
+        title: title || 'Prospecto sem nome',
+        subtitle: [rank ? `#${rank}` : null, position].filter(Boolean).join(' · '),
+        media
+      }
+    }
+  }
 })
 
 export const homeCard = defineType({

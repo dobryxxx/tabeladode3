@@ -171,11 +171,26 @@ function formatarDataPost(data) {
 }
 
 function normalizarCorpo(corpo) {
-  if (Array.isArray(corpo) && corpo.some((bloco) => bloco && bloco._type === "block")) {
+  if (Array.isArray(corpo) && corpo.some((bloco) => bloco && (bloco._type === "block" || bloco._type === "tweetEmbed"))) {
     return corpo
-      .filter((bloco) => bloco._type === "block")
-      .map((bloco) => (bloco.children || []).map((child) => child.text || "").join(""))
-      .map((paragrafo) => paragrafo.trim())
+      .map((bloco) => {
+        if (bloco._type === "tweetEmbed") {
+          return {
+            tipo: "tweet",
+            tweetUrl: bloco.tweetUrl || "",
+            comentario: bloco.comentario || "",
+            textoAlternativo: bloco.textoAlternativo || ""
+          };
+        }
+
+        if (bloco._type !== "block") return "";
+
+        return {
+          tipo: "texto",
+          texto: (bloco.children || []).map((child) => child.text || "").join("").trim()
+        };
+      })
+      .filter((bloco) => typeof bloco === "object" ? (bloco.tipo === "tweet" ? bloco.tweetUrl : bloco.texto) : bloco)
       .filter(Boolean);
   }
 
@@ -662,6 +677,27 @@ function markdownBasico(texto) {
     .replace(/\*(.*?)\*/g, "<em>$1</em>");
 }
 
+function renderBlocoArtigo(bloco) {
+  if (!bloco || typeof bloco === "string") return `<p>${markdownBasico(bloco || "")}</p>`;
+
+  if (bloco.tipo === "texto") {
+    return `<p>${markdownBasico(bloco.texto || "")}</p>`;
+  }
+
+  if (bloco.tipo === "tweet" && bloco.tweetUrl) {
+    return `
+      <aside class="tweet-card">
+        <span class="tweet-card__label">Tweet citado</span>
+        ${bloco.comentario ? `<p>${markdownBasico(bloco.comentario)}</p>` : ""}
+        ${bloco.textoAlternativo ? `<small>${bloco.textoAlternativo}</small>` : ""}
+        <a href="${bloco.tweetUrl}" target="_blank" rel="noopener noreferrer">Abrir no X</a>
+      </aside>
+    `;
+  }
+
+  return "";
+}
+
 function renderConteudoDinamico() {
   renderHeroPrincipal();
   renderHeroLaterais();
@@ -740,9 +776,63 @@ function renderArtigo() {
       ${imagemOuPlaceholder(post, "artigo__capa-img", "hero")}
     </div>
     <div class="artigo__corpo">
-      ${(post.corpo.length ? post.corpo : ["Texto em atualização."]).map((paragrafo) => `<p>${markdownBasico(paragrafo)}</p>`).join("")}
+      ${(post.corpo.length ? post.corpo : ["Texto em atualização."]).map(renderBlocoArtigo).join("")}
     </div>
   `;
+}
+
+function renderPaginaIndisponivel(titulo, mensagem) {
+  const main = document.querySelector("main");
+  if (!main) return;
+
+  main.innerHTML = `
+    <section class="page-disabled">
+      <div class="container page-disabled__inner">
+        <span>temporariamente fora do ar</span>
+        <h1>${titulo}</h1>
+        <p>${mensagem}</p>
+        <a href="index.html">voltar para a home</a>
+      </div>
+    </section>
+  `;
+}
+
+function esconderLinksPagina(href) {
+  document.querySelectorAll(`a[href="${href}"]`).forEach((link) => {
+    link.hidden = true;
+  });
+}
+
+function aplicarVisibilidadeSite(settings = {}) {
+  const mostrarGuia = settings.mostrarGuiaDoDraft !== false;
+  const mostrarRankings = settings.mostrarRankings !== false;
+  const pagina = window.location.pathname.split("/").pop() || "index.html";
+
+  if (!mostrarGuia) {
+    esconderLinksPagina("guia-do-draft.html");
+    if (pagina === "guia-do-draft.html") {
+      renderPaginaIndisponivel("Guia do Draft", settings.mensagemGuiaOculto || "O Guia do Draft está temporariamente indisponível.");
+    }
+  }
+
+  if (!mostrarRankings) {
+    esconderLinksPagina("rankings.html");
+    esconderLinksPagina("ranking-individual.html");
+    if (pagina === "rankings.html" || pagina === "ranking-individual.html") {
+      renderPaginaIndisponivel("Rankings", settings.mensagemRankingsOculto || "Os rankings estão temporariamente indisponíveis.");
+    }
+  }
+}
+
+async function carregarConfiguracoesSite() {
+  if (!window.T3Sanity?.enabled || !window.T3Sanity.fetchSiteSettings) return;
+
+  try {
+    const settings = await window.T3Sanity.fetchSiteSettings();
+    aplicarVisibilidadeSite(settings || {});
+  } catch (erro) {
+    window.T3Sanity?.devLog?.("Configurações gerais indisponíveis. Mantendo páginas visíveis.");
+  }
 }
 
 renderConteudoDinamico();
@@ -753,3 +843,4 @@ iniciarHeaderSticky();
 iniciarMenuMobile();
 iniciarSplashHome();
 carregarHomeSanity();
+carregarConfiguracoesSite();

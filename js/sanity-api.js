@@ -115,11 +115,53 @@
       "motivoEscolha": motivoEscolha,
       "espelho": espelho,
       "tetoPiso": tetoPiso,
+      "encaixes": encaixes,
+      "encaixesTimes": encaixesTimes[]->{
+        "nome": nome,
+        "slug": slug.current,
+        "sigla": sigla,
+        "logo": coalesce(logo.asset->url, logoUrl),
+        "logoAlt": logo.alt,
+        "corPrimaria": corPrimaria
+      },
       "bio": resumo,
       "tags": tags,
       "destaque": destaqueGuia,
       "status": status,
       "updatedAt": _updatedAt
+    }`,
+    draftBoard: `*[_type == "draftGuideSettings"][0].draftBoard[] {
+      "nome": prospecto->nome,
+      "slug": prospecto->slug.current,
+      "foto": coalesce(prospecto->foto.asset->url, prospecto->imageUrl, prospecto->localImagePath),
+      "fotoAlt": prospecto->foto.alt,
+      "rankingGeral": prospecto->rankingGeral,
+      "tier": prospecto->tier,
+      "posicao": prospecto->posicao,
+      "time": prospecto->time,
+      "idade": prospecto->idade,
+      "altura": prospecto->altura,
+      "peso": prospecto->peso,
+      "classeDraft": prospecto->classeDraft,
+      "arquetipoDefensivo": prospecto->arquetipoDefensivo,
+      "arquetipoOfensivo": prospecto->arquetipoOfensivo,
+      "motivoEscolha": prospecto->motivoEscolha,
+      "espelho": prospecto->espelho,
+      "tetoPiso": prospecto->tetoPiso,
+      "encaixes": prospecto->encaixes,
+      "encaixesTimes": prospecto->encaixesTimes[]->{
+        "nome": nome,
+        "slug": slug.current,
+        "sigla": sigla,
+        "logo": coalesce(logo.asset->url, logoUrl),
+        "logoAlt": logo.alt,
+        "corPrimaria": corPrimaria
+      },
+      "bio": prospecto->resumo,
+      "tags": prospecto->tags,
+      "destaque": prospecto->destaqueGuia,
+      "status": prospecto->status,
+      "updatedAt": prospecto->_updatedAt
     }`,
     prospectBySlug: `*[_type == "draftProspect" && status == "publicado" && slug.current == $slug][0] {
       "nome": nome,
@@ -138,6 +180,15 @@
       "motivoEscolha": motivoEscolha,
       "espelho": espelho,
       "tetoPiso": tetoPiso,
+      "encaixes": encaixes,
+      "encaixesTimes": encaixesTimes[]->{
+        "nome": nome,
+        "slug": slug.current,
+        "sigla": sigla,
+        "logo": coalesce(logo.asset->url, logoUrl),
+        "logoAlt": logo.alt,
+        "corPrimaria": corPrimaria
+      },
       "bio": resumo,
       "tags": tags
     }`,
@@ -227,6 +278,10 @@
       "logo": logo.asset->url,
       "logoAlt": logo.alt,
       linksPrincipais,
+      mostrarGuiaDoDraft,
+      mensagemGuiaOculto,
+      mostrarRankings,
+      mensagemRankingsOculto,
       emailContato,
       redesSociais
     }`
@@ -272,7 +327,20 @@
     fetchPostBySlug: (slug) => fetchNamed("postBySlug", {slug}),
     fetchTips: () => fetchNamed("tips"),
     fetchTipBySlug: (slug) => fetchNamed("tipBySlug", {slug}),
-    fetchDraftProspects: () => fetchNamed("draftProspects"),
+    fetchDraftProspects: async () => {
+      const board = await fetchNamed("draftBoard");
+      if (Array.isArray(board) && board.length) {
+        return board
+          .filter((item) => item && item.nome && item.status !== "oculto")
+          .map((item, index) => ({
+            ...item,
+            rank: index + 1,
+            rankingGeral: item.rankingGeral || index + 1,
+            _rankOrigem: "draftBoard"
+          }));
+      }
+      return fetchNamed("draftProspects");
+    },
     fetchProspectBySlug: (slug) => fetchNamed("prospectBySlug", {slug}),
     fetchRankings: () => fetchNamed("rankings"),
     fetchRankingBySlug: (slug) => fetchNamed("rankingBySlug", {slug}),
