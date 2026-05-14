@@ -22,21 +22,32 @@ async function readEnvFile(filePath) {
 }
 
 await readEnvFile(path.join(studioDir, '.env'))
+await readEnvFile(path.join(studioDir, '.env.migration'))
 
 const projectId = process.env.SANITY_STUDIO_PROJECT_ID || 'eaeyiq4k'
 const dataset = process.env.SANITY_STUDIO_DATASET || 'production'
 const token = process.env.SANITY_AUTH_TOKEN
 
-if (!token) {
-  throw new Error('SANITY_AUTH_TOKEN ausente. Este script precisa ler documentos protegidos do Sanity. Adicione no sanity/.env antes de rodar.')
+if (writeMode && !token) {
+  throw new Error('SANITY_AUTH_TOKEN ausente. Para usar --write, adicione no sanity/.env ou sanity/.env.migration antes de rodar.')
 }
 
-const client = createClient({
+function makeClient(authToken = token) {
+  return createClient({
+    projectId,
+    dataset,
+    apiVersion: '2025-05-13',
+    useCdn: false,
+    token: authToken || undefined
+  })
+}
+
+let client = makeClient()
+const publicClient = createClient({
   projectId,
   dataset,
   apiVersion: '2025-05-13',
-  useCdn: false,
-  token: token || undefined
+  useCdn: false
 })
 
 let board
@@ -47,10 +58,27 @@ try {
     "rankingAtual": prospecto->rankingGeral
   }`)
 } catch (error) {
+  if (!writeMode) {
+    console.warn('Leitura com token falhou. Tentando dry-run com leitura publica sem token.')
+    try {
+      client = publicClient
+      board = await client.fetch(`*[_id == "draftGuideSettings"][0].draftBoard[] {
+        "id": prospecto->_id,
+        "nome": prospecto->nome,
+        "rankingAtual": prospecto->rankingGeral
+      }`)
+    } catch (publicError) {
+      console.error('Nao foi possivel ler a ordem do Guia no Sanity.')
+      console.error('Confira se o dataset esta publico ou se SANITY_AUTH_TOKEN e valido.')
+      console.error(publicError.message)
+      process.exit(1)
+    }
+  } else {
   console.error('Nao foi possivel ler a ordem do Guia no Sanity.')
   console.error('Confira se SANITY_AUTH_TOKEN e valido e tem permissao de leitura/escrita.')
   console.error(error.message)
   process.exit(1)
+  }
 }
 
 if (!Array.isArray(board) || !board.length) {

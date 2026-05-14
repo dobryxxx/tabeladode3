@@ -326,3 +326,50 @@ A pagina `contato.html` usa Netlify Forms com:
 Os campos `nome`, `sobrenome`, `email` e `mensagem` possuem `name` e `required`. O envio e feito por `js/contato.js`; em caso de sucesso, o formulario some e aparece `Obrigado pelo envio!`.
 
 Para verificar mensagens no Netlify, acesse o painel do site e abra `Forms > contato`.
+
+## Como ordenar o Guia do Draft
+
+O campo real usado no singleton e `draftBoard`, dentro do documento `draftGuideSettings`. Cada item da lista e um objeto `draftBoardItem` com uma referencia em `prospecto`.
+
+A lista ordenavel nao deve ser montada manualmente pelo cliente. Para preencher automaticamente com todos os prospectos publicados ja existentes no Sanity, rode:
+
+```bash
+cd sanity
+node scripts/seed-draft-board-order.mjs
+```
+
+Esse comando e dry-run: ele mostra quantos prospectos existem, quantos ja estao em `draftBoard`, quantos seriam adicionados ao final e se ha duplicados.
+
+Para aplicar de verdade:
+
+```bash
+cd sanity
+node scripts/seed-draft-board-order.mjs --write
+```
+
+Regras do seed:
+
+- busca todos os documentos `draftProspect` com `status == "publicado"`;
+- ordena por `rankingGeral`, depois `rank`, depois `ordem`;
+- cria ou atualiza o singleton `draftGuideSettings`;
+- preserva qualquer ordem manual ja existente em `draftBoard`;
+- remove duplicados da lista existente;
+- adiciona apenas prospectos que ainda nao estavam na lista;
+- coloca novos prospectos no final, respeitando o ranking atual.
+
+Depois disso, no Studio:
+
+1. Entre em `Guia do Draft > Ordem do Guia`.
+2. Arraste os jogadores para mudar a ordem.
+3. Publique/salve o documento.
+4. O site usa o indice dessa lista para exibir `#1`, `#2`, `#3` etc.
+
+Se quiser atualizar tambem o numero interno `rankingGeral` dos documentos de prospecto para bater com a ordem arrastada, rode:
+
+```bash
+cd sanity
+node scripts/sync-draft-board-ranking.mjs
+node scripts/sync-draft-board-ranking.mjs --write
+```
+
+Ambos os scripts leem `sanity/.env` e `sanity/.env.migration`. Eles precisam de `SANITY_AUTH_TOKEN` valido. Nao commite arquivos `.env`.
