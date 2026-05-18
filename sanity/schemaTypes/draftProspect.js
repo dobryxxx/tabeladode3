@@ -20,7 +20,20 @@ export const draftProspect = defineType({
     defineField({name: 'posicao', title: 'Posição', type: 'string', group: 'identidade'}),
     defineField({name: 'time', title: 'Time / universidade / liga', type: 'string', group: 'identidade'}),
     defineField({name: 'idade', title: 'Idade', type: 'string', group: 'identidade'}),
-    defineField({name: 'altura', title: 'Altura', type: 'string', group: 'identidade'}),
+    defineField({
+      name: 'altura',
+      title: 'Altura em metros',
+      type: 'string',
+      group: 'identidade',
+      description: 'Exemplo: 1.98m'
+    }),
+    defineField({
+      name: 'alturaImperial',
+      title: 'Altura em pés',
+      type: 'string',
+      group: 'identidade',
+      description: "Exemplo: 6'6"
+    }),
     defineField({name: 'peso', title: 'Peso', type: 'string', group: 'identidade'}),
     defineField({name: 'pais', title: 'País', type: 'string', group: 'identidade'}),
     defineField({name: 'envergadura', title: 'Envergadura', type: 'string', group: 'identidade'}),
@@ -28,6 +41,14 @@ export const draftProspect = defineType({
     defineField({name: 'arquetipoDefensivo', title: 'Arquétipo defensivo', type: 'string', group: 'scouting'}),
     defineField({name: 'arquetipoOfensivo', title: 'Arquétipo ofensivo', type: 'string', group: 'scouting'}),
     defineField({name: 'motivoEscolha', title: 'Por que vale a pena uma escolha?', type: 'text', rows: 4, group: 'scouting'}),
+    defineField({
+      name: 'chaveDesenvolvimento',
+      title: 'Chave de desenvolvimento',
+      type: 'text',
+      rows: 3,
+      group: 'scouting',
+      description: 'Ponto central que o jogador precisa evoluir para subir de patamar.'
+    }),
     defineField({name: 'espelho', title: 'Espelho', type: 'string', group: 'scouting'}),
     defineField({name: 'tetoPiso', title: 'Teto vs piso', type: 'text', rows: 3, group: 'scouting'}),
     defineField({name: 'pontosFortes', title: 'Pontos fortes', type: 'array', group: 'scouting', of: [defineArrayMember({type: 'string'})]}),
@@ -84,9 +105,23 @@ export const draftProspect = defineType({
     {title: 'Nome', name: 'nomeAsc', by: [{field: 'nome', direction: 'asc'}]}
   ],
   preview: {
-    select: {title: 'nome', rank: 'rankingGeral', posicao: 'posicao', media: 'foto'},
-    prepare({title, rank, posicao, media}) {
-      return {title: rank ? `#${rank} ${title}` : title, subtitle: posicao || 'Sem posição', media}
+    select: {
+      title: 'nome',
+      ranking: 'rankingGeral',
+      posicao: 'posicao',
+      tier: 'tier',
+      media: 'foto'
+    },
+    prepare({title, ranking, posicao, tier, media}) {
+      return {
+        title: title || 'Prospecto sem nome',
+        subtitle: [
+          ranking ? `#${ranking}` : null,
+          posicao,
+          tier
+        ].filter(Boolean).join(' · ') || 'Sem posição',
+        media
+      }
     }
   }
 })

@@ -656,6 +656,8 @@ function renderHomeSettings(settings) {
       `)
       .join("");
   }
+
+  aplicarVisibilidadeSite(visibilidadeSiteAtual);
 }
 
 async function carregarHomeSanity() {
@@ -798,15 +800,69 @@ function renderPaginaIndisponivel(titulo, mensagem) {
 }
 
 function esconderLinksPagina(href) {
-  document.querySelectorAll(`a[href="${href}"]`).forEach((link) => {
+  document.querySelectorAll(`a[href="${href}"], a[href^="${href}?"]`).forEach((link) => {
     link.hidden = true;
+    link.setAttribute("aria-hidden", "true");
   });
 }
 
+let visibilidadeSiteAtual = {
+  showDraftGuide: true,
+  showRankings: true,
+  draftGuideHiddenMessage: "Estamos atualizando esta área. Volte em breve.",
+  rankingsHiddenMessage: "Estamos atualizando esta área. Volte em breve.",
+  _source: "fallback seguro"
+};
+
+function normalizarVisibilidadeSite(settings = {}) {
+  settings = settings || {};
+
+  if (Object.prototype.hasOwnProperty.call(settings, "showDraftGuide")) {
+    return {
+      ...visibilidadeSiteAtual,
+      ...settings,
+      showDraftGuide: settings.showDraftGuide !== false,
+      showRankings: settings.showRankings !== false
+    };
+  }
+
+  if (window.T3Sanity?.normalizeSiteSettings) {
+    return window.T3Sanity.normalizeSiteSettings(settings, settings._source || "Sanity");
+  }
+
+  return {
+    ...visibilidadeSiteAtual,
+    showDraftGuide: settings.mostrarGuiaDoDraft !== false,
+    showRankings: settings.mostrarRankings !== false,
+    draftGuideHiddenMessage: settings.mensagemGuiaOculto || visibilidadeSiteAtual.draftGuideHiddenMessage,
+    rankingsHiddenMessage: settings.mensagemRankingsOculto || visibilidadeSiteAtual.rankingsHiddenMessage,
+    _source: settings._source || "Sanity"
+  };
+}
+
 function aplicarVisibilidadeSite(settings = {}) {
-  const mostrarGuia = settings.mostrarGuiaDoDraft !== false;
-  const mostrarRankings = settings.mostrarRankings !== false;
+  visibilidadeSiteAtual = normalizarVisibilidadeSite(settings);
+  const mostrarGuia = visibilidadeSiteAtual.showDraftGuide !== false;
+  const mostrarRankings = visibilidadeSiteAtual.showRankings !== false;
   const pagina = window.location.pathname.split("/").pop() || "index.html";
+
+  if (!mostrarGuia) esconderLinksPagina("guia-do-draft.html");
+  if (!mostrarRankings) {
+    esconderLinksPagina("rankings.html");
+    esconderLinksPagina("ranking-individual.html");
+  }
+
+  window.T3Sanity?.devLog?.(`Configurações do site: ${visibilidadeSiteAtual._source || "fallback"} | Guia do Draft: ${mostrarGuia} | Rankings: ${mostrarRankings}`);
+
+  if (!mostrarGuia && pagina === "guia-do-draft.html") {
+    renderPaginaIndisponivel("Guia do Draft temporariamente indisponível", visibilidadeSiteAtual.draftGuideHiddenMessage);
+    return visibilidadeSiteAtual;
+  }
+
+  if (!mostrarRankings && (pagina === "rankings.html" || pagina === "ranking-individual.html")) {
+    renderPaginaIndisponivel("Rankings temporariamente indisponíveis", visibilidadeSiteAtual.rankingsHiddenMessage);
+    return visibilidadeSiteAtual;
+  }
 
   if (!mostrarGuia) {
     esconderLinksPagina("guia-do-draft.html");
@@ -825,15 +881,44 @@ function aplicarVisibilidadeSite(settings = {}) {
 }
 
 async function carregarConfiguracoesSite() {
-  if (!window.T3Sanity?.enabled || !window.T3Sanity.fetchSiteSettings) return;
+  if (!window.T3Sanity?.fetchSiteVisibility) {
+    aplicarVisibilidadeSite(visibilidadeSiteAtual);
+    return visibilidadeSiteAtual;
+  }
 
   try {
-    const settings = await window.T3Sanity.fetchSiteSettings();
-    aplicarVisibilidadeSite(settings || {});
+    const settings = await window.T3Sanity.fetchSiteVisibility();
+    return aplicarVisibilidadeSite(settings || {});
   } catch (erro) {
+    return aplicarVisibilidadeSite(visibilidadeSiteAtual);
     window.T3Sanity?.devLog?.("Configurações gerais indisponíveis. Mantendo páginas visíveis.");
   }
 }
+
+function guiaDoDraftVisivel() {
+  return visibilidadeSiteAtual.showDraftGuide !== false;
+}
+
+function rankingsVisiveis() {
+  return visibilidadeSiteAtual.showRankings !== false;
+}
+
+function mostrarGuiaDoDraftIndisponivel() {
+  renderPaginaIndisponivel("Guia do Draft temporariamente indisponível", visibilidadeSiteAtual.draftGuideHiddenMessage);
+}
+
+function mostrarRankingsIndisponiveis() {
+  renderPaginaIndisponivel("Rankings temporariamente indisponíveis", visibilidadeSiteAtual.rankingsHiddenMessage);
+}
+
+window.T3SiteVisibility = {
+  get: () => visibilidadeSiteAtual,
+  apply: aplicarVisibilidadeSite,
+  isDraftGuideVisible: guiaDoDraftVisivel,
+  isRankingsVisible: rankingsVisiveis,
+  showDraftGuideUnavailable: mostrarGuiaDoDraftIndisponivel,
+  showRankingsUnavailable: mostrarRankingsIndisponiveis
+};
 
 renderConteudoDinamico();
 carregarPostsFontePrincipal();
@@ -843,4 +928,4 @@ iniciarHeaderSticky();
 iniciarMenuMobile();
 iniciarSplashHome();
 carregarHomeSanity();
-carregarConfiguracoesSite();
+window.T3SiteVisibilityReady = carregarConfiguracoesSite();

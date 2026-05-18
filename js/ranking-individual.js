@@ -189,8 +189,6 @@ function ordemPosicao(posicao) {
   return indice === -1 ? 99 : indice;
 }
 
-renderRankingIndividual();
-
 async function carregarRankingSanity() {
   if (!window.T3Sanity?.enabled || !document.querySelector("#ranking-individual")) return;
 
@@ -204,4 +202,20 @@ async function carregarRankingSanity() {
   }
 }
 
-carregarRankingSanity();
+async function iniciarRankingIndividual() {
+  if (!document.querySelector("#ranking-individual")) return;
+
+  if (window.T3SiteVisibilityReady) {
+    await window.T3SiteVisibilityReady;
+  }
+
+  if (window.T3SiteVisibility?.isRankingsVisible?.() === false) {
+    window.T3SiteVisibility.showRankingsUnavailable?.();
+    return;
+  }
+
+  renderRankingIndividual();
+  await carregarRankingSanity();
+}
+
+iniciarRankingIndividual();

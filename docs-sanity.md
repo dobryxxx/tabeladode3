@@ -373,3 +373,32 @@ node scripts/sync-draft-board-ranking.mjs --write
 ```
 
 Ambos os scripts leem `sanity/.env` e `sanity/.env.migration`. Eles precisam de `SANITY_AUTH_TOKEN` valido. Nao commite arquivos `.env`.
+
+### Preview legivel da ordem do Guia
+
+O item `draftBoardItem` tambem guarda campos de preview preenchidos automaticamente pelo seed:
+
+- `ordemPreview`
+- `nomeSnapshot`
+- `posicaoSnapshot`
+- `rankingSnapshot`
+- `tierSnapshot`
+- `fotoSnapshotUrl`
+
+Esses campos existem para a lista do Studio nao aparecer como `Reference`, `Item` ou objeto vazio. A referencia real continua sendo `prospecto`, e o site publico continua usando a ordem do array `draftGuideSettings.draftBoard`.
+
+Se a lista ja existir, rode novamente:
+
+```bash
+cd sanity
+node scripts/seed-draft-board-order.mjs --write
+```
+
+Isso preserva a ordem manual atual, remove duplicados e atualiza os snapshots de preview de cada item.
+
+No dry-run de 14/05/2026, o Sanity retornou 151 prospectos no dataset e 151 publicados. O arquivo local `js/draft-data.js` tem 153; os dois nomes que ainda nao aparecem no Sanity sao:
+
+- Motiejus Krivas
+- Kohl Rosario
+
+Enquanto esses dois nao forem importados/publicados no Sanity, o seed preenche 151 itens. O front publico continua com fallback local para manter a lista completa quando necessario.

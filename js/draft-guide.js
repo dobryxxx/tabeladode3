@@ -46,10 +46,12 @@ function normalizarProspectSanity(prospect = {}) {
     posicao: prospect.posicao || "",
     time: prospect.time || "",
     altura: prospect.altura || "",
+    alturaImperial: prospect.alturaImperial || "",
     idade: prospect.idade || "",
     tier: prospect.tier || prospect.alcance || "",
     alcance: prospect.alcance || prospect.tier || "",
     bio: prospect.bio || prospect.resumo || "",
+    chaveDesenvolvimento: prospect.chaveDesenvolvimento || "",
     encaixes: Array.isArray(prospect.encaixes) ? prospect.encaixes.filter(Boolean) : [],
     encaixesTimes: Array.isArray(prospect.encaixesTimes) ? prospect.encaixesTimes.filter(Boolean) : [],
     tags: Array.isArray(prospect.tags) ? prospect.tags : []
@@ -291,8 +293,7 @@ function renderProspectCard(prospect) {
       <div class="draft-prospect-card__content">
         <div class="draft-prospect-card__eyebrow">
           <span>${prospect.posicao || "posição em aberto"}</span>
-          ${prospect.alcance ? `<span>${prospect.alcance}</span>` : ""}
-          ${prospect.status ? `<span>${prospect.status}</span>` : ""}
+          ${prospect.alcance ? `<span>alcance ${prospect.alcance}</span>` : ""}
         </div>
         <h2>${prospect.nome}</h2>
         <p>${prospect.espelho ? `Espelho: ${prospect.espelho}` : prospect.bio || "Perfil em atualização."}</p>
@@ -393,6 +394,15 @@ function iniciarDraftGuide() {
 
 async function iniciarFonteDraftGuide() {
   if (!document.querySelector("#draft-list")) return;
+
+  if (window.T3SiteVisibilityReady) {
+    await window.T3SiteVisibilityReady;
+  }
+
+  if (window.T3SiteVisibility?.isDraftGuideVisible?.() === false) {
+    window.T3SiteVisibility.showDraftGuideUnavailable?.();
+    return;
+  }
 
   if (!window.T3Sanity?.enabled) {
     window.T3Sanity?.devLog?.("Fonte do guia do draft: fallback local");

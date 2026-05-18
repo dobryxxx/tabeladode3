@@ -97,6 +97,15 @@ function cardRanking(ranking) {
 async function iniciarFonteRankings() {
   if (!document.querySelector("#rankings-grid")) return;
 
+  if (window.T3SiteVisibilityReady) {
+    await window.T3SiteVisibilityReady;
+  }
+
+  if (window.T3SiteVisibility?.isRankingsVisible?.() === false) {
+    window.T3SiteVisibility.showRankingsUnavailable?.();
+    return;
+  }
+
   if (!window.T3Sanity?.enabled) {
     window.T3Sanity?.devLog?.("Fonte de rankings: fallback local");
     renderRankingsPage();

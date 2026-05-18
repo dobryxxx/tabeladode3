@@ -64,9 +64,23 @@ const publicClient = createClient({
 })
 
 let prospects = []
+let allProspects = []
 let settings = null
 
 async function fetchDraftBoardData(activeClient) {
+  allProspects = await activeClient.fetch(`*[_type == "draftProspect"] | order(coalesce(rankingGeral, rank, ordem, 9999) asc, nome asc) {
+    _id,
+    nome,
+    rankingGeral,
+    rank,
+    ordem,
+    posicao,
+    tier,
+    status,
+    "isDraft": _id in path("drafts.**"),
+    "foto": foto.asset->url
+  }`)
+
   prospects = await activeClient.fetch(`*[_type == "draftProspect" && status == "publicado"] | order(coalesce(rankingGeral, rank, ordem, 9999) asc, nome asc) {
     _id,
     nome,
@@ -74,6 +88,8 @@ async function fetchDraftBoardData(activeClient) {
     rank,
     ordem,
     posicao,
+    tier,
+    status,
     "foto": foto.asset->url
   }`)
 
@@ -116,6 +132,25 @@ const existingItems = Array.isArray(settings?.draftBoard) ? settings.draftBoard 
 const existingRefs = new Set()
 const duplicateRefs = []
 const preservedItems = []
+const prospectsById = new Map(prospects.map((prospect) => [prospect._id, prospect]))
+
+function boardItemFromProspect(prospect, index, existing = {}) {
+  return {
+    _key: existing._key || stableKey(prospect?._id, index),
+    _type: 'draftBoardItem',
+    ordemPreview: index + 1,
+    nomeSnapshot: prospect?.nome || existing.nomeSnapshot || 'Prospecto sem nome',
+    posicaoSnapshot: prospect?.posicao || existing.posicaoSnapshot || '',
+    rankingSnapshot: Number(prospect?.rankingGeral || prospect?.rank || prospect?.ordem || existing.rankingSnapshot || index + 1),
+    tierSnapshot: prospect?.tier || existing.tierSnapshot || '',
+    fotoSnapshotUrl: prospect?.foto || existing.fotoSnapshotUrl || '',
+    prospecto: {
+      _type: 'reference',
+      _ref: prospect?._id || refIdFromItem(existing)
+    },
+    ...(existing.observacao ? {observacao: existing.observacao} : {})
+  }
+}
 
 existingItems.forEach((item, index) => {
   const ref = refIdFromItem(item)
@@ -125,28 +160,15 @@ existingItems.forEach((item, index) => {
     return
   }
   existingRefs.add(ref)
-  preservedItems.push({
-    _key: item._key || stableKey(ref, index),
-    _type: 'draftBoardItem',
-    prospecto: {
-      _type: 'reference',
-      _ref: ref
-    },
-    ...(item.observacao ? {observacao: item.observacao} : {})
-  })
+  preservedItems.push(boardItemFromProspect(prospectsById.get(ref), preservedItems.length, item))
 })
 
 const missingProspects = prospects.filter((prospect) => !existingRefs.has(prospect._id))
-const newItems = missingProspects.map((prospect, index) => ({
-  _key: stableKey(prospect._id, preservedItems.length + index),
-  _type: 'draftBoardItem',
-  prospecto: {
-    _type: 'reference',
-    _ref: prospect._id
-  }
-}))
+const newItems = missingProspects.map((prospect, index) => boardItemFromProspect(prospect, preservedItems.length + index))
 
 const nextDraftBoard = [...preservedItems, ...newItems]
+const publishedIds = new Set(prospects.map((prospect) => prospect._id))
+const excludedProspects = allProspects.filter((prospect) => !publishedIds.has(prospect._id))
 const nextDocument = {
   _id: 'draftGuideSettings',
   _type: 'draftGuideSettings',
@@ -156,7 +178,9 @@ const nextDocument = {
 
 console.log('\nSeed da ordem do Guia do Draft')
 console.table({
+  totalProspectosNoDataset: allProspects.length,
   prospectosPublicadosEncontrados: prospects.length,
+  prospectosForaDoSeed: excludedProspects.length,
   itensJaNaLista: preservedItems.length,
   prospectosAdicionadosAoFinal: newItems.length,
   duplicadosRemovidosDaListaExistente: duplicateRefs.length,
@@ -164,6 +188,17 @@ console.table({
   documentoExistia: Boolean(settings?._id),
   modo: writeMode ? 'write' : 'dry-run'
 })
+
+if (excludedProspects.length) {
+  console.log('\nProspectos fora do seed e motivo provável:')
+  console.table(excludedProspects.map((prospect) => ({
+    id: prospect._id,
+    nome: prospect.nome || '(sem nome)',
+    status: prospect.status || '(sem status)',
+    draft: Boolean(prospect.isDraft),
+    motivo: prospect.status !== 'publicado' ? 'status diferente de publicado' : 'fora do filtro'
+  })).slice(0, 30))
+}
 
 if (missingProspects.length) {
   console.log('\nPrimeiros prospectos que seriam adicionados ao final:')

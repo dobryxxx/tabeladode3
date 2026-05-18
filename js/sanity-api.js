@@ -108,11 +108,13 @@
       "time": time,
       "idade": idade,
       "altura": altura,
+      "alturaImperial": alturaImperial,
       "peso": peso,
       "classeDraft": classeDraft,
       "arquetipoDefensivo": arquetipoDefensivo,
       "arquetipoOfensivo": arquetipoOfensivo,
       "motivoEscolha": motivoEscolha,
+      "chaveDesenvolvimento": chaveDesenvolvimento,
       "espelho": espelho,
       "tetoPiso": tetoPiso,
       "encaixes": encaixes,
@@ -141,11 +143,13 @@
       "time": prospecto->time,
       "idade": prospecto->idade,
       "altura": prospecto->altura,
+      "alturaImperial": prospecto->alturaImperial,
       "peso": prospecto->peso,
       "classeDraft": prospecto->classeDraft,
       "arquetipoDefensivo": prospecto->arquetipoDefensivo,
       "arquetipoOfensivo": prospecto->arquetipoOfensivo,
       "motivoEscolha": prospecto->motivoEscolha,
+      "chaveDesenvolvimento": prospecto->chaveDesenvolvimento,
       "espelho": prospecto->espelho,
       "tetoPiso": prospecto->tetoPiso,
       "encaixes": prospecto->encaixes,
@@ -173,11 +177,13 @@
       "time": time,
       "idade": idade,
       "altura": altura,
+      "alturaImperial": alturaImperial,
       "peso": peso,
       "classeDraft": classeDraft,
       "arquetipoDefensivo": arquetipoDefensivo,
       "arquetipoOfensivo": arquetipoOfensivo,
       "motivoEscolha": motivoEscolha,
+      "chaveDesenvolvimento": chaveDesenvolvimento,
       "espelho": espelho,
       "tetoPiso": tetoPiso,
       "encaixes": encaixes,
@@ -272,7 +278,7 @@
       botaoPrincipal,
       botaoSecundario
     }`,
-    siteSettings: `*[_type == "siteSettings"][0] {
+    siteSettings: `*[_id == "siteSettings"][0] {
       nomeSite,
       descricao,
       "logo": logo.asset->url,
@@ -294,6 +300,26 @@
 
   function devLog(message) {
     if (devMode) console.info(message);
+  }
+
+  function normalizeSiteSettings(settings = {}, source = "Sanity") {
+    return {
+      ...settings,
+      showDraftGuide: settings.mostrarGuiaDoDraft !== false,
+      showRankings: settings.mostrarRankings !== false,
+      draftGuideHiddenMessage: sanitizeText(settings.mensagemGuiaOculto, "Estamos atualizando esta área. Volte em breve."),
+      rankingsHiddenMessage: sanitizeText(settings.mensagemRankingsOculto, "Estamos atualizando esta área. Volte em breve."),
+      _source: source
+    };
+  }
+
+  function fallbackSiteSettings(source = "fallback seguro") {
+    return normalizeSiteSettings({
+      mostrarGuiaDoDraft: true,
+      mostrarRankings: true,
+      mensagemGuiaOculto: "Estamos atualizando esta área. Volte em breve.",
+      mensagemRankingsOculto: "Estamos atualizando esta área. Volte em breve."
+    }, source);
   }
 
   function buildUrl(query, params = {}) {
@@ -347,6 +373,20 @@
     fetchGlossaryTerms: () => fetchNamed("glossaryTerms"),
     fetchHomeSettings: () => fetchNamed("homeSettings"),
     fetchSiteSettings: () => fetchNamed("siteSettings"),
+    fetchSiteVisibility: async () => {
+      if (!enabled) return fallbackSiteSettings("fallback local");
+
+      try {
+        const settings = await fetchNamed("siteSettings");
+        if (!settings) return fallbackSiteSettings("fallback seguro");
+        return normalizeSiteSettings(settings, "Sanity");
+      } catch (erro) {
+        devLog("Configurações gerais indisponíveis. Mantendo Guia do Draft e Rankings visíveis.");
+        return fallbackSiteSettings("fallback seguro");
+      }
+    },
+    normalizeSiteSettings,
+    fallbackSiteSettings,
     sanitizeText,
     devLog
   };

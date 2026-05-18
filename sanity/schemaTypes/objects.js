@@ -23,15 +23,15 @@ export const blockContent = defineType({
     defineArrayMember({
       type: 'block',
       styles: [
-        {title: 'Parágrafo', value: 'normal'},
-        {title: 'Título 2', value: 'h2'},
-        {title: 'Título 3', value: 'h3'},
-        {title: 'Citação', value: 'blockquote'}
+        {title: 'ParÃ¡grafo', value: 'normal'},
+        {title: 'TÃ­tulo 2', value: 'h2'},
+        {title: 'TÃ­tulo 3', value: 'h3'},
+        {title: 'CitaÃ§Ã£o', value: 'blockquote'}
       ],
       marks: {
         decorators: [
           {title: 'Negrito', value: 'strong'},
-          {title: 'Itálico', value: 'em'}
+          {title: 'ItÃ¡lico', value: 'em'}
         ],
         annotations: [
           {
@@ -67,21 +67,21 @@ export const tweetEmbed = defineType({
       name: 'tweetUrl',
       title: 'URL do tweet',
       type: 'url',
-      description: 'Cole a URL pública do tweet/X post citado no texto.',
+      description: 'Cole a URL pÃºblica do tweet/X post citado no texto.',
       validation: (Rule) => Rule.required()
     }),
     defineField({
       name: 'comentario',
-      title: 'Comentário editorial',
+      title: 'ComentÃ¡rio editorial',
       type: 'text',
       rows: 3,
-      description: 'Texto opcional para contextualizar o tweet dentro da matéria.'
+      description: 'Texto opcional para contextualizar o tweet dentro da matÃ©ria.'
     }),
     defineField({
       name: 'textoAlternativo',
       title: 'Texto alternativo',
       type: 'string',
-      description: 'Resumo curto para acessibilidade ou caso o embed externo não carregue.'
+      description: 'Resumo curto para acessibilidade ou caso o embed externo nÃ£o carregue.'
     })
   ],
   preview: {
@@ -104,6 +104,43 @@ export const draftBoardItem = defineType({
   type: 'object',
   fields: [
     defineField({
+      name: 'ordemPreview',
+      title: 'PosiÃ§Ã£o na lista',
+      type: 'number',
+      readOnly: true,
+      description: 'Preenchido automaticamente pelo seed. Serve para deixar a lista legÃ­vel no Studio.'
+    }),
+    defineField({
+      name: 'nomeSnapshot',
+      title: 'Nome para preview',
+      type: 'string',
+      readOnly: true
+    }),
+    defineField({
+      name: 'posicaoSnapshot',
+      title: 'PosiÃ§Ã£o do jogador para preview',
+      type: 'string',
+      readOnly: true
+    }),
+    defineField({
+      name: 'rankingSnapshot',
+      title: 'Ranking original para preview',
+      type: 'number',
+      readOnly: true
+    }),
+    defineField({
+      name: 'tierSnapshot',
+      title: 'Tier para preview',
+      type: 'string',
+      readOnly: true
+    }),
+    defineField({
+      name: 'fotoSnapshotUrl',
+      title: 'URL da foto para preview',
+      type: 'url',
+      readOnly: true
+    }),
+    defineField({
       name: 'prospecto',
       title: 'Prospecto',
       type: 'reference',
@@ -112,23 +149,28 @@ export const draftBoardItem = defineType({
     }),
     defineField({
       name: 'observacao',
-      title: 'Observação interna',
+      title: 'ObservaÃ§Ã£o interna',
       type: 'string',
-      description: 'Opcional. Não aparece no site; serve só para organização editorial.'
+      description: 'Opcional. NÃ£o aparece no site; serve sÃ³ para organizaÃ§Ã£o editorial.'
     })
   ],
   preview: {
     select: {
-      title: 'prospecto.nome',
-      rank: 'prospecto.rankingGeral',
-      position: 'prospecto.posicao',
-      media: 'prospecto.foto'
+      ordem: 'ordemPreview',
+      nome: 'nomeSnapshot',
+      posicao: 'posicaoSnapshot',
+      ranking: 'rankingSnapshot',
+      tier: 'tierSnapshot',
+      fotoUrl: 'fotoSnapshotUrl'
     },
-    prepare({title, rank, position, media}) {
+    prepare({ordem, nome, posicao, ranking, tier}) {
       return {
-        title: title || 'Prospecto sem nome',
-        subtitle: [rank ? `#${rank}` : null, position].filter(Boolean).join(' · '),
-        media
+        title: `${ordem ? `#${ordem} - ` : ''}${nome || 'Prospecto sem nome'}`,
+        subtitle: [
+          posicao,
+          tier,
+          ranking ? `Ranking original #${ranking}` : null
+        ].filter(Boolean).join(' / ') || 'Sem posicao cadastrada'
       }
     }
   }
@@ -141,25 +183,25 @@ export const homeCard = defineType({
   fields: [
     defineField({
       name: 'numero',
-      title: 'Número',
+      title: 'NÃºmero',
       type: 'string',
       description: 'Ex.: 01, 02, 03.'
     }),
     defineField({
       name: 'titulo',
-      title: 'Título',
+      title: 'TÃ­tulo',
       type: 'string',
       validation: (Rule) => Rule.required()
     }),
     defineField({
       name: 'descricao',
-      title: 'Descrição',
+      title: 'DescriÃ§Ã£o',
       type: 'text',
       rows: 2
     }),
     defineField({
       name: 'cta',
-      title: 'Texto do botão',
+      title: 'Texto do botÃ£o',
       type: 'string',
       initialValue: 'Entrar'
     }),
@@ -202,7 +244,7 @@ export const rankingItem = defineType({
   fields: [
     defineField({
       name: 'posicao',
-      title: 'Posição',
+      title: 'PosiÃ§Ã£o',
       type: 'number',
       validation: (Rule) => Rule.required().min(1)
     }),
@@ -229,7 +271,7 @@ export const rankingItem = defineType({
     }),
     defineField({
       name: 'descricao',
-      title: 'Descrição/comentário',
+      title: 'DescriÃ§Ã£o/comentÃ¡rio',
       type: 'text',
       rows: 3
     }),
@@ -246,7 +288,7 @@ export const rankingItem = defineType({
     }),
     defineField({
       name: 'posicaoQuadra',
-      title: 'Posição em quadra',
+      title: 'PosiÃ§Ã£o em quadra',
       type: 'string'
     }),
     defineField({
@@ -267,7 +309,7 @@ export const rankingItem = defineType({
     }),
     defineField({
       name: 'postRelacionado',
-      title: 'Publicação relacionada',
+      title: 'PublicaÃ§Ã£o relacionada',
       type: 'reference',
       to: [{type: 'post'}]
     }),
