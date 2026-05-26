@@ -275,16 +275,30 @@ function renderEncaixes(prospect = {}) {
   `;
 }
 
+function renderDetalhePerfil(label, valor, classe = "") {
+  return `
+    <div class="draft-prospect-card__detail ${classe}">
+      <span>${label}</span>
+      <p>${valor}</p>
+    </div>
+  `;
+}
+
 function renderProspectCard(prospect) {
-  const detalhes = [
+  const leituraPerfil = [
+    ["Por que vale uma escolha?", prospect.motivoEscolha],
+    ["Chave de desenvolvimento", prospect.chaveDesenvolvimento],
+    ["Observações", prospect.observacoes]
+  ].filter(([, valor]) => valor);
+
+  const fichaPerfil = [
     ["Arquétipo ofensivo", prospect.arquetipoOfensivo],
     ["Arquétipo defensivo", prospect.arquetipoDefensivo],
-    ["Por que vale uma escolha?", prospect.motivoEscolha],
-    ["Chave para desenvolvimento", prospect.chaveDesenvolvimento],
-    ["Observações", prospect.observacoes],
     ["Teto vs piso", prospect.tetoPiso],
-    ["Espelho", prospect.espelho]
+    ["espelho", prospect.espelho]
   ].filter(([, valor]) => valor);
+
+  const temPerfil = leituraPerfil.length || fichaPerfil.length;
 
   return `
     <article class="draft-prospect-card" data-draft-card>
@@ -308,15 +322,23 @@ function renderProspectCard(prospect) {
       <div class="draft-prospect-card__aside">
         ${prospect.tetoPiso ? `<div><span>teto/piso</span><strong>${prospect.tetoPiso}</strong></div>` : ""}
         ${renderEncaixes(prospect)}
-        <button type="button" class="draft-prospect-card__toggle" ${detalhes.length ? "" : "disabled"}>ver perfil</button>
+        <button type="button" class="draft-prospect-card__toggle" ${temPerfil ? "" : "disabled"}>ver perfil</button>
       </div>
       <div class="draft-prospect-card__details">
-        ${detalhes.length ? detalhes.map(([label, valor]) => `
-          <div>
-            <span>${label}</span>
-            <p>${valor}</p>
-          </div>
-        `).join("") : "<p>Sem detalhes adicionais no CSV.</p>"}
+        ${temPerfil ? `
+          ${leituraPerfil.length ? `
+            <section class="draft-prospect-card__profile-main" aria-label="Leitura do perfil">
+              <span class="draft-prospect-card__section-label">leitura do perfil</span>
+              ${leituraPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor, "draft-prospect-card__detail--reading")).join("")}
+            </section>
+          ` : ""}
+          ${fichaPerfil.length ? `
+            <aside class="draft-prospect-card__profile-aside" aria-label="Ficha de scouting">
+              <span class="draft-prospect-card__section-label">ficha de scouting</span>
+              ${fichaPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor)).join("")}
+            </aside>
+          ` : ""}
+        ` : "<p>Sem detalhes adicionais no CSV.</p>"}
       </div>
     </article>
   `;

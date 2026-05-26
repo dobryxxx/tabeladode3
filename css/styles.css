@@ -2648,21 +2648,78 @@
     .draft-prospect-card__details {
       display: none;
       grid-column: 1 / -1;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr);
       gap: 18px;
-      padding: 24px;
+      padding: 22px;
       border-top: 1px solid var(--gray-700);
-      background: rgba(0,0,0,.18);
+      background:
+        linear-gradient(135deg, rgba(186,78,37,.08), transparent 32%),
+        rgba(0,0,0,.18);
     }
 
     .draft-prospect-card--expanded .draft-prospect-card__details {
       display: grid;
     }
 
+    .draft-prospect-card__profile-main,
+    .draft-prospect-card__profile-aside {
+      min-width: 0;
+    }
+
+    .draft-prospect-card__profile-main {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .draft-prospect-card__profile-aside {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      padding-left: 18px;
+      border-left: 1px solid rgba(244,244,241,.1);
+    }
+
+    .draft-prospect-card__section-label {
+      color: var(--laranja) !important;
+      font-size: 10px !important;
+      font-weight: 900 !important;
+      letter-spacing: .16em !important;
+    }
+
+    .draft-prospect-card__detail {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      border: 1px solid rgba(244,244,241,.1);
+      background: rgba(244,244,241,.035);
+      min-height: 0;
+      padding: 15px 16px;
+    }
+
+    .draft-prospect-card__detail--reading {
+      background:
+        linear-gradient(135deg, rgba(186,78,37,.12), transparent 46%),
+        rgba(20,20,20,.8);
+      padding: 18px;
+    }
+
+    .draft-prospect-card__profile-aside .draft-prospect-card__detail {
+      padding: 13px 14px;
+      background: rgba(244,244,241,.028);
+    }
+
     .draft-prospect-card__details p {
       margin-top: 8px;
       color: var(--white);
       font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .draft-prospect-card__detail--reading p {
+      color: var(--gray-100);
+      font-family: var(--font-serif);
+      font-size: 16px;
       line-height: 1.55;
     }
 
@@ -3790,8 +3847,18 @@
       .draft-guide-stats,
       .draft-featured-grid,
       .draft-guide-controls,
-      .draft-prospect-card__details {
+      .draft-prospect-card__details,
+      .draft-prospect-card__profile-main,
+      .draft-prospect-card__profile-aside,
+      .draft-prospect-card__detail {
         grid-template-columns: 1fr;
+        grid-column: 1 / -1;
+      }
+      .draft-prospect-card__profile-aside {
+        padding-top: 14px;
+        padding-left: 0;
+        border-top: 1px solid rgba(244,244,241,.1);
+        border-left: 0;
       }
       .draft-guide-stats div {
         min-height: 0;
