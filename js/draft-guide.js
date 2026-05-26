@@ -52,6 +52,7 @@ function normalizarProspectSanity(prospect = {}) {
     alcance: prospect.alcance || prospect.tier || "",
     bio: prospect.bio || prospect.resumo || "",
     chaveDesenvolvimento: prospect.chaveDesenvolvimento || "",
+    observacoes: prospect.observacoes || "",
     encaixes: Array.isArray(prospect.encaixes) ? prospect.encaixes.filter(Boolean) : [],
     encaixesTimes: Array.isArray(prospect.encaixesTimes) ? prospect.encaixesTimes.filter(Boolean) : [],
     tags: Array.isArray(prospect.tags) ? prospect.tags : []
@@ -280,6 +281,7 @@ function renderProspectCard(prospect) {
     ["Arquétipo defensivo", prospect.arquetipoDefensivo],
     ["Por que vale uma escolha?", prospect.motivoEscolha],
     ["Chave para desenvolvimento", prospect.chaveDesenvolvimento],
+    ["Observações", prospect.observacoes],
     ["Teto vs piso", prospect.tetoPiso],
     ["Espelho", prospect.espelho]
   ].filter(([, valor]) => valor);

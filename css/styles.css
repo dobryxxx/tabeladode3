@@ -2674,15 +2674,18 @@
     }
 
     .page-disabled {
-      min-height: 62vh;
+      min-height: calc(100vh - 64px - 184px);
       display: flex;
       align-items: center;
+      justify-content: center;
       border-bottom: 1px solid var(--gray-700);
     }
 
     .page-disabled__inner {
+      width: 100%;
       max-width: 720px;
-      padding: 92px 24px;
+      margin: 0 auto;
+      padding: 112px 24px;
       text-align: center;
     }
 
