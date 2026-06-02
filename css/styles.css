@@ -2830,6 +2830,296 @@
     }
 
     /* Glossário */
+    /* Colmeia */
+    .colmeia-page {
+      min-height: 100vh;
+      background: var(--black);
+    }
+
+    .colmeia-hero {
+      padding: calc(var(--nav-h) + 72px) 0 38px;
+      border-bottom: 1px solid var(--gray-700);
+    }
+
+    .colmeia-hero__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+      gap: 40px;
+      align-items: end;
+    }
+
+    .colmeia-hero h1 {
+      margin-top: 14px;
+      color: var(--white);
+      font-family: var(--font-display);
+      font-size: clamp(48px, 8vw, 104px);
+      line-height: .88;
+      text-transform: uppercase;
+    }
+
+    .colmeia-hero p {
+      color: var(--gray-300);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .colmeia-shell {
+      padding: 28px 0 72px;
+    }
+
+    .colmeia-shell__inner {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr) 300px;
+      min-height: 680px;
+      border-top: 1px solid var(--gray-700);
+      border-bottom: 1px solid var(--gray-700);
+    }
+
+    .colmeia-toolbar,
+    .colmeia-detail {
+      padding: 22px;
+      background: var(--gray-900);
+    }
+
+    .colmeia-toolbar {
+      border-right: 1px solid var(--gray-700);
+    }
+
+    .colmeia-detail {
+      border-left: 1px solid var(--gray-700);
+      overflow-y: auto;
+    }
+
+    .colmeia-search span,
+    .colmeia-detail__eyebrow,
+    .colmeia-status {
+      color: var(--laranja);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .colmeia-search input {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px 0;
+      border: 0;
+      border-bottom: 1px solid var(--gray-700);
+      background: transparent;
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .colmeia-search input:focus {
+      border-bottom-color: var(--laranja);
+    }
+
+    .colmeia-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .colmeia-chip,
+    .colmeia-action {
+      border: 1px solid var(--gray-700);
+      background: transparent;
+      color: var(--gray-300);
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .colmeia-chip {
+      padding: 8px 10px;
+    }
+
+    .colmeia-chip.is-active {
+      border-color: var(--laranja);
+      color: var(--white);
+    }
+
+    .colmeia-action {
+      width: 100%;
+      margin-top: 22px;
+      padding: 12px;
+    }
+
+    .colmeia-action:hover,
+    .colmeia-action:focus-visible {
+      border-color: var(--laranja);
+      color: var(--white);
+    }
+
+    .colmeia-status {
+      margin-top: 18px;
+      color: var(--gray-300);
+      line-height: 1.5;
+    }
+
+    .colmeia-canvas-wrap {
+      position: relative;
+      min-height: 680px;
+      overflow: hidden;
+      background: var(--black);
+    }
+
+    #colmeia-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 680px;
+    }
+
+    .colmeia-legend {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--gray-700);
+      background: var(--gray-900);
+      color: var(--gray-300);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .colmeia-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .colmeia-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--white);
+    }
+
+    .colmeia-dot--hub { background: var(--laranja); }
+    .colmeia-dot--prospect { background: var(--blue); }
+    .colmeia-dot--termo { background: var(--green); }
+    .colmeia-dot--content { background: var(--white); }
+
+    .colmeia-detail h2 {
+      margin-top: 10px;
+      color: var(--white);
+      font-family: var(--font-display);
+      font-size: 28px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .colmeia-detail p {
+      margin-top: 14px;
+      color: var(--gray-300);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .colmeia-detail__slug {
+      display: block;
+      margin-top: 14px;
+      color: var(--gray-500);
+      font-size: 12px;
+      word-break: break-word;
+    }
+
+    .colmeia-detail__neighbors {
+      margin-top: 20px;
+      list-style: none;
+      border-top: 1px solid var(--gray-700);
+    }
+
+    .colmeia-detail__neighbors li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-700);
+      color: var(--white);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .colmeia-detail__neighbors span,
+    .colmeia-detail__neighbors small {
+      display: block;
+      color: var(--laranja);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .colmeia-detail__neighbors small {
+      margin-top: 5px;
+      color: var(--gray-500);
+    }
+
+    .colmeia-detail .tweet-card {
+      margin: 18px 0 0;
+    }
+
+    @media (max-width: 1040px) {
+      .colmeia-hero__inner,
+      .colmeia-shell__inner {
+        grid-template-columns: 1fr;
+      }
+
+      .colmeia-shell__inner {
+        min-height: 0;
+      }
+
+      .colmeia-toolbar {
+        border-right: 0;
+        border-bottom: 1px solid var(--gray-700);
+      }
+
+      .colmeia-detail {
+        border-top: 1px solid var(--gray-700);
+        border-left: 0;
+      }
+
+      .colmeia-canvas-wrap,
+      #colmeia-canvas {
+        min-height: 620px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .colmeia-hero {
+        padding: calc(var(--nav-h) + 42px) 0 26px;
+      }
+
+      .colmeia-shell {
+        padding-bottom: 46px;
+      }
+
+      .colmeia-toolbar,
+      .colmeia-detail {
+        padding: 18px;
+      }
+
+      .colmeia-canvas-wrap,
+      #colmeia-canvas {
+        min-height: 540px;
+      }
+
+      .colmeia-legend {
+        right: 12px;
+        left: 12px;
+        bottom: 12px;
+      }
+    }
+
     .glossario-list { margin-top: 20px; }
 
     .glossario-item {

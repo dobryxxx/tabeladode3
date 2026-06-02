@@ -293,6 +293,70 @@
       mensagemRankingsOculto,
       emailContato,
       redesSociais
+    }`,
+    // Colmeia editorial: usa somente tags string como hubs; categorias ficam fora do grafo.
+    colmeia: `{
+      "posts": *[_type == "post" && !(_id in path("drafts.**"))] | order(dataPublicacao desc) {
+        _id,
+        "label": titulo,
+        "body": resumo,
+        "slug": slug.current,
+        tags
+      },
+      "prospects": *[_type == "draftProspect" && !(_id in path("drafts.**"))] | order(rankingGeral asc, nome asc) {
+        _id,
+        "label": nome,
+        "body": resumo,
+        "slug": slug.current,
+        posicao,
+        "encaixes": array::unique(coalesce(encaixesTimes[]->nome, []) + coalesce(encaixes, [])),
+        tags
+      },
+      "termos": *[_type == "glossaryTerm" && !(_id in path("drafts.**"))] | order(coalesce(ordem, 9999) asc, termo asc) {
+        _id,
+        "label": termo,
+        "body": coalesce(explicacaoCompleta, definicaoCurta),
+        "slug": slug.current,
+        tags
+      },
+      "rankings": *[_type == "ranking" && !(_id in path("drafts.**"))] | order(data desc, titulo asc) {
+        _id,
+        "label": titulo,
+        "body": descricao,
+        "slug": slug.current,
+        tags
+      },
+      "dicas": *[_type == "tip" && !(_id in path("drafts.**"))] | order(featured desc, coalesce(order, 9999) asc, publishedAt desc) {
+        _id,
+        "label": title,
+        "body": excerpt,
+        "slug": slug.current,
+        tags,
+        "link": externalUrl
+      },
+      "tweets": *[_type == "tweetCard" && !(_id in path("drafts.**"))] | order(data desc, titulo asc) {
+        _id,
+        "label": titulo,
+        "slug": _id,
+        tags,
+        "tweet": {
+          autorNome,
+          autorHandle,
+          texto,
+          data,
+          link
+        }
+      },
+      "conexoes": *[_type == "conexao" && !(_id in path("drafts.**"))] {
+        _id,
+        "de": de->_id,
+        "para": para->_id,
+        descricao,
+        peso
+      },
+      "settings": *[_id == "colmeiaSettings"][0] {
+        tagsEstruturais
+      }
     }`
   };
 
@@ -376,6 +440,7 @@
     fetchGlossaryTerms: () => fetchNamed("glossaryTerms"),
     fetchHomeSettings: () => fetchNamed("homeSettings"),
     fetchSiteSettings: () => fetchNamed("siteSettings"),
+    fetchColmeia: () => fetchNamed("colmeia"),
     fetchSiteVisibility: async () => {
       if (!enabled) return fallbackSiteSettings("fallback local");
 
