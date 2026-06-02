@@ -2709,6 +2709,14 @@
       background: rgba(244,244,241,.028);
     }
 
+    .draft-prospect-card__detail--fits {
+      gap: 10px;
+    }
+
+    .draft-prospect-card__detail--fits .draft-fit-list {
+      margin-top: 2px;
+    }
+
     .draft-prospect-card__details p {
       margin-top: 8px;
       color: var(--white);

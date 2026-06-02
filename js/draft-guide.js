@@ -298,7 +298,8 @@ function renderProspectCard(prospect) {
     ["espelho", prospect.espelho]
   ].filter(([, valor]) => valor);
 
-  const temPerfil = leituraPerfil.length || fichaPerfil.length;
+  const encaixesPerfil = renderEncaixes(prospect);
+  const temPerfil = leituraPerfil.length || fichaPerfil.length || encaixesPerfil;
 
   return `
     <article class="draft-prospect-card" data-draft-card>
@@ -321,7 +322,6 @@ function renderProspectCard(prospect) {
       </div>
       <div class="draft-prospect-card__aside">
         ${prospect.tetoPiso ? `<div><span>teto/piso</span><strong>${prospect.tetoPiso}</strong></div>` : ""}
-        ${renderEncaixes(prospect)}
         <button type="button" class="draft-prospect-card__toggle" ${temPerfil ? "" : "disabled"}>ver perfil</button>
       </div>
       <div class="draft-prospect-card__details">
@@ -332,10 +332,16 @@ function renderProspectCard(prospect) {
               ${leituraPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor, "draft-prospect-card__detail--reading")).join("")}
             </section>
           ` : ""}
-          ${fichaPerfil.length ? `
+          ${fichaPerfil.length || encaixesPerfil ? `
             <aside class="draft-prospect-card__profile-aside" aria-label="Ficha de scouting">
               <span class="draft-prospect-card__section-label">ficha de scouting</span>
               ${fichaPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor)).join("")}
+              ${encaixesPerfil ? `
+                <div class="draft-prospect-card__detail draft-prospect-card__detail--fits">
+                  <span>Melhores encaixes</span>
+                  ${encaixesPerfil}
+                </div>
+              ` : ""}
             </aside>
           ` : ""}
         ` : "<p>Sem detalhes adicionais no CSV.</p>"}
