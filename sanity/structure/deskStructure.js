@@ -2,8 +2,11 @@ const hiddenTypes = new Set([
   'homeSettings',
   'siteSettings',
   'draftGuideSettings',
+  'colmeiaSettings',
   'post',
   'tip',
+  'tweetCard',
+  'conexao',
   'draftProspect',
   'nbaTeam',
   'ranking',
@@ -24,6 +27,14 @@ export const deskStructure = (S) =>
         .title('Dicas')
         .schemaType('tip')
         .child(S.documentTypeList('tip').title('Dicas')),
+      S.listItem()
+        .title('Tweets')
+        .schemaType('tweetCard')
+        .child(S.documentTypeList('tweetCard').title('Cards de Tweet')),
+      S.listItem()
+        .title('Conexoes')
+        .schemaType('conexao')
+        .child(S.documentTypeList('conexao').title('Conexoes editoriais')),
       S.listItem()
         .title('Guia do Draft')
         .schemaType('draftProspect')
@@ -85,6 +96,15 @@ export const deskStructure = (S) =>
             .schemaType('siteSettings')
             .documentId('siteSettings')
             .title('Configurações gerais')
+        ),
+      S.listItem()
+        .title('Configuracoes da Colmeia')
+        .schemaType('colmeiaSettings')
+        .child(
+          S.document()
+            .schemaType('colmeiaSettings')
+            .documentId('colmeiaSettings')
+            .title('Configuracoes da Colmeia')
         ),
       S.divider(),
       ...S.documentTypeListItems().filter((item) => !hiddenTypes.has(item.getId()))

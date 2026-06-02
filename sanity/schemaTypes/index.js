@@ -1,12 +1,14 @@
 import {author} from './author.js'
 import {category} from './category.js'
+import {conexao} from './conexao.js'
 import {draftProspect} from './draftProspect.js'
 import {glossaryTerm} from './glossaryTerm.js'
 import {nbaTeam} from './nbaTeam.js'
 import {post} from './post.js'
 import {ranking} from './ranking.js'
 import {tip} from './tip.js'
-import {draftGuideSettings, homeSettings, siteSettings} from './settings.js'
+import {tweetCard} from './tweetCard.js'
+import {colmeiaSettings, draftGuideSettings, homeSettings, siteSettings} from './settings.js'
 import {blockContent, draftBoardItem, homeCard, imageWithAlt, rankingItem, socialLink, tweetEmbed} from './objects.js'
 
 export const schemaTypes = [
@@ -22,10 +24,13 @@ export const schemaTypes = [
   nbaTeam,
   post,
   tip,
+  tweetCard,
+  conexao,
   draftProspect,
   ranking,
   glossaryTerm,
   homeSettings,
   siteSettings,
-  draftGuideSettings
+  draftGuideSettings,
+  colmeiaSettings
 ]

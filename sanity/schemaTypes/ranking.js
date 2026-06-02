@@ -1,4 +1,4 @@
-import {defineField, defineType} from 'sanity'
+import {defineArrayMember, defineField, defineType} from 'sanity'
 
 export const ranking = defineType({
   name: 'ranking',
@@ -27,6 +27,13 @@ export const ranking = defineType({
     }),
     defineField({name: 'data', title: 'Data', type: 'date'}),
     defineField({name: 'autor', title: 'Autor', type: 'reference', to: [{type: 'author'}]}),
+    defineField({
+      name: 'tags',
+      title: 'Tags',
+      type: 'array',
+      of: [defineArrayMember({type: 'string'})],
+      options: {layout: 'tags'}
+    }),
     defineField({
       name: 'status',
       title: 'Status',

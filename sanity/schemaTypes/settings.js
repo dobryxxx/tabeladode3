@@ -107,6 +107,20 @@ export const siteSettings = defineType({
       rows: 2,
       initialValue: 'Os rankings estão temporariamente indisponíveis.'
     }),
+    defineField({
+      name: 'mostrarColmeia',
+      title: 'Exibir pagina Colmeia',
+      type: 'boolean',
+      initialValue: true,
+      description: 'Desative para esconder o link e mostrar uma tela de indisponibilidade no site.'
+    }),
+    defineField({
+      name: 'mensagemColmeiaOculta',
+      title: 'Mensagem quando a Colmeia estiver oculta',
+      type: 'text',
+      rows: 2,
+      initialValue: 'A Colmeia esta temporariamente indisponivel.'
+    }),
     defineField({name: 'emailContato', title: 'E-mail de contato', type: 'email'}),
     defineField({
       name: 'redesSociais',
@@ -143,6 +157,34 @@ export const draftGuideSettings = defineType({
   preview: {
     prepare() {
       return {title: 'Ordem do Guia do Draft'}
+    }
+  }
+})
+
+export const colmeiaSettings = defineType({
+  name: 'colmeiaSettings',
+  title: 'Configuracoes da Colmeia',
+  type: 'document',
+  fields: [
+    defineField({
+      name: 'tagsEstruturais',
+      title: 'Tags estruturais',
+      type: 'array',
+      description: 'Tags amplas que nao viram hub no grafo.',
+      of: [defineArrayMember({type: 'string'})],
+      options: {layout: 'tags'}
+    }),
+    defineField({
+      name: 'descricao',
+      title: 'Descricao',
+      type: 'text',
+      rows: 3,
+      description: 'Nota interna opcional.'
+    })
+  ],
+  preview: {
+    prepare() {
+      return {title: 'Configuracoes da Colmeia'}
     }
   }
 })
