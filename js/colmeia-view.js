@@ -1,16 +1,7 @@
 (function () {
-  const TYPES = {
-    post: { label: "post", group: "content" },
-    prospect: { label: "prospect", group: "prospect" },
-    termo: { label: "termo", group: "termo" },
-    ranking: { label: "ranking", group: "content" },
-    dica: { label: "dica", group: "content" },
-    tweet: { label: "tweet", group: "tweet" },
-    tag: { label: "tag", group: "hub" },
-    posicao: { label: "posicao", group: "hub" },
-    time: { label: "time", group: "hub" }
-  };
-  const TYPE_ORDER = ["post", "prospect", "termo", "ranking", "dica", "tweet", "tag", "posicao", "time"];
+  "use strict";
+
+  const TYPE_ORDER = ["tag", "posicao", "time", "post", "prospect", "termo", "ranking", "dica", "tweet"];
 
   function escapeHtml(value = "") {
     return String(value)
@@ -21,375 +12,643 @@
       .replace(/'/g, "&#039;");
   }
 
-  function renderTweetCard(tweet = {}) {
+  function makeTweetCard(tweet = {}) {
+    const text = tweet.texto || tweet.text || "";
+    const handle = tweet.handle || tweet.autorHandle || "";
+    const name = tweet.nome || tweet.name || tweet.autorNome || "";
+    const date = tweet.data || tweet.date || "";
+    const link = tweet.link || tweet.tweetUrl || "";
+
     return `
       <aside class="tweet-card">
         <span class="tweet-card__label">Tweet citado</span>
-        ${tweet.texto ? `<p>${escapeHtml(tweet.texto)}</p>` : ""}
-        ${tweet.nome || tweet.handle || tweet.data ? `<small>${escapeHtml([tweet.nome, tweet.handle, tweet.data].filter(Boolean).join(" | "))}</small>` : ""}
-        ${tweet.link ? `<a href="${escapeHtml(tweet.link)}" target="_blank" rel="noopener noreferrer">Abrir no X</a>` : ""}
+        ${text ? `<p>${escapeHtml(text)}</p>` : ""}
+        ${name || handle || date ? `<small>${escapeHtml([name, handle, date].filter(Boolean).join(" | "))}</small>` : ""}
+        ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Abrir no X</a>` : ""}
       </aside>
     `;
   }
 
-  function createColmeiaView({ canvas, detail, filters, search, centerButton, status, graph }) {
-    const ctx = canvas.getContext("2d");
-    const css = getComputedStyle(document.documentElement);
-    const colors = {
-      black: css.getPropertyValue("--black").trim(),
-      white: css.getPropertyValue("--white").trim(),
-      orange: css.getPropertyValue("--laranja").trim(),
-      blue: css.getPropertyValue("--blue").trim(),
-      green: css.getPropertyValue("--green").trim(),
-      gray: css.getPropertyValue("--gray-500").trim()
+  function createColmeiaView(options = {}) {
+    const canvas = options.canvas;
+    const graph = options.graph || { nodes: [], links: [] };
+    const root = options.root || document;
+    const chipsEl = options.chips || root.getElementById("chips");
+    const legendEl = options.legend || root.getElementById("legend");
+    const searchEl = options.search || root.getElementById("search");
+    const resetEl = options.reset || root.getElementById("reset");
+    const panel = options.panel || root.getElementById("panel");
+    const panelContent = options.panelContent || root.getElementById("panelContent");
+    const panelClose = options.panelClose || root.getElementById("panelClose");
+    const loading = options.loading || root.getElementById("colmeia-loading");
+
+    if (!canvas) throw new Error("Canvas da Colmeia nao encontrado");
+
+    const css = getComputedStyle(document.body || document.documentElement);
+    const v = (name) => css.getPropertyValue(name).trim();
+    const C = {
+      black: v("--black"),
+      white: v("--white"),
+      laranja: v("--laranja"),
+      blue: v("--blue"),
+      green: v("--green"),
+      laranjaSoft: v("--col-laranja-soft"),
+      bgSoft: v("--col-bg-soft"),
+      muted: v("--col-muted"),
+      hair: v("--col-hair"),
+      edge: "rgba(244,244,241,.5)"
     };
-    const nodes = graph.nodes.map((node, index) => ({
+    const FONT_DISPLAY = v("--font-display");
+    const FONT_BODY = v("--font-body");
+    const TYPES = {
+      tag: { label: "Tag", color: C.laranja, hub: true },
+      posicao: { label: "Posicao", color: C.laranja, hub: true },
+      time: { label: "Time NBA", color: C.laranja, hub: true },
+      post: { label: "Publicacao", color: C.white },
+      prospect: { label: "Prospecto", color: C.blue },
+      termo: { label: "Termo", color: C.green },
+      ranking: { label: "Ranking", color: C.white, ring: true },
+      dica: { label: "Dica", color: C.white, arrow: true },
+      tweet: { label: "Tweet", color: C.white, quote: true }
+    };
+
+    const ctx = canvas.getContext("2d");
+    const nodes = graph.nodes.map((node) => ({
       ...node,
-      x: Math.cos(index * 2.399) * (110 + index * 0.9),
-      y: Math.sin(index * 2.399) * (110 + index * 0.9),
+      type: node.type || node.tipo,
+      x: (Math.random() - 0.5) * 500,
+      y: (Math.random() - 0.5) * 500,
       vx: 0,
       vy: 0,
-      radius: radiusFor(node)
+      deg: 0,
+      fixed: false
     }));
-    const nodeById = new Map(nodes.map((node) => [node.id, node]));
-    const links = graph.links
-      .map((link) => ({ ...link, sourceNode: nodeById.get(link.source), targetNode: nodeById.get(link.target) }))
-      .filter((link) => link.sourceNode && link.targetNode);
-    const activeTypes = new Set(TYPE_ORDER);
-    let query = "";
-    let width = 1;
-    let height = 1;
-    let dpr = 1;
-    let zoom = 1;
-    let panX = 0;
-    let panY = 0;
-    let hoverNode = null;
-    let focusNode = null;
-    let dragNode = null;
-    let draggingCanvas = false;
-    let lastPointer = null;
-    let animationFrame = null;
+    const byId = {};
+    nodes.forEach((node) => { byId[node.id] = node; });
 
-    function radiusFor(node) {
-      if (node.tipo === "tag" || node.tipo === "posicao" || node.tipo === "time") return 17;
-      if (node.tipo === "prospect") return 15;
-      if (node.tipo === "tweet") return 14;
-      return 12;
+    const links = graph.links
+      .map((link) => ({
+        s: byId[link.source] || byId[link.s],
+        t: byId[link.target] || byId[link.t],
+        kind: link.kind || "tag",
+        via: link.via || "",
+        peso: link.peso || 1
+      }))
+      .filter((link) => link.s && link.t);
+
+    links.forEach((link) => {
+      link.s.deg += 1;
+      link.t.deg += 1;
+    });
+
+    const adj = {};
+    nodes.forEach((node) => { adj[node.id] = []; });
+    links.forEach((link) => {
+      adj[link.s.id].push({ node: link.t, link });
+      adj[link.t.id].push({ node: link.s, link });
+    });
+
+    function radius(node) {
+      const type = TYPES[node.type] || TYPES.post;
+      if (type.hub) return 16 + Math.min(node.deg, 9) * 1.7;
+      if (node.type === "tweet" || node.type === "ranking" || node.type === "dica") return 15;
+      return 14;
+    }
+    nodes.forEach((node) => { node.r = radius(node); });
+
+    let W = 0;
+    let H = 0;
+    let dpr = 1;
+    let target = null;
+    const view = { x: 0, y: 0, k: 1 };
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.clientWidth;
+      H = canvas.clientHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
     }
 
-    function colorFor(node) {
-      if (node.tipo === "tag" || node.tipo === "posicao" || node.tipo === "time") return colors.orange;
-      if (node.tipo === "prospect") return colors.blue;
-      if (node.tipo === "termo") return colors.green;
-      return colors.white;
+    window.addEventListener("resize", resize);
+    resize();
+    view.x = W / 2;
+    view.y = H / 2;
+
+    function step() {
+      const REP = 26000;
+      const SPRING = 0.045;
+      const CENTER = 0.014;
+      const DAMP = 0.86;
+
+      for (let i = 0; i < nodes.length; i += 1) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j += 1) {
+          const b = nodes[j];
+          let dx = a.x - b.x;
+          let dy = a.y - b.y;
+          let d2 = dx * dx + dy * dy;
+          if (d2 < 0.01) d2 = 0.01;
+          const d = Math.sqrt(d2);
+          const f = REP / d2;
+          const fx = (dx / d) * f;
+          const fy = (dy / d) * f;
+          a.vx += fx;
+          a.vy += fy;
+          b.vx -= fx;
+          b.vy -= fy;
+        }
+      }
+
+      for (const link of links) {
+        const sourceType = TYPES[link.s.type] || {};
+        const targetType = TYPES[link.t.type] || {};
+        const isHub = sourceType.hub || targetType.hub;
+        const rest = link.kind === "manual" ? 78 : (isHub ? 96 : 110);
+        const dx = link.t.x - link.s.x;
+        const dy = link.t.y - link.s.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const f = (d - rest) * SPRING;
+        const fx = (dx / d) * f;
+        const fy = (dy / d) * f;
+        link.s.vx += fx;
+        link.s.vy += fy;
+        link.t.vx -= fx;
+        link.t.vy -= fy;
+      }
+
+      for (const node of nodes) {
+        const type = TYPES[node.type] || {};
+        node.vx += -node.x * CENTER;
+        node.vy += -node.y * CENTER;
+        if (node.fixed) {
+          node.vx = 0;
+          node.vy = 0;
+          continue;
+        }
+        node.vx *= DAMP;
+        node.vy *= DAMP;
+        const mass = type.hub ? 0.55 : 1;
+        node.x += node.vx * mass;
+        node.y += node.vy * mass;
+      }
+    }
+
+    let hover = null;
+    let focusId = null;
+    let query = "";
+    const hiddenTypes = {};
+    let frame = null;
+
+    function visibleNodes() {
+      return nodes.filter((node) => !hiddenTypes[node.type]);
     }
 
     function isVisible(node) {
-      return activeTypes.has(node.tipo);
+      return node && !hiddenTypes[node.type];
     }
 
-    function matchesQuery(node) {
-      if (!query) return true;
-      const text = [node.label, node.body, node.slug, node.tweet?.texto, node.tweet?.handle].filter(Boolean).join(" ").toLowerCase();
-      return text.includes(query);
-    }
+    function fitView(animated) {
+      const set = visibleNodes().length ? visibleNodes() : nodes;
+      if (!set.length) return;
 
-    function isNeighbor(node) {
-      const selected = focusNode || hoverNode;
-      if (!selected) return true;
-      if (node === selected) return true;
-      return links.some((link) =>
-        (link.sourceNode === selected && link.targetNode === node) ||
-        (link.targetNode === selected && link.sourceNode === node)
-      );
-    }
+      let minX = 1e9;
+      let minY = 1e9;
+      let maxX = -1e9;
+      let maxY = -1e9;
 
-    function visibleLinks() {
-      return links.filter((link) => isVisible(link.sourceNode) && isVisible(link.targetNode));
-    }
-
-    function resize() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-      width = Math.max(320, rect.width);
-      height = Math.max(420, rect.height);
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    function worldToScreen(node) {
-      return {
-        x: width / 2 + panX + node.x * zoom,
-        y: height / 2 + panY + node.y * zoom
-      };
-    }
-
-    function screenToWorld(point) {
-      return {
-        x: (point.x - width / 2 - panX) / zoom,
-        y: (point.y - height / 2 - panY) / zoom
-      };
-    }
-
-    function pointer(event) {
-      const rect = canvas.getBoundingClientRect();
-      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
-    }
-
-    function hitTest(point) {
-      for (let index = nodes.length - 1; index >= 0; index -= 1) {
-        const node = nodes[index];
-        if (!isVisible(node)) continue;
-        const screen = worldToScreen(node);
-        const radius = (node.radius + 5) * zoom;
-        if (Math.hypot(point.x - screen.x, point.y - screen.y) <= radius) return node;
+      for (const node of set) {
+        minX = Math.min(minX, node.x - node.r);
+        maxX = Math.max(maxX, node.x + node.r);
+        minY = Math.min(minY, node.y - node.r);
+        maxY = Math.max(maxY, node.y + node.r);
       }
-      return null;
+
+      const pad = 100;
+      const graphW = maxX - minX;
+      const graphH = maxY - minY;
+      let k = Math.min(W / (graphW + pad * 2), H / (graphH + pad * 2));
+      k = Math.max(0.35, Math.min(k, 1.5));
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const x = W / 2 - cx * k;
+      const y = H / 2 - cy * k;
+
+      if (animated) target = { x, y, k };
+      else {
+        view.x = x;
+        view.y = y;
+        view.k = k;
+        target = null;
+      }
     }
 
-    function tick() {
-      const activeLinks = visibleLinks();
-      nodes.forEach((node) => {
-        if (!isVisible(node) || node === dragNode) return;
-        node.vx += -node.x * 0.0007;
-        node.vy += -node.y * 0.0007;
-      });
-      activeLinks.forEach((link) => {
-        const a = link.sourceNode;
-        const b = link.targetNode;
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const distance = Math.max(1, Math.hypot(dx, dy));
-        const desired = link.kind === "manual" ? 118 : 92;
-        const force = (distance - desired) * 0.0009;
-        const fx = dx / distance * force;
-        const fy = dy / distance * force;
-        if (a !== dragNode) { a.vx += fx; a.vy += fy; }
-        if (b !== dragNode) { b.vx -= fx; b.vy -= fy; }
-      });
-      for (let i = 0; i < nodes.length; i += 1) {
-        const a = nodes[i];
-        if (!isVisible(a)) continue;
-        for (let j = i + 1; j < nodes.length; j += 1) {
-          const b = nodes[j];
-          if (!isVisible(b)) continue;
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
-          const distance = Math.max(8, Math.hypot(dx, dy));
-          const force = 18 / (distance * distance);
-          const fx = dx / distance * force;
-          const fy = dy / distance * force;
-          if (a !== dragNode) { a.vx -= fx; a.vy -= fy; }
-          if (b !== dragNode) { b.vx += fx; b.vy += fy; }
-        }
+    function activeSet() {
+      const key = focusId || hover;
+      if (!key) return null;
+      const set = new Set([key]);
+      for (const edge of adj[key] || []) {
+        if (isVisible(edge.node)) set.add(edge.node.id);
       }
-      nodes.forEach((node) => {
-        if (node === dragNode) return;
-        node.vx *= 0.86;
-        node.vy *= 0.86;
-        node.x += node.vx;
-        node.y += node.vy;
-      });
+      return set;
+    }
+
+    function searchSet() {
+      if (!query) return null;
+      const q = query.toLowerCase();
+      const set = new Set();
+
+      for (const node of nodes) {
+        const type = TYPES[node.type] || {};
+        if (type.hub) continue;
+        const text = [node.label, node.body, node.slug, node.tweet?.texto, node.tweet?.text, node.tweet?.handle]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (text.includes(q)) set.add(node.id);
+      }
+
+      return set;
+    }
+
+    function hex(x, y, r) {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i += 1) {
+        const a = (Math.PI / 180) * (60 * i - 90);
+        const px = x + r * Math.cos(a);
+        const py = y + r * Math.sin(a);
+        if (i) ctx.lineTo(px, py);
+        else ctx.moveTo(px, py);
+      }
+      ctx.closePath();
     }
 
     function draw() {
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = colors.black;
-      ctx.fillRect(0, 0, width, height);
-      const selected = focusNode || hoverNode;
-      visibleLinks().forEach((link) => {
-        const a = worldToScreen(link.sourceNode);
-        const b = worldToScreen(link.targetNode);
-        const highlighted = !selected || link.sourceNode === selected || link.targetNode === selected;
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = link.kind === "manual" ? colors.orange : colors.gray;
-        ctx.globalAlpha = highlighted ? 0.65 : 0.1;
-        ctx.lineWidth = link.kind === "manual" ? 2.4 : 1;
-        ctx.stroke();
-      });
-      ctx.globalAlpha = 1;
-      nodes.forEach((node) => {
-        if (!isVisible(node)) return;
-        const p = worldToScreen(node);
-        const searchMatch = matchesQuery(node);
-        const muted = (selected && !isNeighbor(node)) || (query && !searchMatch);
-        const highlighted = node === selected || (query && searchMatch);
-        ctx.globalAlpha = muted ? 0.18 : 1;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, node.radius * zoom, 0, Math.PI * 2);
-        ctx.fillStyle = colorFor(node);
-        ctx.fill();
-        ctx.lineWidth = highlighted ? 3 : 1.5;
-        ctx.strokeStyle = node.tipo === "tweet" ? colors.orange : colors.black;
-        ctx.stroke();
-        if (node.tipo === "tweet") {
-          ctx.fillStyle = colors.black;
-          ctx.font = `${Math.max(13, 15 * zoom)}px ${css.getPropertyValue("--font-display")}`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("\u201c", p.x, p.y + 2);
+      if (target) {
+        view.x += (target.x - view.x) * 0.12;
+        view.y += (target.y - view.y) * 0.12;
+        view.k += (target.k - view.k) * 0.12;
+        if (Math.abs(target.x - view.x) < 0.4 && Math.abs(target.k - view.k) < 0.002) target = null;
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      ctx.translate(view.x, view.y);
+      ctx.scale(view.k, view.k);
+
+      const active = activeSet();
+      const search = searchSet();
+
+      function nodeAlpha(node) {
+        const type = TYPES[node.type] || {};
+        if (!isVisible(node)) return 0;
+        if (search && !type.hub && !search.has(node.id)) return 0.12;
+        if (active && !active.has(node.id)) return 0.15;
+        return 1;
+      }
+
+      function linkAlpha(link) {
+        if (!isVisible(link.s) || !isVisible(link.t)) return 0;
+        if (active) {
+          const on = active.has(link.s.id) && active.has(link.t.id) && (focusId ? (link.s.id === focusId || link.t.id === focusId) : true);
+          return on ? 1 : 0.06;
         }
-        if (zoom > 0.55 || node === selected) {
-          ctx.fillStyle = colors.white;
-          ctx.font = `700 ${Math.max(10, 11 * zoom)}px ${css.getPropertyValue("--font-body")}`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "top";
-          ctx.fillText(String(node.label || "").slice(0, 28), p.x, p.y + node.radius * zoom + 7);
+        return link.kind === "manual" ? 0.85 : 1;
+      }
+
+      ctx.lineCap = "round";
+      for (const link of links) {
+        const alpha = linkAlpha(link);
+        if (alpha <= 0) continue;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.moveTo(link.s.x, link.s.y);
+        ctx.lineTo(link.t.x, link.t.y);
+        if (link.kind === "manual") {
+          ctx.strokeStyle = C.laranja;
+          ctx.lineWidth = 1.7;
+        } else {
+          ctx.strokeStyle = C.edge;
+          ctx.lineWidth = 0.9;
         }
-      });
+        ctx.stroke();
+      }
       ctx.globalAlpha = 1;
+
+      for (const node of nodes) {
+        const alpha = nodeAlpha(node);
+        if (alpha <= 0) continue;
+        const type = TYPES[node.type] || TYPES.post;
+        const focused = node.id === focusId;
+        ctx.globalAlpha = alpha;
+
+        if (focused) {
+          ctx.shadowColor = C.laranja;
+          ctx.shadowBlur = 22;
+        }
+        hex(node.x, node.y, node.r);
+
+        if (type.hub) {
+          ctx.fillStyle = C.laranja;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "rgba(20,20,20,.6)";
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = C.bgSoft;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.lineWidth = focused ? 2 : 1.4;
+          ctx.strokeStyle = type.color;
+          ctx.stroke();
+          if (type.ring) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 3.4, 0, Math.PI * 2);
+            ctx.fillStyle = C.laranja;
+            ctx.fill();
+          }
+          if (type.quote) {
+            ctx.fillStyle = type.color;
+            ctx.font = `600 15px ${FONT_DISPLAY}`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("\u201d", node.x, node.y + 1);
+          }
+          if (type.arrow) {
+            ctx.fillStyle = type.color;
+            ctx.font = `600 13px ${FONT_DISPLAY}`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("\u2197", node.x, node.y);
+          }
+        }
+        ctx.shadowBlur = 0;
+      }
+      ctx.globalAlpha = 1;
+
+      const showAll = view.k > 0.92;
+      for (const node of nodes) {
+        const alpha = nodeAlpha(node);
+        if (alpha <= 0.2) continue;
+        const type = TYPES[node.type] || TYPES.post;
+        const emphasized = (active && active.has(node.id)) || (search && search.has(node.id)) || node.id === focusId;
+        if (!type.hub && !showAll && !emphasized) continue;
+
+        ctx.globalAlpha = Math.min(alpha, 1);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        const y = node.y + node.r + 6;
+        if (type.hub) {
+          ctx.font = `700 12.5px ${FONT_DISPLAY}`;
+          ctx.fillStyle = C.laranjaSoft;
+        } else {
+          ctx.font = `400 12px ${FONT_BODY}`;
+          ctx.fillStyle = "rgba(244,244,241,.86)";
+        }
+        ctx.fillText(node.label || "", node.x, y);
+      }
+      ctx.globalAlpha = 1;
+
+      step();
+      frame = requestAnimationFrame(draw);
     }
 
-    function loop() {
-      tick();
-      draw();
-      animationFrame = requestAnimationFrame(loop);
+    function screenToWorld(sx, sy) {
+      return {
+        x: (sx - view.x) / view.k,
+        y: (sy - view.y) / view.k
+      };
     }
 
-    function renderFilters() {
-      filters.innerHTML = TYPE_ORDER.map((type) => `
-        <button class="colmeia-chip is-active" type="button" data-type="${type}">
-          ${TYPES[type].label}
-        </button>
-      `).join("");
-      filters.querySelectorAll("[data-type]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const type = button.dataset.type;
-          if (activeTypes.has(type)) activeTypes.delete(type);
-          else activeTypes.add(type);
-          button.classList.toggle("is-active", activeTypes.has(type));
-          updateStatus();
-          renderDetail(focusNode);
-        });
-      });
+    function pick(sx, sy) {
+      const world = screenToWorld(sx, sy);
+      let best = null;
+      let bestDistance = 1e9;
+      for (const node of nodes) {
+        if (!isVisible(node)) continue;
+        const dx = node.x - world.x;
+        const dy = node.y - world.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < node.r + 4 && distance < bestDistance) {
+          bestDistance = distance;
+          best = node;
+        }
+      }
+      return best;
     }
 
-    function renderDetail(node) {
-      if (!node || !isVisible(node)) {
-        detail.innerHTML = `
-          <span class="colmeia-detail__eyebrow">selecione um n\u00f3</span>
-          <h2>Explore a rede</h2>
-          <p>Passe o cursor para ver vizinhos. Clique para fixar detalhes, arraste para reorganizar e use a roda do mouse para aproximar.</p>
-        `;
+    let down = null;
+    let dragNode = null;
+    let moved = false;
+
+    function localXY(event) {
+      const rect = canvas.getBoundingClientRect();
+      const point = event.touches ? event.touches[0] : event;
+      return {
+        x: point.clientX - rect.left,
+        y: point.clientY - rect.top
+      };
+    }
+
+    function onPointerDown(event) {
+      const point = localXY(event);
+      down = point;
+      moved = false;
+      const node = pick(point.x, point.y);
+      if (node) {
+        dragNode = node;
+        node.fixed = true;
+      }
+      canvas.classList.add("grabbing");
+    }
+
+    function onPointerMove(event) {
+      const point = localXY(event);
+      if (down) {
+        if (Math.abs(point.x - down.x) + Math.abs(point.y - down.y) > 4) moved = true;
+        if (dragNode) {
+          const world = screenToWorld(point.x, point.y);
+          dragNode.x = world.x;
+          dragNode.y = world.y;
+          dragNode.vx = 0;
+          dragNode.vy = 0;
+        } else {
+          view.x += point.x - down.x;
+          view.y += point.y - down.y;
+          target = null;
+          down = point;
+        }
         return;
       }
-      const neighbors = links
-        .filter((link) => link.sourceNode === node || link.targetNode === node)
-        .map((link) => {
-          const other = link.sourceNode === node ? link.targetNode : link.sourceNode;
-          return `<li><span>${escapeHtml(TYPES[other.tipo]?.label || other.tipo)}</span>${escapeHtml(other.label)}${link.via ? `<small>${escapeHtml(link.via)}</small>` : ""}</li>`;
-        })
-        .slice(0, 12)
-        .join("");
-      detail.innerHTML = `
-        <span class="colmeia-detail__eyebrow">${escapeHtml(TYPES[node.tipo]?.label || node.tipo)}</span>
-        <h2>${escapeHtml(node.label)}</h2>
-        ${node.body ? `<p>${escapeHtml(node.body)}</p>` : ""}
-        ${node.tipo === "tweet" ? renderTweetCard(node.tweet) : ""}
-        ${node.slug ? `<small class="colmeia-detail__slug">${escapeHtml(node.slug)}</small>` : ""}
-        ${neighbors ? `<ul class="colmeia-detail__neighbors">${neighbors}</ul>` : `<p class="colmeia-detail__empty">N\u00f3 isolado no grafo atual.</p>`}
-      `;
+      const node = pick(point.x, point.y);
+      hover = node ? node.id : null;
+      canvas.classList.toggle("pointer", Boolean(node));
     }
 
-    function updateStatus() {
-      const visibleCount = nodes.filter(isVisible).length;
-      const matches = query ? nodes.filter((node) => isVisible(node) && matchesQuery(node)).length : visibleCount;
-      status.textContent = query
-        ? `${visibleCount} n\u00f3s vis\u00edveis | ${matches} destacados | ${visibleLinks().length} conex\u00f5es`
-        : `${visibleCount} n\u00f3s vis\u00edveis | ${visibleLinks().length} conex\u00f5es`;
-    }
-
-    canvas.addEventListener("pointermove", (event) => {
-      const point = pointer(event);
-      if (dragNode) {
-        const world = screenToWorld(point);
-        dragNode.x = world.x;
-        dragNode.y = world.y;
-        dragNode.vx = 0;
-        dragNode.vy = 0;
-        return;
+    function onPointerUp() {
+      canvas.classList.remove("grabbing");
+      if (down && !moved) {
+        const node = pick(down.x, down.y);
+        if (node) focusNode(node.id);
+        else closePanel();
       }
-      if (draggingCanvas && lastPointer) {
-        panX += point.x - lastPointer.x;
-        panY += point.y - lastPointer.y;
-        lastPointer = point;
-        return;
-      }
-      hoverNode = hitTest(point);
-      canvas.style.cursor = hoverNode ? "grab" : "default";
-    });
-    canvas.addEventListener("pointerdown", (event) => {
-      const point = pointer(event);
-      const hit = hitTest(point);
-      lastPointer = point;
-      if (hit) {
-        dragNode = hit;
-        focusNode = hit;
-        renderDetail(hit);
-        canvas.setPointerCapture(event.pointerId);
-        return;
-      }
-      draggingCanvas = true;
-      focusNode = null;
-      renderDetail(null);
-    });
-    canvas.addEventListener("pointerup", (event) => {
+      if (dragNode) dragNode.fixed = false;
       dragNode = null;
-      draggingCanvas = false;
-      lastPointer = null;
-      canvas.releasePointerCapture?.(event.pointerId);
-    });
-    canvas.addEventListener("click", (event) => {
-      const hit = hitTest(pointer(event));
-      focusNode = hit;
-      renderDetail(hit);
-    });
+      down = null;
+    }
+
+    canvas.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("mousemove", onPointerMove);
+    window.addEventListener("mouseup", onPointerUp);
     canvas.addEventListener("wheel", (event) => {
       event.preventDefault();
-      const point = pointer(event);
-      const before = screenToWorld(point);
-      const factor = event.deltaY > 0 ? 0.9 : 1.1;
-      zoom = Math.max(0.35, Math.min(2.8, zoom * factor));
-      const after = screenToWorld(point);
-      panX += (after.x - before.x) * zoom;
-      panY += (after.y - before.y) * zoom;
+      const point = localXY(event);
+      const world = screenToWorld(point.x, point.y);
+      const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+      view.k = Math.max(0.35, Math.min(view.k * factor, 4.2));
+      view.x = point.x - world.x * view.k;
+      view.y = point.y - world.y * view.k;
+      target = null;
     }, { passive: false });
-    search?.addEventListener("input", () => {
-      query = search.value.trim().toLowerCase();
-      updateStatus();
-      if (focusNode && !isVisible(focusNode)) {
-        focusNode = null;
-        renderDetail(null);
-      }
-    });
-    centerButton?.addEventListener("click", () => {
-      zoom = 1;
-      panX = 0;
-      panY = 0;
-      nodes.forEach((node) => { node.vx *= 0.2; node.vy *= 0.2; });
-    });
-    window.addEventListener("resize", resize);
 
-    renderFilters();
-    resize();
-    updateStatus();
-    renderDetail(null);
-    loop();
+    function mt(event) {
+      const touch = event.touches[0] || event.changedTouches[0];
+      return { clientX: touch.clientX, clientY: touch.clientY };
+    }
+    canvas.addEventListener("touchstart", (event) => {
+      canvas.dispatchEvent(new MouseEvent("mousedown", mt(event)));
+    }, { passive: true });
+    canvas.addEventListener("touchmove", (event) => {
+      window.dispatchEvent(new MouseEvent("mousemove", mt(event)));
+    }, { passive: true });
+    canvas.addEventListener("touchend", () => {
+      window.dispatchEvent(new MouseEvent("mouseup", {}));
+    });
+
+    function focusNode(id) {
+      focusId = id;
+      const node = byId[id];
+      if (!node) return;
+      const k = Math.max(view.k, 1.2);
+      const desktop = window.innerWidth > 720;
+      const cx = desktop ? (W - 360) / 2 : W / 2;
+      const cy = desktop ? H / 2 : H * 0.34;
+      target = { x: cx - node.x * k, y: cy - node.y * k, k };
+      renderPanel(node);
+      panel?.classList.add("open");
+    }
+
+    function closePanel() {
+      focusId = null;
+      panel?.classList.remove("open");
+    }
+    panelClose?.addEventListener("click", closePanel);
+
+    function renderPanel(node) {
+      if (!panelContent) return;
+      const type = TYPES[node.type] || TYPES.post;
+      let html = `<span class="badge"><span class="dot" style="background:${type.color}"></span>${type.label}</span>`;
+      html += `<h2>${escapeHtml(node.label)}</h2>`;
+
+      if (node.type === "tweet" && node.tweet) {
+        html += makeTweetCard(node.tweet);
+      } else if (node.body) {
+        html += `<div class="body">${escapeHtml(node.body)}</div>`;
+      }
+
+      if (node.type === "dica" && node.link) {
+        html += `<a class="ext" href="${escapeHtml(node.link)}" target="_blank" rel="noopener">Acessar \u2197</a>`;
+      }
+
+      const connections = (adj[node.id] || []).filter((edge) => isVisible(edge.node));
+      if (connections.length) {
+        html += `<div class="conn-title">Conexoes · ${connections.length}</div>`;
+        connections.sort((a, b) => (a.link.kind === "manual" ? -1 : 1) - (b.link.kind === "manual" ? -1 : 1));
+        for (const edge of connections) {
+          const connectionType = TYPES[edge.node.type] || TYPES.post;
+          const marker = edge.link.kind === "manual"
+            ? `<span class="mk manual"></span>`
+            : `<span class="mk" style="background:${connectionType.color}"></span>`;
+          let via;
+          if (edge.link.kind === "manual") {
+            via = `<span class="via">${escapeHtml(edge.link.via || "editorial")}</span>`;
+          } else {
+            const hubNode = TYPES[edge.node.type]?.hub ? edge.node : (TYPES[node.type]?.hub ? node : null);
+            via = `<span class="via">via ${escapeHtml(hubNode ? hubNode.label : "tag")}</span>`;
+          }
+          html += `<div class="conn" data-id="${edge.node.id}">${marker}<span class="lbl">${escapeHtml(edge.node.label)}</span>${via}</div>`;
+        }
+      }
+
+      panelContent.innerHTML = html;
+      panelContent.querySelectorAll(".conn").forEach((element) => {
+        element.addEventListener("click", () => focusNode(element.getAttribute("data-id")));
+      });
+    }
+
+    function renderChips() {
+      if (!chipsEl) return;
+      chipsEl.innerHTML = "";
+      TYPE_ORDER.forEach((key) => {
+        const type = TYPES[key];
+        const chip = document.createElement("div");
+        chip.className = "chip on";
+        chip.dataset.type = key;
+        chip.innerHTML = `<span class="dot" style="background:${type.color}"></span>${type.label}`;
+        chip.addEventListener("click", () => {
+          hiddenTypes[key] = !hiddenTypes[key];
+          chip.classList.toggle("on", !hiddenTypes[key]);
+          chip.classList.toggle("off", Boolean(hiddenTypes[key]));
+          if (focusId && !isVisible(byId[focusId])) closePanel();
+        });
+        chipsEl.appendChild(chip);
+      });
+    }
+
+    function renderLegend() {
+      if (!legendEl) return;
+      let html = "";
+      TYPE_ORDER.forEach((key) => {
+        const type = TYPES[key];
+        html += `<div class="row"><span class="swatch" style="background:${type.color}"></span>${type.label}</div>`;
+      });
+      html += `<div class="row"><span class="ln"></span>Conexao editorial manual</div>`;
+      legendEl.innerHTML = html;
+    }
+
+    searchEl?.addEventListener("input", (event) => {
+      query = event.target.value.trim();
+    });
+    resetEl?.addEventListener("click", () => {
+      closePanel();
+      query = "";
+      if (searchEl) searchEl.value = "";
+      fitView(true);
+    });
+
+    renderChips();
+    renderLegend();
+    for (let i = 0; i < 380; i += 1) step();
+    fitView(false);
+    if (loading) loading.hidden = true;
+    frame = requestAnimationFrame(draw);
 
     return {
       destroy() {
-        cancelAnimationFrame(animationFrame);
-      }
+        if (frame) cancelAnimationFrame(frame);
+        window.removeEventListener("resize", resize);
+        window.removeEventListener("mousemove", onPointerMove);
+        window.removeEventListener("mouseup", onPointerUp);
+      },
+      focusNode,
+      closePanel,
+      fitView
     };
   }
 
   window.T3ColmeiaView = {
-    TYPES,
+    TYPES: TYPE_ORDER,
     createColmeiaView
   };
 })();

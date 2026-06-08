@@ -10,7 +10,7 @@
   <title>Colmeia | Tabelado de 3</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body>
+<body class="colmeia-body">
   <header class="top-nav">
     <div class="container top-nav__inner">
       <a href="index.html" class="logo" aria-label="Tabelado de 3">
@@ -49,48 +49,44 @@
   </div>
 
   <main class="colmeia-page">
-    <section class="colmeia-hero">
-      <div class="container colmeia-hero__inner">
-        <div>
-          <span class="tag tag--red">grafo editorial</span>
-          <h1>Colmeia</h1>
+    <div class="shell">
+      <header class="colmeia-head">
+        <div class="brand">
+          <span class="kicker">Tabelado de 3</span>
+          <h1>Col<b>meia</b></h1>
+          <span class="sub">Uma vis&atilde;o macro de tudo que se conecta &mdash; textos, prospectos, termos, dicas e tweets, ligados pelos pontos em comum.</span>
         </div>
-        <p>Um mapa vivo de temas, prospectos, textos e conceitos. Aproxime, filtre, puxe um n&oacute; e encontre as conex&otilde;es que sustentam a cobertura.</p>
-      </div>
-    </section>
+      </header>
 
-    <section class="colmeia-shell" aria-label="Grafo da Colmeia">
-      <div class="container colmeia-shell__inner">
-        <aside class="colmeia-toolbar" aria-label="Controles da Colmeia">
-          <label class="colmeia-search">
-            <span>buscar</span>
-            <input id="colmeia-search" type="search" placeholder="N&oacute;, tag, time..." autocomplete="off" />
-          </label>
-          <div id="colmeia-filters" class="colmeia-filters" aria-label="Filtros por tipo"></div>
-          <button id="colmeia-center" class="colmeia-action" type="button">recentralizar</button>
-          <div id="colmeia-status" class="colmeia-status" aria-live="polite">Carregando Colmeia...</div>
-        </aside>
-
-        <div class="colmeia-canvas-wrap">
-          <canvas id="colmeia-canvas" aria-label="Mapa de conex&otilde;es da Colmeia"></canvas>
-          <div class="colmeia-legend" aria-label="Legenda">
-            <span><i class="colmeia-dot colmeia-dot--hub"></i> hubs</span>
-            <span><i class="colmeia-dot colmeia-dot--prospect"></i> prospect</span>
-            <span><i class="colmeia-dot colmeia-dot--termo"></i> termo</span>
-            <span><i class="colmeia-dot colmeia-dot--content"></i> conte&uacute;do</span>
-          </div>
+      <div class="controls">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input id="search" type="text" placeholder="Buscar na colmeia..." autocomplete="off" />
         </div>
-
-        <aside id="colmeia-detail" class="colmeia-detail" aria-live="polite">
-          <span class="colmeia-detail__eyebrow">selecione um n&oacute;</span>
-          <h2>Explore a rede</h2>
-          <p>Passe o cursor para ver vizinhos. Clique para fixar detalhes, arraste para reorganizar e use a roda do mouse para aproximar.</p>
-        </aside>
+        <div class="chips" id="chips"></div>
+        <button class="reset" id="reset" type="button">Recentralizar</button>
       </div>
-    </section>
+
+      <div class="legend" id="legend"></div>
+
+      <div class="hint">
+        arraste o fundo para mover &middot; <kbd>scroll</kbd> para zoom<br />
+        clique num n&oacute; para focar &middot; arraste um n&oacute; para reposicionar
+      </div>
+    </div>
+
+    <div id="stage">
+      <canvas id="cv" aria-label="Mapa de conex&otilde;es da Colmeia"></canvas>
+      <div id="colmeia-loading" class="colmeia-loading" aria-live="polite">Carregando Colmeia...</div>
+    </div>
+
+    <aside id="panel">
+      <button class="close" id="panelClose" type="button" aria-label="Fechar painel">&times;</button>
+      <div id="panelContent"></div>
+    </aside>
   </main>
 
-  <footer>
+  <footer class="colmeia-footer">
     <div class="container footer__inner">
       <div class="footer__copy">
         <img class="footer__logo" src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
@@ -109,15 +105,12 @@
       </div>
     </div>
   </footer>
+
   <script src="js/sanity-config.js"></script>
+  <script src="js/main.js"></script>
   <script src="js/sanity-api.js"></script>
-  <script src="js/conteudo.js"></script>
-  <script src="js/cms-posts.js"></script>
-  <script src="js/rankings.js"></script>
-  <script src="js/draft-data.js"></script>
   <script src="js/colmeia-data.js"></script>
   <script src="js/colmeia-graph.js"></script>
-  <script src="js/main.js"></script>
   <script src="js/colmeia-view.js"></script>
   <script src="js/colmeia-page.js"></script>
 </body>

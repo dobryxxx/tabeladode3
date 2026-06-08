@@ -2831,293 +2831,460 @@
 
     /* Glossário */
     /* Colmeia */
-    .colmeia-page {
-      min-height: 100vh;
-      background: var(--black);
-    }
-
-    .colmeia-hero {
-      padding: calc(var(--nav-h) + 72px) 0 38px;
-      border-bottom: 1px solid var(--gray-700);
-    }
-
-    .colmeia-hero__inner {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
-      gap: 40px;
-      align-items: end;
-    }
-
-    .colmeia-hero h1 {
-      margin-top: 14px;
-      color: var(--white);
-      font-family: var(--font-display);
-      font-size: clamp(48px, 8vw, 104px);
-      line-height: .88;
-      text-transform: uppercase;
-    }
-
-    .colmeia-hero p {
-      color: var(--gray-300);
-      font-size: 16px;
-      line-height: 1.65;
-    }
-
-    .colmeia-shell {
-      padding: 28px 0 72px;
-    }
-
-    .colmeia-shell__inner {
-      display: grid;
-      grid-template-columns: 240px minmax(0, 1fr) 300px;
-      min-height: 680px;
-      border-top: 1px solid var(--gray-700);
-      border-bottom: 1px solid var(--gray-700);
-    }
-
-    .colmeia-toolbar,
-    .colmeia-detail {
-      padding: 22px;
-      background: var(--gray-900);
-    }
-
-    .colmeia-toolbar {
-      border-right: 1px solid var(--gray-700);
-    }
-
-    .colmeia-detail {
-      border-left: 1px solid var(--gray-700);
-      overflow-y: auto;
-    }
-
-    .colmeia-search span,
-    .colmeia-detail__eyebrow,
-    .colmeia-status {
-      color: var(--laranja);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .13em;
-      text-transform: uppercase;
-    }
-
-    .colmeia-search input {
-      width: 100%;
-      margin-top: 10px;
-      padding: 12px 0;
-      border: 0;
-      border-bottom: 1px solid var(--gray-700);
-      background: transparent;
-      color: var(--white);
-      font-family: var(--font-body);
-      font-size: 14px;
-      outline: none;
-    }
-
-    .colmeia-search input:focus {
-      border-bottom-color: var(--laranja);
-    }
-
-    .colmeia-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 22px;
-    }
-
-    .colmeia-chip,
-    .colmeia-action {
-      border: 1px solid var(--gray-700);
-      background: transparent;
-      color: var(--gray-300);
-      font-family: var(--font-body);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-
-    .colmeia-chip {
-      padding: 8px 10px;
-    }
-
-    .colmeia-chip.is-active {
-      border-color: var(--laranja);
-      color: var(--white);
-    }
-
-    .colmeia-action {
-      width: 100%;
-      margin-top: 22px;
-      padding: 12px;
-    }
-
-    .colmeia-action:hover,
-    .colmeia-action:focus-visible {
-      border-color: var(--laranja);
-      color: var(--white);
-    }
-
-    .colmeia-status {
-      margin-top: 18px;
-      color: var(--gray-300);
-      line-height: 1.5;
-    }
-
-    .colmeia-canvas-wrap {
-      position: relative;
-      min-height: 680px;
+    .colmeia-body {
+      --col-laranja-soft: #d8693e;
+      --col-bg-soft: #1b1b1b;
+      --col-muted: rgba(244,244,241,.55);
+      --col-hair: rgba(244,244,241,.12);
+      min-height: 100%;
       overflow: hidden;
       background: var(--black);
+      color: var(--white);
     }
 
-    #colmeia-canvas {
+    .colmeia-body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(120% 90% at 50% 0%, rgba(186,78,37,.06), transparent 55%),
+        radial-gradient(140% 120% at 50% 100%, rgba(0,0,0,.55), transparent 60%);
+    }
+
+    .colmeia-body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .04;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .colmeia-page {
+      min-height: 100vh;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    #cv {
       display: block;
       width: 100%;
       height: 100%;
-      min-height: 680px;
+      cursor: grab;
     }
 
-    .colmeia-legend {
-      position: absolute;
-      left: 18px;
-      bottom: 18px;
+    #cv.grabbing { cursor: grabbing; }
+    #cv.pointer { cursor: pointer; }
+
+    .colmeia-head {
+      position: fixed;
+      top: var(--nav-h);
+      left: 0;
+      right: 0;
+      z-index: 3;
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid var(--gray-700);
-      background: var(--gray-900);
-      color: var(--gray-300);
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 22px 28px 18px;
+      background: linear-gradient(180deg, rgba(20,20,20,.92), rgba(20,20,20,0));
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      pointer-events: auto;
+    }
+
+    .brand .kicker {
+      color: var(--col-muted);
       font-size: 11px;
+      font-weight: 400;
+      letter-spacing: .32em;
       text-transform: uppercase;
     }
 
-    .colmeia-legend span {
-      display: inline-flex;
+    .brand h1 {
+      font-family: var(--font-display);
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      line-height: 1;
+    }
+
+    .brand h1 b {
+      color: var(--laranja);
+      font-weight: 800;
+    }
+
+    .brand .sub {
+      max-width: 42ch;
+      margin-top: 4px;
+      color: var(--col-muted);
+      font-size: 12.5px;
+    }
+
+    .controls {
+      position: fixed;
+      top: calc(var(--nav-h) + 26px);
+      right: 28px;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    .search {
+      display: flex;
       align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--col-hair);
+      border-radius: 2px;
+      background: rgba(27,27,27,.85);
+      backdrop-filter: blur(6px);
+    }
+
+    .search input {
+      width: 200px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 300;
+    }
+
+    .search input::placeholder { color: var(--col-muted); }
+
+    .search svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: var(--col-muted);
+      stroke-width: 1.6;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: 430px;
       gap: 6px;
     }
 
-    .colmeia-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--white);
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      border: 1px solid var(--col-hair);
+      border-radius: 2px;
+      background: rgba(27,27,27,.7);
+      color: var(--col-muted);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: .04em;
+      cursor: pointer;
+      user-select: none;
+      transition: all .18s ease;
     }
 
-    .colmeia-dot--hub { background: var(--laranja); }
-    .colmeia-dot--prospect { background: var(--blue); }
-    .colmeia-dot--termo { background: var(--green); }
-    .colmeia-dot--content { background: var(--white); }
+    .chip .dot {
+      width: 8px;
+      height: 8px;
+      flex: none;
+      border-radius: 1px;
+    }
 
-    .colmeia-detail h2 {
-      margin-top: 10px;
+    .chip.on {
+      border-color: rgba(244,244,241,.3);
       color: var(--white);
-      font-family: var(--font-display);
-      font-size: 28px;
+    }
+
+    .chip.off {
+      opacity: .4;
+      text-decoration: line-through;
+    }
+
+    .chip:hover { border-color: rgba(244,244,241,.35); }
+
+    .reset {
+      padding: 4px 0;
+      border: none;
+      background: none;
+      color: var(--col-muted);
+      font-family: var(--font-body);
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color .18s;
+    }
+
+    .reset:hover { color: var(--col-laranja-soft); }
+
+    .legend {
+      position: fixed;
+      left: 28px;
+      bottom: 22px;
+      z-index: 3;
+      color: var(--col-muted);
+      font-size: 11.5px;
+      line-height: 1.9;
+      pointer-events: none;
+    }
+
+    .legend .row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .legend .swatch {
+      width: 11px;
+      height: 11px;
+      flex: none;
+    }
+
+    .legend .ln {
+      width: 18px;
+      height: 0;
+      border-top: 2px solid var(--laranja);
+    }
+
+    .hint {
+      position: fixed;
+      right: 28px;
+      bottom: 22px;
+      z-index: 3;
+      color: rgba(244,244,241,.35);
+      font-size: 11px;
+      line-height: 1.7;
+      text-align: right;
+      pointer-events: none;
+    }
+
+    .colmeia-body kbd {
+      padding: 1px 5px;
+      border: 1px solid var(--col-hair);
+      border-radius: 2px;
+      color: var(--col-muted);
+      font-family: var(--font-body);
+      font-size: 10px;
+    }
+
+    #panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      width: 360px;
+      max-width: 88vw;
+      padding: 84px 26px 26px;
+      overflow-y: auto;
+      border-left: 1px solid var(--col-hair);
+      background: rgba(22,22,22,.96);
+      backdrop-filter: blur(10px);
+      transform: translateX(100%);
+      transition: transform .42s cubic-bezier(.22,.61,.36,1);
+    }
+
+    #panel.open { transform: translateX(0); }
+
+    #panel .close {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      border: none;
+      background: none;
+      color: var(--col-muted);
+      font-size: 20px;
       line-height: 1;
+      cursor: pointer;
+      transition: color .18s;
+    }
+
+    #panel .close:hover { color: var(--white); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      gap: 7px;
+      padding: 4px 10px;
+      border: 1px solid var(--col-hair);
+      border-radius: 2px;
+      color: var(--col-muted);
+      font-size: 10.5px;
+      font-weight: 400;
+      letter-spacing: .14em;
       text-transform: uppercase;
     }
 
-    .colmeia-detail p {
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 1px;
+    }
+
+    #panel h2 {
+      margin: 16px 0 0;
+      font-family: var(--font-display);
+      font-size: 25px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      line-height: 1.12;
+    }
+
+    #panel .body {
       margin-top: 14px;
-      color: var(--gray-300);
+      color: rgba(244,244,241,.82);
       font-size: 14px;
+      font-weight: 300;
       line-height: 1.65;
     }
 
-    .colmeia-detail__slug {
-      display: block;
+    #panel .ext {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      gap: 6px;
       margin-top: 14px;
-      color: var(--gray-500);
+      padding-bottom: 3px;
+      border-bottom: 1px solid rgba(216,105,62,.4);
+      color: var(--col-laranja-soft);
       font-size: 12px;
-      word-break: break-word;
-    }
-
-    .colmeia-detail__neighbors {
-      margin-top: 20px;
-      list-style: none;
-      border-top: 1px solid var(--gray-700);
-    }
-
-    .colmeia-detail__neighbors li {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--gray-700);
-      color: var(--white);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-
-    .colmeia-detail__neighbors span,
-    .colmeia-detail__neighbors small {
-      display: block;
-      color: var(--laranja);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .1em;
+      letter-spacing: .12em;
+      text-decoration: none;
       text-transform: uppercase;
     }
 
-    .colmeia-detail__neighbors small {
-      margin-top: 5px;
-      color: var(--gray-500);
+    #panel .ext:hover { color: var(--laranja); }
+
+    #panel .tweet-card {
+      margin-top: 18px;
+      background: var(--col-bg-soft);
     }
 
-    .colmeia-detail .tweet-card {
-      margin: 18px 0 0;
+    .conn-title {
+      margin: 26px 0 12px;
+      padding-top: 18px;
+      border-top: 1px solid var(--col-hair);
+      color: var(--col-muted);
+      font-size: 10.5px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
     }
 
-    @media (max-width: 1040px) {
-      .colmeia-hero__inner,
-      .colmeia-shell__inner {
-        grid-template-columns: 1fr;
-      }
-
-      .colmeia-shell__inner {
-        min-height: 0;
-      }
-
-      .colmeia-toolbar {
-        border-right: 0;
-        border-bottom: 1px solid var(--gray-700);
-      }
-
-      .colmeia-detail {
-        border-top: 1px solid var(--gray-700);
-        border-left: 0;
-      }
-
-      .colmeia-canvas-wrap,
-      #colmeia-canvas {
-        min-height: 620px;
-      }
+    .conn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(244,244,241,.05);
+      cursor: pointer;
+      transition: padding-left .18s;
     }
 
-    @media (max-width: 640px) {
-      .colmeia-hero {
-        padding: calc(var(--nav-h) + 42px) 0 26px;
+    .conn:hover { padding-left: 5px; }
+
+    .conn .mk {
+      width: 9px;
+      height: 9px;
+      flex: none;
+      border-radius: 1px;
+    }
+
+    .conn .mk.manual {
+      width: 14px;
+      height: 0;
+      border-top: 2px solid var(--laranja);
+      border-radius: 0;
+    }
+
+    .conn .lbl {
+      color: rgba(244,244,241,.85);
+      font-size: 13.5px;
+      font-weight: 300;
+    }
+
+    .conn .via {
+      margin-left: auto;
+      color: var(--col-muted);
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    .shell {
+      opacity: 0;
+      animation: colmeia-fade .8s ease .15s forwards;
+    }
+
+    .colmeia-loading {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 2;
+      color: var(--col-muted);
+      font-size: 11px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .colmeia-loading[hidden] { display: none; }
+
+    @keyframes colmeia-fade {
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 720px) {
+      .brand h1 { font-size: 23px; }
+
+      .controls {
+        top: auto;
+        right: 14px;
+        bottom: 74px;
+        left: 14px;
+        align-items: stretch;
       }
 
-      .colmeia-shell {
-        padding-bottom: 46px;
+      .search input { width: 100%; }
+      .chips { max-width: none; }
+      .legend { display: none; }
+      .hint { display: none; }
+
+      #panel {
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: auto;
+        height: 62vh;
+        max-width: none;
+        padding-top: 26px;
+        border-top: 1px solid var(--col-hair);
+        border-left: none;
+        transform: translateY(100%);
       }
 
-      .colmeia-toolbar,
-      .colmeia-detail {
-        padding: 18px;
-      }
-
-      .colmeia-canvas-wrap,
-      #colmeia-canvas {
-        min-height: 540px;
-      }
-
-      .colmeia-legend {
-        right: 12px;
-        left: 12px;
-        bottom: 12px;
-      }
+      #panel.open { transform: translateY(0); }
     }
 
     .glossario-list { margin-top: 20px; }
