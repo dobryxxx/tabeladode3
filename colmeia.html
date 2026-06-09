@@ -65,6 +65,7 @@
         </div>
         <div class="chips" id="chips"></div>
         <button class="reset" id="reset" type="button">Recentralizar</button>
+        <button class="list-toggle" id="listToggle" type="button" aria-expanded="false" aria-controls="mobileList">ver como lista</button>
       </div>
 
       <div class="legend" id="legend"></div>
@@ -83,6 +84,10 @@
     <aside id="panel">
       <button class="close" id="panelClose" type="button" aria-label="Fechar painel">&times;</button>
       <div id="panelContent"></div>
+    </aside>
+
+    <aside id="mobileList" class="mobile-list" aria-live="polite" hidden>
+      <div id="mobileListContent"></div>
     </aside>
   </main>
 
@@ -111,7 +116,7 @@
   <script src="js/sanity-api.js"></script>
   <script src="js/colmeia-data.js"></script>
   <script src="js/colmeia-graph.js"></script>
-  <script src="js/colmeia-view.js?v=force-cooling"></script>
-  <script src="js/colmeia-page.js?v=force-cooling"></script>
+  <script src="js/colmeia-view.js?v=mobile-ux"></script>
+  <script src="js/colmeia-page.js?v=mobile-ux"></script>
 </body>
 </html>

@@ -55,6 +55,9 @@
         panel: document.getElementById("panel"),
         panelContent: document.getElementById("panelContent"),
         panelClose: document.getElementById("panelClose"),
+        listToggle: document.getElementById("listToggle"),
+        mobileList: document.getElementById("mobileList"),
+        mobileListContent: document.getElementById("mobileListContent"),
         loading: document.getElementById("colmeia-loading")
       });
     } catch (erro) {
@@ -71,6 +74,9 @@
           panel: document.getElementById("panel"),
           panelContent: document.getElementById("panelContent"),
           panelClose: document.getElementById("panelClose"),
+          listToggle: document.getElementById("listToggle"),
+          mobileList: document.getElementById("mobileList"),
+          mobileListContent: document.getElementById("mobileListContent"),
           loading: document.getElementById("colmeia-loading")
         });
       } catch (fallbackErro) {

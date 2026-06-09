@@ -40,6 +40,9 @@
     const panel = options.panel || root.getElementById("panel");
     const panelContent = options.panelContent || root.getElementById("panelContent");
     const panelClose = options.panelClose || root.getElementById("panelClose");
+    const listToggle = options.listToggle || root.getElementById("listToggle");
+    const mobileList = options.mobileList || root.getElementById("mobileList");
+    const mobileListContent = options.mobileListContent || root.getElementById("mobileListContent");
     const loading = options.loading || root.getElementById("colmeia-loading");
 
     if (!canvas) throw new Error("Canvas da Colmeia nao encontrado");
@@ -60,6 +63,7 @@
     };
     const FONT_DISPLAY = v("--font-display");
     const FONT_BODY = v("--font-body");
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false;
     const TYPES = {
       tag: { label: "Tag", color: C.laranja, hub: true },
       posicao: { label: "Posicao", color: C.laranja, hub: true },
@@ -216,6 +220,7 @@
     }
 
     function fitView(animated) {
+      if (reducedMotion) animated = false;
       const set = visibleNodes().length ? visibleNodes() : nodes;
       if (!set.length) return;
 
@@ -451,6 +456,9 @@
     let down = null;
     let dragNode = null;
     let moved = false;
+    let touchMode = null;
+    let pinchDistance = 0;
+    let listOpen = false;
 
     function localXY(event) {
       const rect = canvas.getBoundingClientRect();
@@ -459,6 +467,29 @@
         x: point.clientX - rect.left,
         y: point.clientY - rect.top
       };
+    }
+
+    function touchXY(touch) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    function touchMidpoint(touches) {
+      const a = touchXY(touches[0]);
+      const b = touchXY(touches[1]);
+      return {
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2
+      };
+    }
+
+    function touchDistance(touches) {
+      const a = touchXY(touches[0]);
+      const b = touchXY(touches[1]);
+      return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
     function onPointerDown(event) {
@@ -510,6 +541,11 @@
       down = null;
     }
 
+    function releaseDragNode() {
+      if (dragNode) dragNode.fixed = false;
+      dragNode = null;
+    }
+
     canvas.addEventListener("mousedown", onPointerDown);
     window.addEventListener("mousemove", onPointerMove);
     window.addEventListener("mouseup", onPointerUp);
@@ -524,19 +560,89 @@
       target = null;
     }, { passive: false });
 
-    function mt(event) {
-      const touch = event.touches[0] || event.changedTouches[0];
-      return { clientX: touch.clientX, clientY: touch.clientY };
-    }
     canvas.addEventListener("touchstart", (event) => {
-      canvas.dispatchEvent(new MouseEvent("mousedown", mt(event)));
-    }, { passive: true });
+      event.preventDefault();
+      target = null;
+      if (event.touches.length >= 2) {
+        releaseDragNode();
+        touchMode = "pinch";
+        pinchDistance = touchDistance(event.touches);
+        moved = true;
+        canvas.classList.add("grabbing");
+        return;
+      }
+
+      const point = touchXY(event.touches[0]);
+      down = point;
+      moved = false;
+      touchMode = "single";
+      const node = pick(point.x, point.y);
+      if (node) {
+        dragNode = node;
+        node.fixed = true;
+        reheat(0.5);
+      }
+      canvas.classList.add("grabbing");
+    }, { passive: false });
+
     canvas.addEventListener("touchmove", (event) => {
-      window.dispatchEvent(new MouseEvent("mousemove", mt(event)));
-    }, { passive: true });
-    canvas.addEventListener("touchend", () => {
-      window.dispatchEvent(new MouseEvent("mouseup", {}));
-    });
+      event.preventDefault();
+      if (touchMode === "pinch" && event.touches.length >= 2) {
+        const midpoint = touchMidpoint(event.touches);
+        const distance = touchDistance(event.touches);
+        if (pinchDistance > 0) {
+          const world = screenToWorld(midpoint.x, midpoint.y);
+          const factor = distance / pinchDistance;
+          view.k = Math.max(0.35, Math.min(view.k * factor, 4.2));
+          view.x = midpoint.x - world.x * view.k;
+          view.y = midpoint.y - world.y * view.k;
+        }
+        pinchDistance = distance;
+        target = null;
+        return;
+      }
+
+      if (touchMode !== "single" || !event.touches.length || !down) return;
+      const point = touchXY(event.touches[0]);
+      if (Math.abs(point.x - down.x) + Math.abs(point.y - down.y) > 4) moved = true;
+      if (dragNode) {
+        const world = screenToWorld(point.x, point.y);
+        dragNode.x = world.x;
+        dragNode.y = world.y;
+        dragNode.vx = 0;
+        dragNode.vy = 0;
+        reheat(0.3);
+      } else {
+        view.x += point.x - down.x;
+        view.y += point.y - down.y;
+        target = null;
+        down = point;
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", (event) => {
+      event.preventDefault();
+      const endedMode = touchMode;
+      canvas.classList.remove("grabbing");
+      if (touchMode === "single" && down && !moved) {
+        const node = pick(down.x, down.y);
+        if (node) focusNode(node.id);
+        else closePanel();
+      }
+      releaseDragNode();
+      down = null;
+      pinchDistance = 0;
+      touchMode = null;
+      if (endedMode === "pinch") return;
+    }, { passive: false });
+    canvas.addEventListener("touchcancel", (event) => {
+      event.preventDefault();
+      canvas.classList.remove("grabbing");
+      releaseDragNode();
+      down = null;
+      pinchDistance = 0;
+      touchMode = null;
+    }, { passive: false });
 
     function focusNode(id) {
       focusId = id;
@@ -546,34 +652,28 @@
       const desktop = window.innerWidth > 720;
       const cx = desktop ? (W - 360) / 2 : W / 2;
       const cy = desktop ? H / 2 : H * 0.34;
-      target = { x: cx - node.x * k, y: cy - node.y * k, k };
+      if (reducedMotion) {
+        view.x = cx - node.x * k;
+        view.y = cy - node.y * k;
+        view.k = k;
+        target = null;
+      } else {
+        target = { x: cx - node.x * k, y: cy - node.y * k, k };
+      }
       renderPanel(node);
-      panel?.classList.add("open");
+      panel?.classList.toggle("open", !listOpen);
     }
 
     function closePanel() {
       focusId = null;
       panel?.classList.remove("open");
+      renderMobileList(null);
     }
     panelClose?.addEventListener("click", closePanel);
 
-    function renderPanel(node) {
-      if (!panelContent) return;
-      const type = TYPES[node.type] || TYPES.post;
-      let html = `<span class="badge"><span class="dot" style="background:${type.color}"></span>${type.label}</span>`;
-      html += `<h2>${escapeHtml(node.label)}</h2>`;
-
-      if (node.type === "tweet" && node.tweet) {
-        html += makeTweetCard(node.tweet);
-      } else if (node.body) {
-        html += `<div class="body">${escapeHtml(node.body)}</div>`;
-      }
-
-      if (node.type === "dica" && node.link) {
-        html += `<a class="ext" href="${escapeHtml(node.link)}" target="_blank" rel="noopener">Acessar \u2197</a>`;
-      }
-
+    function connectionsHtml(node) {
       const connections = (adj[node.id] || []).filter((edge) => isVisible(edge.node));
+      let html = "";
       if (connections.length) {
         html += `<div class="conn-title">Conexoes · ${connections.length}</div>`;
         connections.sort((a, b) => (a.link.kind === "manual" ? -1 : 1) - (b.link.kind === "manual" ? -1 : 1));
@@ -592,11 +692,55 @@
           html += `<div class="conn" data-id="${edge.node.id}">${marker}<span class="lbl">${escapeHtml(edge.node.label)}</span>${via}</div>`;
         }
       }
+      return html;
+    }
 
-      panelContent.innerHTML = html;
-      panelContent.querySelectorAll(".conn").forEach((element) => {
+    function bindConnectionClicks(container) {
+      container?.querySelectorAll(".conn").forEach((element) => {
         element.addEventListener("click", () => focusNode(element.getAttribute("data-id")));
       });
+    }
+
+    function renderPanel(node) {
+      if (!panelContent) return;
+      const type = TYPES[node.type] || TYPES.post;
+      let html = `<span class="badge"><span class="dot" style="background:${type.color}"></span>${type.label}</span>`;
+      html += `<h2>${escapeHtml(node.label)}</h2>`;
+
+      if (node.type === "tweet" && node.tweet) {
+        html += makeTweetCard(node.tweet);
+      } else if (node.body) {
+        html += `<div class="body">${escapeHtml(node.body)}</div>`;
+      }
+
+      if (node.type === "dica" && node.link) {
+        html += `<a class="ext" href="${escapeHtml(node.link)}" target="_blank" rel="noopener">Acessar \u2197</a>`;
+      }
+
+      html += connectionsHtml(node);
+
+      panelContent.innerHTML = html;
+      bindConnectionClicks(panelContent);
+      renderMobileList(node);
+    }
+
+    function renderMobileList(node) {
+      if (!mobileListContent) return;
+      if (!node) {
+        mobileListContent.innerHTML = `
+          <span class="mobile-list__eyebrow">lista</span>
+          <p>Toque em um no no grafo para ver conexoes por aqui.</p>
+        `;
+        return;
+      }
+
+      const type = TYPES[node.type] || TYPES.post;
+      mobileListContent.innerHTML = `
+        <span class="mobile-list__eyebrow">${escapeHtml(type.label)}</span>
+        <h2>${escapeHtml(node.label)}</h2>
+        ${connectionsHtml(node)}
+      `;
+      bindConnectionClicks(mobileListContent);
     }
 
     function renderChips() {
@@ -638,11 +782,19 @@
       if (searchEl) searchEl.value = "";
       fitView(true);
     });
+    listToggle?.addEventListener("click", () => {
+      listOpen = !listOpen;
+      listToggle.setAttribute("aria-expanded", String(listOpen));
+      mobileList?.classList.toggle("is-open", listOpen);
+      if (mobileList) mobileList.hidden = !listOpen;
+      panel?.classList.toggle("open", Boolean(focusId && !listOpen));
+      renderMobileList(focusId ? byId[focusId] : null);
+    });
 
     renderChips();
     renderLegend();
     for (let i = 0; i < 600; i += 1) step(1);
-    alpha = 0.08;
+    alpha = reducedMotion ? ALPHA_MIN : 0.08;
     fitView(false);
     if (loading) loading.hidden = true;
     frame = requestAnimationFrame(draw);
