@@ -135,7 +135,14 @@
     view.x = W / 2;
     view.y = H / 2;
 
-    function step() {
+    let alpha = 1;
+    const ALPHA_DECAY = 0.03;
+    const ALPHA_MIN = 0.005;
+    function reheat(al) {
+      alpha = Math.max(alpha, al || 0.5);
+    }
+
+    function step(al) {
       const REP = 26000;
       const SPRING = 0.045;
       const CENTER = 0.014;
@@ -188,7 +195,7 @@
         }
         node.vx *= DAMP;
         node.vy *= DAMP;
-        const mass = type.hub ? 0.55 : 1;
+        const mass = (type.hub ? 0.55 : 1) * al;
         node.x += node.vx * mass;
         node.y += node.vy * mass;
       }
@@ -410,7 +417,10 @@
       }
       ctx.globalAlpha = 1;
 
-      step();
+      if (alpha > ALPHA_MIN) {
+        step(alpha);
+        alpha *= (1 - ALPHA_DECAY);
+      }
       frame = requestAnimationFrame(draw);
     }
 
@@ -459,6 +469,7 @@
       if (node) {
         dragNode = node;
         node.fixed = true;
+        reheat(0.5);
       }
       canvas.classList.add("grabbing");
     }
@@ -473,6 +484,7 @@
           dragNode.y = world.y;
           dragNode.vx = 0;
           dragNode.vy = 0;
+          reheat(0.3);
         } else {
           view.x += point.x - down.x;
           view.y += point.y - down.y;
@@ -629,7 +641,8 @@
 
     renderChips();
     renderLegend();
-    for (let i = 0; i < 380; i += 1) step();
+    for (let i = 0; i < 600; i += 1) step(1);
+    alpha = 0.08;
     fitView(false);
     if (loading) loading.hidden = true;
     frame = requestAnimationFrame(draw);
