@@ -105,6 +105,14 @@ export const tip = defineType({
       options: {layout: 'tags'}
     }),
     defineField({
+      name: 'relacionados',
+      title: 'Conteúdos relacionados (Colmeia)',
+      type: 'array',
+      group: 'editorial',
+      description: 'Ligue este conteúdo a outros que se relacionam. Eles aparecem conectados na Colmeia.',
+      of: [defineArrayMember({type: 'reference', to: [{type: 'post'}, {type: 'draftProspect'}, {type: 'glossaryTerm'}, {type: 'ranking'}, {type: 'tip'}, {type: 'tweetCard'}]})]
+    }),
+    defineField({
       name: 'publishedAt',
       title: 'Data de publicacao',
       type: 'datetime',

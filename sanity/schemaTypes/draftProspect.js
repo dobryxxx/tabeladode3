@@ -84,6 +84,14 @@ export const draftProspect = defineType({
       of: [defineArrayMember({type: 'string'})],
       options: {layout: 'tags'}
     }),
+    defineField({
+      name: 'relacionados',
+      title: 'Conteúdos relacionados (Colmeia)',
+      type: 'array',
+      group: 'scouting',
+      description: 'Ligue este conteúdo a outros que se relacionam. Eles aparecem conectados na Colmeia.',
+      of: [defineArrayMember({type: 'reference', to: [{type: 'post'}, {type: 'draftProspect'}, {type: 'glossaryTerm'}, {type: 'ranking'}, {type: 'tip'}, {type: 'tweetCard'}]})]
+    }),
     defineField({name: 'destaqueGuia', title: 'Destaque no Guia', type: 'boolean', group: 'ranking', initialValue: false}),
     defineField({
       name: 'status',

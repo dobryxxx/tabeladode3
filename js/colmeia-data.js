@@ -13,7 +13,8 @@
         label: "Arremesso como vantagem",
         body: "Como spacing e tomada de decisao mudam a avaliacao de jovens jogadores.",
         slug: "arremesso-como-vantagem",
-        tags: ["arremesso", "spacing", "vantagem"]
+        tags: ["arremesso", "spacing", "vantagem"],
+        relacionados: ["fallback-dica-film-room"]
       }
     ],
     prospects: [
@@ -33,7 +34,8 @@
         slug: "prospecto-ala",
         posicao: "Ala",
         encaixes: ["Orlando Magic", "Toronto Raptors", "Toronto Raptors"],
-        tags: ["defesa", "ponto de ataque", "desenvolvimento"]
+        tags: ["defesa", "ponto de ataque", "desenvolvimento"],
+        relacionados: ["fallback-tweet-draft"]
       }
     ],
     termos: [

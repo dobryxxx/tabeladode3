@@ -303,7 +303,8 @@
         "label": titulo,
         "body": resumo,
         "slug": slug.current,
-        tags
+        tags,
+        "relacionados": relacionados[]->_id
       },
       "prospects": *[_type == "draftProspect" && !(_id in path("drafts.**"))] | order(rankingGeral asc, nome asc) {
         _id,
@@ -312,21 +313,24 @@
         "slug": slug.current,
         posicao,
         "encaixes": array::unique(coalesce(encaixesTimes[]->nome, []) + coalesce(encaixes, [])),
-        tags
+        tags,
+        "relacionados": relacionados[]->_id
       },
       "termos": *[_type == "glossaryTerm" && !(_id in path("drafts.**"))] | order(coalesce(ordem, 9999) asc, termo asc) {
         _id,
         "label": termo,
         "body": coalesce(explicacaoCompleta, definicaoCurta),
         "slug": slug.current,
-        tags
+        tags,
+        "relacionados": relacionados[]->_id
       },
       "rankings": *[_type == "ranking" && !(_id in path("drafts.**"))] | order(data desc, titulo asc) {
         _id,
         "label": titulo,
         "body": descricao,
         "slug": slug.current,
-        tags
+        tags,
+        "relacionados": relacionados[]->_id
       },
       "dicas": *[_type == "tip" && !(_id in path("drafts.**"))] | order(featured desc, coalesce(order, 9999) asc, publishedAt desc) {
         _id,
@@ -334,13 +338,15 @@
         "body": excerpt,
         "slug": slug.current,
         tags,
-        "link": externalUrl
+        "link": externalUrl,
+        "relacionados": relacionados[]->_id
       },
       "tweets": *[_type == "tweetCard" && !(_id in path("drafts.**"))] | order(data desc, titulo asc) {
         _id,
         "label": titulo,
         "slug": _id,
         tags,
+        "relacionados": relacionados[]->_id,
         "tweet": {
           autorNome,
           autorHandle,

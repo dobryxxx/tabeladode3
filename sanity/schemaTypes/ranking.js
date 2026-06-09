@@ -35,6 +35,13 @@ export const ranking = defineType({
       options: {layout: 'tags'}
     }),
     defineField({
+      name: 'relacionados',
+      title: 'Conteúdos relacionados (Colmeia)',
+      type: 'array',
+      description: 'Ligue este conteúdo a outros que se relacionam. Eles aparecem conectados na Colmeia.',
+      of: [defineArrayMember({type: 'reference', to: [{type: 'post'}, {type: 'draftProspect'}, {type: 'glossaryTerm'}, {type: 'ranking'}, {type: 'tip'}, {type: 'tweetCard'}]})]
+    }),
+    defineField({
       name: 'status',
       title: 'Status',
       type: 'string',

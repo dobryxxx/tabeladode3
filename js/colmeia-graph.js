@@ -47,6 +47,12 @@
     ]);
   }
 
+  function idRelacionado(relacionado) {
+    if (!relacionado) return "";
+    if (typeof relacionado === "string") return relacionado;
+    return relacionado._id || relacionado._ref || relacionado.id || "";
+  }
+
   const colecoes = [
     { campo: "posts", tipo: "post" },
     { campo: "prospects", tipo: "prospect" },
@@ -86,6 +92,7 @@
     const nodesById = new Map();
     const hubLinksByContent = new Map();
     const hubStats = new Map();
+    const relacionadosInline = [];
     const structuralSlugs = new Set(normalizarTags(dados.settings?.tagsEstruturais).map((tag) => tag.slug));
 
     function registrarHub(contentId, hubTipo, prefix, label) {
@@ -120,6 +127,9 @@
         nodesById.set(node.id, node);
 
         normalizarTags(item.tags).forEach((tag) => registrarHub(node.id, "tag", "tag", tag.label));
+        arraySeguro(item.relacionados).map(idRelacionado).filter(Boolean).forEach((targetId) => {
+          relacionadosInline.push({ source: node.id, target: targetId });
+        });
 
         if (tipo === "prospect") {
           registrarHub(node.id, "posicao", "pos", item.posicao);
@@ -142,12 +152,24 @@
 
     const links = [];
     const linkKeys = new Set();
+    const manualPairKeys = new Set();
 
     function addLink(link) {
       const key = [link.source, link.target, link.kind, link.via || "", link.peso || ""].join("|");
       if (linkKeys.has(key)) return;
       linkKeys.add(key);
       links.push(link);
+    }
+
+    function manualPairKey(source, target) {
+      return [source, target].sort().join("|");
+    }
+
+    function addManualLink(link) {
+      const pairKey = manualPairKey(link.source, link.target);
+      if (manualPairKeys.has(pairKey)) return;
+      manualPairKeys.add(pairKey);
+      addLink(link);
     }
 
     hubLinksByContent.forEach((hubs, contentId) => {
@@ -166,12 +188,28 @@
       if (!conexao?.de || !conexao?.para) return;
       if (!nodesById.has(conexao.de) || !nodesById.has(conexao.para)) return;
 
-      addLink({
+      addManualLink({
         source: conexao.de,
         target: conexao.para,
         kind: "manual",
         via: conexao.descricao || "",
-        peso: conexao.peso || 1
+        peso: conexao.peso || 1,
+        origem: "conexao"
+      });
+    });
+
+    relacionadosInline.forEach((relacionado) => {
+      if (!relacionado.source || !relacionado.target) return;
+      if (relacionado.source === relacionado.target) return;
+      if (!nodesById.has(relacionado.source) || !nodesById.has(relacionado.target)) return;
+
+      addManualLink({
+        source: relacionado.source,
+        target: relacionado.target,
+        kind: "manual",
+        via: "relacionado",
+        peso: 1,
+        origem: "relacionado"
       });
     });
 
