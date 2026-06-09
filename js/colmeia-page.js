@@ -31,6 +31,15 @@
     const canvas = document.getElementById("cv");
     if (!canvas) return;
 
+    if (window.T3SiteVisibilityReady) {
+      await window.T3SiteVisibilityReady;
+    }
+
+    if (window.T3SiteVisibility?.isColmeiaVisible?.() === false) {
+      window.T3SiteVisibility.showColmeiaUnavailable?.();
+      return;
+    }
+
     try {
       mostrarFalha("Carregando Colmeia...");
       const dados = await carregarColmeia();

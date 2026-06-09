@@ -809,8 +809,10 @@ function esconderLinksPagina(href) {
 let visibilidadeSiteAtual = {
   showDraftGuide: true,
   showRankings: true,
+  showColmeia: true,
   draftGuideHiddenMessage: "Estamos atualizando esta área. Volte em breve.",
   rankingsHiddenMessage: "Estamos atualizando esta área. Volte em breve.",
+  colmeiaHiddenMessage: "Estamos atualizando esta área. Volte em breve.",
   _source: "fallback seguro"
 };
 
@@ -822,7 +824,8 @@ function normalizarVisibilidadeSite(settings = {}) {
       ...visibilidadeSiteAtual,
       ...settings,
       showDraftGuide: settings.showDraftGuide !== false,
-      showRankings: settings.showRankings !== false
+      showRankings: settings.showRankings !== false,
+      showColmeia: settings.showColmeia !== false
     };
   }
 
@@ -834,8 +837,10 @@ function normalizarVisibilidadeSite(settings = {}) {
     ...visibilidadeSiteAtual,
     showDraftGuide: settings.mostrarGuiaDoDraft !== false,
     showRankings: settings.mostrarRankings !== false,
+    showColmeia: settings.mostrarColmeia !== false,
     draftGuideHiddenMessage: settings.mensagemGuiaOculto || visibilidadeSiteAtual.draftGuideHiddenMessage,
     rankingsHiddenMessage: settings.mensagemRankingsOculto || visibilidadeSiteAtual.rankingsHiddenMessage,
+    colmeiaHiddenMessage: settings.mensagemColmeiaOculta || visibilidadeSiteAtual.colmeiaHiddenMessage,
     _source: settings._source || "Sanity"
   };
 }
@@ -844,6 +849,7 @@ function aplicarVisibilidadeSite(settings = {}) {
   visibilidadeSiteAtual = normalizarVisibilidadeSite(settings);
   const mostrarGuia = visibilidadeSiteAtual.showDraftGuide !== false;
   const mostrarRankings = visibilidadeSiteAtual.showRankings !== false;
+  const mostrarColmeia = visibilidadeSiteAtual.showColmeia !== false;
   const pagina = window.location.pathname.split("/").pop() || "index.html";
 
   if (!mostrarGuia) esconderLinksPagina("guia-do-draft.html");
@@ -851,8 +857,9 @@ function aplicarVisibilidadeSite(settings = {}) {
     esconderLinksPagina("rankings.html");
     esconderLinksPagina("ranking-individual.html");
   }
+  if (!mostrarColmeia) esconderLinksPagina("colmeia.html");
 
-  window.T3Sanity?.devLog?.(`Configurações do site: ${visibilidadeSiteAtual._source || "fallback"} | Guia do Draft: ${mostrarGuia} | Rankings: ${mostrarRankings}`);
+  window.T3Sanity?.devLog?.(`Configurações do site: ${visibilidadeSiteAtual._source || "fallback"} | Guia do Draft: ${mostrarGuia} | Rankings: ${mostrarRankings} | Colmeia: ${mostrarColmeia}`);
 
   if (!mostrarGuia && pagina === "guia-do-draft.html") {
     renderPaginaIndisponivel("Guia do Draft temporariamente indisponível", visibilidadeSiteAtual.draftGuideHiddenMessage);
@@ -861,6 +868,11 @@ function aplicarVisibilidadeSite(settings = {}) {
 
   if (!mostrarRankings && (pagina === "rankings.html" || pagina === "ranking-individual.html")) {
     renderPaginaIndisponivel("Rankings temporariamente indisponíveis", visibilidadeSiteAtual.rankingsHiddenMessage);
+    return visibilidadeSiteAtual;
+  }
+
+  if (!mostrarColmeia && pagina === "colmeia.html") {
+    renderPaginaIndisponivel("Colmeia", visibilidadeSiteAtual.colmeiaHiddenMessage);
     return visibilidadeSiteAtual;
   }
 
@@ -876,6 +888,13 @@ function aplicarVisibilidadeSite(settings = {}) {
     esconderLinksPagina("ranking-individual.html");
     if (pagina === "rankings.html" || pagina === "ranking-individual.html") {
       renderPaginaIndisponivel("Rankings", settings.mensagemRankingsOculto || "Os rankings estão temporariamente indisponíveis.");
+    }
+  }
+
+  if (!mostrarColmeia) {
+    esconderLinksPagina("colmeia.html");
+    if (pagina === "colmeia.html") {
+      renderPaginaIndisponivel("Colmeia", settings.mensagemColmeiaOculta || "Estamos atualizando esta área. Volte em breve.");
     }
   }
 }
@@ -903,6 +922,10 @@ function rankingsVisiveis() {
   return visibilidadeSiteAtual.showRankings !== false;
 }
 
+function colmeiaVisivel() {
+  return visibilidadeSiteAtual.showColmeia !== false;
+}
+
 function mostrarGuiaDoDraftIndisponivel() {
   renderPaginaIndisponivel("Guia do Draft temporariamente indisponível", visibilidadeSiteAtual.draftGuideHiddenMessage);
 }
@@ -911,13 +934,19 @@ function mostrarRankingsIndisponiveis() {
   renderPaginaIndisponivel("Rankings temporariamente indisponíveis", visibilidadeSiteAtual.rankingsHiddenMessage);
 }
 
+function mostrarColmeiaIndisponivel() {
+  renderPaginaIndisponivel("Colmeia", visibilidadeSiteAtual.colmeiaHiddenMessage);
+}
+
 window.T3SiteVisibility = {
   get: () => visibilidadeSiteAtual,
   apply: aplicarVisibilidadeSite,
   isDraftGuideVisible: guiaDoDraftVisivel,
   isRankingsVisible: rankingsVisiveis,
+  isColmeiaVisible: colmeiaVisivel,
   showDraftGuideUnavailable: mostrarGuiaDoDraftIndisponivel,
-  showRankingsUnavailable: mostrarRankingsIndisponiveis
+  showRankingsUnavailable: mostrarRankingsIndisponiveis,
+  showColmeiaUnavailable: mostrarColmeiaIndisponivel
 };
 
 renderConteudoDinamico();

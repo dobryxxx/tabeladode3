@@ -291,6 +291,8 @@
       mensagemGuiaOculto,
       mostrarRankings,
       mensagemRankingsOculto,
+      mostrarColmeia,
+      mensagemColmeiaOculta,
       emailContato,
       redesSociais
     }`,
@@ -374,8 +376,10 @@
       ...settings,
       showDraftGuide: settings.mostrarGuiaDoDraft !== false,
       showRankings: settings.mostrarRankings !== false,
+      showColmeia: settings.mostrarColmeia !== false,
       draftGuideHiddenMessage: sanitizeText(settings.mensagemGuiaOculto, "Estamos atualizando esta área. Volte em breve."),
       rankingsHiddenMessage: sanitizeText(settings.mensagemRankingsOculto, "Estamos atualizando esta área. Volte em breve."),
+      colmeiaHiddenMessage: sanitizeText(settings.mensagemColmeiaOculta, "Estamos atualizando esta área. Volte em breve."),
       _source: source
     };
   }
@@ -384,8 +388,10 @@
     return normalizeSiteSettings({
       mostrarGuiaDoDraft: true,
       mostrarRankings: true,
+      mostrarColmeia: true,
       mensagemGuiaOculto: "Estamos atualizando esta área. Volte em breve.",
-      mensagemRankingsOculto: "Estamos atualizando esta área. Volte em breve."
+      mensagemRankingsOculto: "Estamos atualizando esta área. Volte em breve.",
+      mensagemColmeiaOculta: "Estamos atualizando esta área. Volte em breve."
     }, source);
   }
 
