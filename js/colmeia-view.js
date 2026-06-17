@@ -77,16 +77,20 @@
     };
 
     const ctx = canvas.getContext("2d");
-    const nodes = graph.nodes.map((node) => ({
-      ...node,
-      type: node.type || node.tipo,
-      x: (Math.random() - 0.5) * 500,
-      y: (Math.random() - 0.5) * 500,
-      vx: 0,
-      vy: 0,
-      deg: 0,
-      fixed: false
-    }));
+    const rawNodes = graph.nodes;
+    const nodes = rawNodes.map((node, i) => {
+      const angle = (i / rawNodes.length) * 2 * Math.PI;
+      return {
+        ...node,
+        type: node.type || node.tipo,
+        x: Math.cos(angle) * 400,
+        y: Math.sin(angle) * 400,
+        vx: 0,
+        vy: 0,
+        deg: 0,
+        fixed: false
+      };
+    });
     const byId = {};
     nodes.forEach((node) => { byId[node.id] = node; });
 
@@ -125,7 +129,7 @@
     let dpr = 1;
     let target = null;
     const view = { x: 0, y: 0, k: 1 };
-    const MIN_ZOOM = 0.05;
+    const MIN_ZOOM = 0.25;
     const MAX_ZOOM = 4.2;
 
     function resize() {
@@ -244,8 +248,31 @@
 
     function fitView(animated) {
       if (reducedMotion) animated = false;
-      const set = visibleNodes().length ? visibleNodes() : nodes;
-      if (!set.length) return;
+      const all = visibleNodes().length ? visibleNodes() : nodes;
+      if (!all.length) return;
+
+      // Compute centroid and std-dev to exclude outliers from the bounding box.
+      let sumX = 0;
+      let sumY = 0;
+      for (const node of all) { sumX += node.x; sumY += node.y; }
+      const meanX = sumX / all.length;
+      const meanY = sumY / all.length;
+
+      let varX = 0;
+      let varY = 0;
+      for (const node of all) {
+        varX += (node.x - meanX) ** 2;
+        varY += (node.y - meanY) ** 2;
+      }
+      const stdX = Math.sqrt(varX / all.length);
+      const stdY = Math.sqrt(varY / all.length);
+      const limitX = (stdX || 1e4) * 2.5;
+      const limitY = (stdY || 1e4) * 2.5;
+
+      const core = all.filter(
+        (node) => Math.abs(node.x - meanX) <= limitX && Math.abs(node.y - meanY) <= limitY
+      );
+      const set = core.length ? core : all;
 
       let minX = 1e9;
       let minY = 1e9;
@@ -259,7 +286,7 @@
         maxY = Math.max(maxY, node.y + node.r);
       }
 
-      const pad = 100;
+      const pad = 80;
       const graphW = maxX - minX;
       const graphH = maxY - minY;
       let k = Math.min(W / (graphW + pad * 2), H / (graphH + pad * 2));
