@@ -39,4 +39,26 @@
   console.log("Colmeia links por kind", linksByKind);
   console.log("Colmeia manuais por origem", manualByOrigem);
   console.log("Colmeia nos isolados", graph.nodes.filter((node) => !connected.has(node.id)).length);
+
+  const synthetic = root.T3ColmeiaGraph.construirGrafo({
+    posts: [
+      {
+        _id: "isolado-a",
+        label: "Isolado A",
+        tags: [],
+        relacionados: ["isolado-b"]
+      },
+      {
+        _id: "isolado-b",
+        label: "Isolado B",
+        tags: []
+      }
+    ]
+  });
+  const inlineIsolado = synthetic.links.filter((link) =>
+    link.kind === "manual" &&
+    link.origem === "relacionado" &&
+    [link.source, link.target].sort().join("|") === "isolado-a|isolado-b"
+  ).length;
+  console.log("Colmeia teste relacionados isolados", inlineIsolado);
 })();

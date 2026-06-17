@@ -27,6 +27,32 @@
     if (loading) loading.textContent = message;
   }
 
+  function bindColmeiaControls(view) {
+    const search = document.getElementById("search");
+    const reset = document.getElementById("reset");
+    const chips = document.querySelectorAll("#chips [data-type]");
+
+    search?.addEventListener("input", (event) => {
+      view.setQuery?.(event.target.value);
+    });
+
+    reset?.addEventListener("click", () => {
+      if (search) {
+        search.value = "";
+        view.setQuery?.("");
+      }
+      view.recenter?.();
+    });
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const hidden = view.toggleType?.(chip.dataset.type);
+        chip.classList.toggle("on", !hidden);
+        chip.classList.toggle("off", Boolean(hidden));
+      });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     const canvas = document.getElementById("cv");
     if (!canvas) return;
@@ -45,7 +71,7 @@
       const dados = await carregarColmeia();
       const graph = window.T3ColmeiaGraph.construirGrafo(dados);
 
-      window.T3ColmeiaView.createColmeiaView({
+      const view = window.T3ColmeiaView.createColmeiaView({
         canvas,
         graph,
         chips: document.getElementById("chips"),
@@ -60,11 +86,12 @@
         mobileListContent: document.getElementById("mobileListContent"),
         loading: document.getElementById("colmeia-loading")
       });
+      bindColmeiaControls(view);
     } catch (erro) {
       console.warn("Falha ao construir a Colmeia. Usando fallback local.", erro);
       try {
         const graph = window.T3ColmeiaGraph.construirGrafo(fallbackData());
-        window.T3ColmeiaView.createColmeiaView({
+        const view = window.T3ColmeiaView.createColmeiaView({
           canvas,
           graph,
           chips: document.getElementById("chips"),
@@ -79,6 +106,7 @@
           mobileListContent: document.getElementById("mobileListContent"),
           loading: document.getElementById("colmeia-loading")
         });
+        bindColmeiaControls(view);
       } catch (fallbackErro) {
         console.warn("Fallback local da Colmeia tambem falhou.", fallbackErro);
         mostrarFalha("Colmeia indisponivel no momento.");

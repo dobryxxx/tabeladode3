@@ -125,6 +125,8 @@
     let dpr = 1;
     let target = null;
     const view = { x: 0, y: 0, k: 1 };
+    const MIN_ZOOM = 0.05;
+    const MAX_ZOOM = 4.2;
 
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -140,10 +142,31 @@
     view.y = H / 2;
 
     let alpha = 1;
-    const ALPHA_DECAY = 0.03;
+    const ALPHA_DECAY = 0.025;
     const ALPHA_MIN = 0.005;
     function reheat(al) {
       alpha = Math.max(alpha, al || 0.5);
+    }
+
+    function setQuery(texto = "") {
+      query = String(texto || "").trim();
+    }
+
+    function setTypeHidden(type, hidden) {
+      if (!TYPES[type]) return;
+      hiddenTypes[type] = Boolean(hidden);
+      if (!hiddenTypes[type]) delete hiddenTypes[type];
+      if (focusId && !isVisible(byId[focusId])) closePanel();
+    }
+
+    function toggleType(type) {
+      setTypeHidden(type, !hiddenTypes[type]);
+      return Boolean(hiddenTypes[type]);
+    }
+
+    function recenter() {
+      closePanel();
+      fitView(true);
     }
 
     function step(al) {
@@ -240,7 +263,7 @@
       const graphW = maxX - minX;
       const graphH = maxY - minY;
       let k = Math.min(W / (graphW + pad * 2), H / (graphH + pad * 2));
-      k = Math.max(0.35, Math.min(k, 1.5));
+      k = Math.max(MIN_ZOOM, Math.min(k, 1.5));
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
       const x = W / 2 - cx * k;
@@ -271,8 +294,6 @@
       const set = new Set();
 
       for (const node of nodes) {
-        const type = TYPES[node.type] || {};
-        if (type.hub) continue;
         const text = [node.label, node.body, node.slug, node.tweet?.texto, node.tweet?.text, node.tweet?.handle]
           .filter(Boolean)
           .join(" ")
@@ -312,15 +333,15 @@
       const search = searchSet();
 
       function nodeAlpha(node) {
-        const type = TYPES[node.type] || {};
         if (!isVisible(node)) return 0;
-        if (search && !type.hub && !search.has(node.id)) return 0.12;
+        if (search && !search.has(node.id)) return 0.12;
         if (active && !active.has(node.id)) return 0.15;
         return 1;
       }
 
       function linkAlpha(link) {
         if (!isVisible(link.s) || !isVisible(link.t)) return 0;
+        if (search && !search.has(link.s.id) && !search.has(link.t.id)) return 0.06;
         if (active) {
           const on = active.has(link.s.id) && active.has(link.t.id) && (focusId ? (link.s.id === focusId || link.t.id === focusId) : true);
           return on ? 1 : 0.06;
@@ -554,7 +575,7 @@
       const point = localXY(event);
       const world = screenToWorld(point.x, point.y);
       const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
-      view.k = Math.max(0.35, Math.min(view.k * factor, 4.2));
+      view.k = Math.max(MIN_ZOOM, Math.min(view.k * factor, MAX_ZOOM));
       view.x = point.x - world.x * view.k;
       view.y = point.y - world.y * view.k;
       target = null;
@@ -593,7 +614,7 @@
         if (pinchDistance > 0) {
           const world = screenToWorld(midpoint.x, midpoint.y);
           const factor = distance / pinchDistance;
-          view.k = Math.max(0.35, Math.min(view.k * factor, 4.2));
+          view.k = Math.max(MIN_ZOOM, Math.min(view.k * factor, MAX_ZOOM));
           view.x = midpoint.x - world.x * view.k;
           view.y = midpoint.y - world.y * view.k;
         }
@@ -752,12 +773,6 @@
         chip.className = "chip on";
         chip.dataset.type = key;
         chip.innerHTML = `<span class="dot" style="background:${type.color}"></span>${type.label}`;
-        chip.addEventListener("click", () => {
-          hiddenTypes[key] = !hiddenTypes[key];
-          chip.classList.toggle("on", !hiddenTypes[key]);
-          chip.classList.toggle("off", Boolean(hiddenTypes[key]));
-          if (focusId && !isVisible(byId[focusId])) closePanel();
-        });
         chipsEl.appendChild(chip);
       });
     }
@@ -773,15 +788,6 @@
       legendEl.innerHTML = html;
     }
 
-    searchEl?.addEventListener("input", (event) => {
-      query = event.target.value.trim();
-    });
-    resetEl?.addEventListener("click", () => {
-      closePanel();
-      query = "";
-      if (searchEl) searchEl.value = "";
-      fitView(true);
-    });
     listToggle?.addEventListener("click", () => {
       listOpen = !listOpen;
       listToggle.setAttribute("aria-expanded", String(listOpen));
@@ -793,8 +799,8 @@
 
     renderChips();
     renderLegend();
-    for (let i = 0; i < 600; i += 1) step(1);
-    alpha = reducedMotion ? ALPHA_MIN : 0.08;
+    for (let i = 0; i < 1100; i += 1) step(1);
+    alpha = reducedMotion ? ALPHA_MIN : 0.12;
     fitView(false);
     if (loading) loading.hidden = true;
     frame = requestAnimationFrame(draw);
@@ -808,7 +814,12 @@
       },
       focusNode,
       closePanel,
-      fitView
+      fitView,
+      fit: fitView,
+      recenter,
+      setQuery,
+      toggleType,
+      setTypeHidden
     };
   }
 

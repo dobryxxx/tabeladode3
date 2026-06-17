@@ -90,6 +90,7 @@
 
   function construirGrafo(dados = {}) {
     const nodesById = new Map();
+    const contentNodeIds = new Set();
     const hubLinksByContent = new Map();
     const hubStats = new Map();
     const relacionadosInline = [];
@@ -125,6 +126,7 @@
 
         const node = criarNode(item, tipo);
         nodesById.set(node.id, node);
+        contentNodeIds.add(node.id);
 
         normalizarTags(item.tags).forEach((tag) => registrarHub(node.id, "tag", "tag", tag.label));
         arraySeguro(item.relacionados).map(idRelacionado).filter(Boolean).forEach((targetId) => {
@@ -201,7 +203,7 @@
     relacionadosInline.forEach((relacionado) => {
       if (!relacionado.source || !relacionado.target) return;
       if (relacionado.source === relacionado.target) return;
-      if (!nodesById.has(relacionado.source) || !nodesById.has(relacionado.target)) return;
+      if (!contentNodeIds.has(relacionado.source) || !contentNodeIds.has(relacionado.target)) return;
 
       addManualLink({
         source: relacionado.source,

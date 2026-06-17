@@ -15,6 +15,21 @@
         slug: "arremesso-como-vantagem",
         tags: ["arremesso", "spacing", "vantagem"],
         relacionados: ["fallback-dica-film-room"]
+      },
+      {
+        _id: "fallback-post-isolado-a",
+        label: "Conteudo isolado A",
+        body: "No sem tags para testar relacao manual inline.",
+        slug: "conteudo-isolado-a",
+        tags: [],
+        relacionados: ["fallback-post-isolado-b"]
+      },
+      {
+        _id: "fallback-post-isolado-b",
+        label: "Conteudo isolado B",
+        body: "Outro no sem tags que deve receber aresta de relacionado.",
+        slug: "conteudo-isolado-b",
+        tags: []
       }
     ],
     prospects: [
