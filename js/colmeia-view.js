@@ -176,7 +176,7 @@
     function step(al) {
       const REP = 26000;
       const SPRING = 0.045;
-      const CENTER = 0.014;
+      const CENTER = 0.022;
       const DAMP = 0.86;
 
       for (let i = 0; i < nodes.length; i += 1) {
@@ -202,7 +202,9 @@
         const sourceType = TYPES[link.s.type] || {};
         const targetType = TYPES[link.t.type] || {};
         const isHub = sourceType.hub || targetType.hub;
-        const rest = link.kind === "manual" ? 78 : (isHub ? 96 : 110);
+        const hubDeg = Math.max(link.s.deg, link.t.deg);
+        const megaHub = isHub && hubDeg >= 20;
+        const rest = link.kind === "manual" ? 78 : (megaHub ? 70 : (isHub ? 96 : 110));
         const dx = link.t.x - link.s.x;
         const dy = link.t.y - link.s.y;
         const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
@@ -217,8 +219,9 @@
 
       for (const node of nodes) {
         const type = TYPES[node.type] || {};
-        node.vx += -node.x * CENTER;
-        node.vy += -node.y * CENTER;
+        const centerPull = (type.hub && node.deg < 5) ? CENTER * 2.0 : CENTER;
+        node.vx += -node.x * centerPull;
+        node.vy += -node.y * centerPull;
         if (node.fixed) {
           node.vx = 0;
           node.vy = 0;
@@ -380,7 +383,10 @@
       for (const link of links) {
         const alpha = linkAlpha(link);
         if (alpha <= 0) continue;
-        ctx.globalAlpha = alpha;
+        const isMegaHub = link.kind !== "manual" &&
+          (TYPES[link.s.type]?.hub || TYPES[link.t.type]?.hub) &&
+          Math.max(link.s.deg, link.t.deg) >= 20;
+        ctx.globalAlpha = isMegaHub ? alpha * 0.55 : alpha;
         ctx.beginPath();
         ctx.moveTo(link.s.x, link.s.y);
         ctx.lineTo(link.t.x, link.t.y);
@@ -389,7 +395,7 @@
           ctx.lineWidth = 1.7;
         } else {
           ctx.strokeStyle = C.edge;
-          ctx.lineWidth = 0.9;
+          ctx.lineWidth = isMegaHub ? 0.6 : 0.9;
         }
         ctx.stroke();
       }
