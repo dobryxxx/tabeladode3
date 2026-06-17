@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const TYPE_ORDER = ["tag", "posicao", "time", "post", "prospect", "termo", "ranking", "dica", "tweet"];
+  const TYPE_ORDER = ["tag", "post", "termo", "ranking", "dica", "tweet"];
 
   function escapeHtml(value = "") {
     return String(value)
@@ -66,10 +66,7 @@
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false;
     const TYPES = {
       tag: { label: "Tag", color: C.laranja, hub: true },
-      posicao: { label: "Posicao", color: C.laranja, hub: true },
-      time: { label: "Time NBA", color: C.laranja, hub: true },
       post: { label: "Publicacao", color: C.white },
-      prospect: { label: "Prospecto", color: C.blue },
       termo: { label: "Termo", color: C.green },
       ranking: { label: "Ranking", color: C.white, ring: true },
       dica: { label: "Dica", color: C.white, arrow: true },

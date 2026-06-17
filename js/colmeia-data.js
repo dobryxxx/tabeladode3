@@ -4,7 +4,7 @@
       {
         _id: "fallback-post-draft-brasileiro",
         label: "Draft brasileiro em contexto",
-        body: "Leitura editorial sobre caminhos de desenvolvimento para prospectos brasileiros.",
+        body: "Leitura editorial sobre caminhos de desenvolvimento para jovens jogadores.",
         slug: "draft-brasileiro-contexto",
         tags: ["draft", "scouting", "desenvolvimento"]
       },
@@ -32,27 +32,6 @@
         tags: []
       }
     ],
-    prospects: [
-      {
-        _id: "fallback-prospect-armador",
-        label: "Prospecto armador",
-        body: "Criador primario com leitura de pick and roll.",
-        slug: "prospecto-armador",
-        posicao: "Armador",
-        encaixes: ["San Antonio Spurs", "Orlando Magic", "San Antonio Spurs"],
-        tags: ["criacao", "PnR", "vantagem"]
-      },
-      {
-        _id: "fallback-prospect-ala",
-        label: "Prospecto ala",
-        body: "Ala fisico com defesa no ponto de ataque.",
-        slug: "prospecto-ala",
-        posicao: "Ala",
-        encaixes: ["Orlando Magic", "Toronto Raptors", "Toronto Raptors"],
-        tags: ["defesa", "ponto de ataque", "desenvolvimento"],
-        relacionados: ["fallback-tweet-draft"]
-      }
-    ],
     termos: [
       {
         _id: "fallback-termo-spacing",
@@ -66,7 +45,7 @@
         label: "Pick and roll",
         body: "Acao entre bloqueador e manipulador para gerar leitura e vantagem.",
         slug: "pick-and-roll",
-        tags: ["PnR", "criacao"]
+        tags: ["scouting", "vantagem"]
       }
     ],
     rankings: [
@@ -106,13 +85,6 @@
     conexoes: [
       {
         _id: "fallback-conexao-1",
-        de: "fallback-post-draft-brasileiro",
-        para: "fallback-prospect-armador",
-        descricao: "exemplo de leitura aplicada",
-        peso: 3
-      },
-      {
-        _id: "fallback-conexao-2",
         de: "fallback-termo-spacing",
         para: "fallback-post-arremesso",
         descricao: "conceito explicado no texto",

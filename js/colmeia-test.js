@@ -35,10 +35,16 @@
     connected.add(link.target);
   });
 
+  const isolados = graph.nodes.filter((node) => !connected.has(node.id));
+  const pctIsolamento = graph.nodes.length
+    ? ((isolados.length / graph.nodes.length) * 100).toFixed(1)
+    : "0.0";
+
   console.log("Colmeia nodes por tipo", nodesByTipo);
   console.log("Colmeia links por kind", linksByKind);
   console.log("Colmeia manuais por origem", manualByOrigem);
-  console.log("Colmeia nos isolados", graph.nodes.filter((node) => !connected.has(node.id)).length);
+  console.log("Colmeia nos isolados", isolados.length, "de", graph.nodes.length, `(${pctIsolamento}%)`);
+  console.log("Colmeia nos conectados", graph.nodes.length - isolados.length);
 
   const synthetic = root.T3ColmeiaGraph.construirGrafo({
     posts: [

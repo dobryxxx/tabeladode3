@@ -33,20 +33,6 @@
       });
   }
 
-  function normalizarValores(values) {
-    return normalizarTags(values);
-  }
-
-  function normalizarEncaixes(encaixes) {
-    if (Array.isArray(encaixes)) return normalizarValores(encaixes);
-    if (!encaixes || typeof encaixes !== "object") return [];
-
-    return normalizarValores([
-      ...arraySeguro(encaixes.times),
-      ...arraySeguro(encaixes.texto)
-    ]);
-  }
-
   function idRelacionado(relacionado) {
     if (!relacionado) return "";
     if (typeof relacionado === "string") return relacionado;
@@ -55,7 +41,6 @@
 
   const colecoes = [
     { campo: "posts", tipo: "post" },
-    { campo: "prospects", tipo: "prospect" },
     { campo: "termos", tipo: "termo" },
     { campo: "rankings", tipo: "ranking" },
     { campo: "dicas", tipo: "dica" },
@@ -132,11 +117,6 @@
         arraySeguro(item.relacionados).map(idRelacionado).filter(Boolean).forEach((targetId) => {
           relacionadosInline.push({ source: node.id, target: targetId });
         });
-
-        if (tipo === "prospect") {
-          registrarHub(node.id, "posicao", "pos", item.posicao);
-          normalizarEncaixes(item.encaixes).forEach((time) => registrarHub(node.id, "time", "time", time.label));
-        }
       });
     });
 

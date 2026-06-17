@@ -296,23 +296,13 @@
       emailContato,
       redesSociais
     }`,
-    // Colmeia editorial: usa somente tags string como hubs; categorias ficam fora do grafo.
+    // Colmeia editorial: somente conteudo editorial (post, termo, ranking, dica, tweet).
     colmeia: `{
       "posts": *[_type == "post" && !(_id in path("drafts.**"))] | order(dataPublicacao desc) {
         _id,
         "label": titulo,
         "body": resumo,
         "slug": slug.current,
-        tags,
-        "relacionados": relacionados[]->_id
-      },
-      "prospects": *[_type == "draftProspect" && !(_id in path("drafts.**"))] | order(rankingGeral asc, nome asc) {
-        _id,
-        "label": nome,
-        "body": resumo,
-        "slug": slug.current,
-        posicao,
-        "encaixes": array::unique(coalesce(encaixesTimes[]->nome, []) + coalesce(encaixes, [])),
         tags,
         "relacionados": relacionados[]->_id
       },
