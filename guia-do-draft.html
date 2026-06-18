@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
   <title>Guia do Draft | Tabelado de 3</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=draft-guide-polish" />
 </head>
 <body>
   <header class="top-nav">
@@ -56,7 +56,6 @@
           <h1>Guia do Draft</h1>
           <p>Um panorama completo dos principais nomes da classe, com ranking, perfil, contexto e leitura de jogo.</p>
         </div>
-        <div id="draft-guide-stats" class="draft-guide-stats" aria-label="Resumo do guia"></div>
       </div>
     </section>
 
@@ -64,7 +63,6 @@
       <div class="container">
         <div class="section-header">
           <h2 class="section-title">Topo do board</h2>
-          <a href="#draft-guide-list" class="section-link">ver lista completa</a>
         </div>
         <div id="draft-featured" class="draft-featured-grid"></div>
       </div>
@@ -75,10 +73,10 @@
         <div class="draft-view-toolbar">
           <span class="draft-view-toolbar__label">modo de leitura</span>
           <div class="draft-view-switcher" role="group" aria-label="Densidade de visualização do Guia do Draft">
-            <button type="button" data-draft-view="skim" aria-pressed="false">Skim</button>
-            <button type="button" data-draft-view="peek" aria-pressed="false">Peek</button>
-            <button type="button" data-draft-view="peruse" aria-pressed="true">Peruse</button>
-            <button type="button" data-draft-view="deep" aria-pressed="false">Deep Dive</button>
+            <button type="button" data-draft-view="skim" aria-pressed="false">Board de bolso</button>
+            <button type="button" data-draft-view="peek" aria-pressed="false">Espiadinha</button>
+            <button type="button" data-draft-view="peruse" aria-pressed="true">Leitura de jogo</button>
+            <button type="button" data-draft-view="deep" aria-pressed="false">Perfil destrinchado</button>
           </div>
         </div>
         <div class="draft-guide-controls" aria-label="Controles do Guia do Draft">
@@ -141,6 +139,6 @@
 <script src="js/rankings.js"></script>
   <script src="js/draft-data.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/draft-guide.js?v=guide-view-modes"></script>
+  <script src="js/draft-guide.js?v=draft-guide-polish"></script>
 </body>
 </html>

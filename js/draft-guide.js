@@ -9,6 +9,7 @@ const draftState = {
 
 let draftSanityProspects = [];
 let draftEventosIniciados = false;
+let draftViewAnimationTimer;
 
 function draftData() {
   const locais = typeof draftProspects !== "undefined" ? draftProspects : [];
@@ -157,13 +158,6 @@ function iniciais(nome = "") {
   return nome.split(/\s+/).filter(Boolean).slice(0, 2).map((parte) => parte[0]).join("");
 }
 
-function dataCurta(valor) {
-  if (!valor) return "sem data";
-  const data = new Date(valor);
-  if (Number.isNaN(data.getTime())) return "sem data";
-  return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
-}
-
 function opcoesUnicas(campo) {
   return [...new Set(draftData().map((item) => item[campo]).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -173,27 +167,6 @@ function preencherSelect(id, label, opcoes) {
   const select = document.querySelector(id);
   if (!select) return;
   select.innerHTML = `<option value="">${label}</option>${opcoes.map((opcao) => `<option value="${opcao}">${opcao}</option>`).join("")}`;
-}
-
-function renderDraftStats() {
-  const area = document.querySelector("#draft-guide-stats");
-  if (!area || draftData().length === 0) return;
-
-  const total = draftData().length;
-  const posicoes = opcoesUnicas("posicao").length;
-  const times = opcoesUnicas("time").length;
-  const ultimaAtualizacao = draftData()
-    .map((item) => item.updatedAt)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
-
-  area.innerHTML = `
-    <div><strong>${total}</strong><span>prospects</span></div>
-    <div><strong>${posicoes}</strong><span>posições</span></div>
-    <div><strong>${times}</strong><span>times/ligas</span></div>
-    <div><strong>${dataCurta(ultimaAtualizacao)}</strong><span>atualização</span></div>
-  `;
 }
 
 function fotoOuPlaceholder(prospect, classe = "") {
@@ -214,7 +187,7 @@ function renderFeatured() {
 
   area.innerHTML = draftData().slice(0, 3).map((prospect) => `
     <article class="draft-feature-card">
-      <div class="draft-feature-card__rank">#${prospect.rank}</div>
+      <div class="draft-feature-card__rank" aria-label="Ranking ${prospect.rank}">${prospect.rank}</div>
       <div class="draft-feature-card__photo">${fotoOuPlaceholder(prospect, "draft-feature-card__img")}</div>
       <div class="draft-feature-card__body">
         <span>${prospect.posicao || "prospect"}</span>
@@ -318,7 +291,9 @@ function renderProspectCard(prospect) {
 
   return `
     <article class="draft-prospect-card${expandido ? " draft-prospect-card--expanded" : ""}" data-draft-card>
-      <div class="draft-prospect-card__rank">#${prospect.rank}</div>
+      <div class="draft-prospect-card__rank" aria-label="Ranking ${prospect.rank}">
+        <strong>${prospect.rank}</strong>
+      </div>
       <div class="draft-prospect-card__photo">
         ${fotoOuPlaceholder(prospect, "draft-prospect-card__img")}
       </div>
@@ -327,7 +302,11 @@ function renderProspectCard(prospect) {
           <span>${prospect.posicao || "posição em aberto"}</span>
           ${prospect.alcance ? `<span>alcance ${prospect.alcance}</span>` : ""}
         </div>
-        <h2>${prospect.nome}</h2>
+        <h2>
+          ${temPerfil
+            ? `<button type="button" class="draft-prospect-card__name-button" data-draft-profile-trigger aria-expanded="${expandido}">${prospect.nome}</button>`
+            : prospect.nome}
+        </h2>
         <p>${prospect.espelho ? `Espelho: ${prospect.espelho}` : prospect.bio || "Perfil em atualização."}</p>
         <div class="draft-prospect-card__meta">
           ${dadoDraft("time/liga", prospect.time)}
@@ -380,11 +359,27 @@ function renderDraftList() {
   }
 
   lista.innerHTML = filtrados.map(renderProspectCard).join("");
+
+  function alternarPerfil(card) {
+    const aberto = card.classList.toggle("draft-prospect-card--expanded");
+    const botao = card.querySelector(".draft-prospect-card__toggle");
+    const nome = card.querySelector("[data-draft-profile-trigger]");
+    if (botao) botao.textContent = aberto ? "fechar perfil" : "ver perfil";
+    if (nome) nome.setAttribute("aria-expanded", String(aberto));
+  }
+
   lista.querySelectorAll(".draft-prospect-card__toggle").forEach((botao) => {
     botao.addEventListener("click", () => {
       const card = botao.closest("[data-draft-card]");
-      card.classList.toggle("draft-prospect-card--expanded");
-      botao.textContent = card.classList.contains("draft-prospect-card--expanded") ? "fechar perfil" : "ver perfil";
+      alternarPerfil(card);
+    });
+  });
+
+  lista.querySelectorAll("[data-draft-profile-trigger]").forEach((nome) => {
+    nome.addEventListener("click", () => {
+      if (draftState.view !== "skim") return;
+      const card = nome.closest("[data-draft-card]");
+      alternarPerfil(card);
     });
   });
 }
@@ -404,6 +399,16 @@ function aplicarModoVisualizacao(view) {
   });
 
   renderDraftList();
+
+  const lista = document.querySelector("#draft-list");
+  if (!lista) return;
+  clearTimeout(draftViewAnimationTimer);
+  lista.classList.remove("draft-guide-list--changing");
+  void lista.offsetWidth;
+  lista.classList.add("draft-guide-list--changing");
+  draftViewAnimationTimer = setTimeout(() => {
+    lista.classList.remove("draft-guide-list--changing");
+  }, 360);
 }
 
 function debounce(fn, delay = 160) {
@@ -428,7 +433,6 @@ function iniciarDraftGuide() {
   preencherSelect("#draft-team", "todos", opcoesUnicas("time"));
   preencherSelect("#draft-range", "todos", opcoesUnicas("alcance"));
 
-  renderDraftStats();
   renderFeatured();
   renderDraftList();
 
