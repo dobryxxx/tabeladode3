@@ -645,6 +645,7 @@ function renderHomeSettings(settings) {
   if (cards && Array.isArray(settings.cards) && settings.cards.length) {
     cards.innerHTML = settings.cards
       .slice()
+      .filter((card) => !String(card.link || "").includes("colmeia.html"))
       .sort((a, b) => (a.ordem || 99) - (b.ordem || 99))
       .map((card, index) => `
         <a class="splash-entry" href="${card.link || "#"}" style="--entry-index: ${index + 1}">
