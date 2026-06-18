@@ -3,7 +3,8 @@ const draftState = {
   position: "",
   team: "",
   range: "",
-  sort: "rank"
+  sort: "rank",
+  view: "peruse"
 };
 
 let draftSanityProspects = [];
@@ -312,10 +313,11 @@ function renderProspectCard(prospect) {
   ].filter(([, valor]) => valor);
 
   const encaixesPerfil = renderEncaixes(prospect);
-  const temPerfil = leituraPerfil.length || fichaPerfil.length || encaixesPerfil;
+  const temPerfil = leituraPerfil.length || fichaPerfil.length;
+  const expandido = draftState.view === "deep";
 
   return `
-    <article class="draft-prospect-card" data-draft-card>
+    <article class="draft-prospect-card${expandido ? " draft-prospect-card--expanded" : ""}" data-draft-card>
       <div class="draft-prospect-card__rank">#${prospect.rank}</div>
       <div class="draft-prospect-card__photo">
         ${fotoOuPlaceholder(prospect, "draft-prospect-card__img")}
@@ -335,6 +337,12 @@ function renderProspectCard(prospect) {
       </div>
       <div class="draft-prospect-card__aside">
         ${prospect.tetoPiso ? `<div><span>teto/piso</span><strong>${prospect.tetoPiso}</strong></div>` : ""}
+        ${encaixesPerfil ? `
+          <div class="draft-prospect-card__fits">
+            <span>Melhores encaixes</span>
+            ${encaixesPerfil}
+          </div>
+        ` : ""}
         <button type="button" class="draft-prospect-card__toggle" ${temPerfil ? "" : "disabled"}>ver perfil</button>
       </div>
       <div class="draft-prospect-card__details">
@@ -345,16 +353,10 @@ function renderProspectCard(prospect) {
               ${leituraPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor, "draft-prospect-card__detail--reading")).join("")}
             </section>
           ` : ""}
-          ${fichaPerfil.length || encaixesPerfil ? `
+          ${fichaPerfil.length ? `
             <aside class="draft-prospect-card__profile-aside" aria-label="Ficha de scouting">
               <span class="draft-prospect-card__section-label">ficha de scouting</span>
               ${fichaPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor)).join("")}
-              ${encaixesPerfil ? `
-                <div class="draft-prospect-card__detail draft-prospect-card__detail--fits">
-                  <span>Melhores encaixes</span>
-                  ${encaixesPerfil}
-                </div>
-              ` : ""}
             </aside>
           ` : ""}
         ` : "<p>Sem detalhes adicionais no CSV.</p>"}
@@ -370,6 +372,7 @@ function renderDraftList() {
 
   const filtrados = ordenarProspects(draftData().filter(prospectCombina));
   contador.textContent = `${filtrados.length} ${filtrados.length === 1 ? "prospect encontrado" : "prospects encontrados"}`;
+  lista.className = `draft-guide-list draft-guide-list--${draftState.view}`;
 
   if (filtrados.length === 0) {
     lista.innerHTML = '<div class="draft-empty-state">Nenhum prospect encontrado com esses filtros.</div>';
@@ -386,6 +389,23 @@ function renderDraftList() {
   });
 }
 
+function aplicarModoVisualizacao(view) {
+  const modos = new Set(["skim", "peek", "peruse", "deep"]);
+  draftState.view = modos.has(view) ? view : "peruse";
+
+  try {
+    localStorage.setItem("t3-draft-view", draftState.view);
+  } catch {
+    // Storage may be unavailable in privacy modes.
+  }
+
+  document.querySelectorAll("[data-draft-view]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.draftView === draftState.view));
+  });
+
+  renderDraftList();
+}
+
 function debounce(fn, delay = 160) {
   let timer;
   return (...args) => {
@@ -396,6 +416,13 @@ function debounce(fn, delay = 160) {
 
 function iniciarDraftGuide() {
   if (draftData().length === 0) return;
+
+  try {
+    const savedView = localStorage.getItem("t3-draft-view");
+    if (["skim", "peek", "peruse", "deep"].includes(savedView)) draftState.view = savedView;
+  } catch {
+    // Keep the default view.
+  }
 
   preencherSelect("#draft-position", "todas", opcoesUnicas("posicao"));
   preencherSelect("#draft-team", "todos", opcoesUnicas("time"));
@@ -414,6 +441,7 @@ function iniciarDraftGuide() {
   const alcance = document.querySelector("#draft-range");
   const ordenacao = document.querySelector("#draft-sort");
   const limpar = document.querySelector("#draft-clear");
+  const modosVisualizacao = document.querySelectorAll("[data-draft-view]");
   const atualizarBusca = debounce(() => {
     draftState.search = busca.value;
     renderDraftList();
@@ -424,6 +452,12 @@ function iniciarDraftGuide() {
   time?.addEventListener("change", () => { draftState.team = time.value; renderDraftList(); });
   alcance?.addEventListener("change", () => { draftState.range = alcance.value; renderDraftList(); });
   ordenacao?.addEventListener("change", () => { draftState.sort = ordenacao.value; renderDraftList(); });
+  modosVisualizacao.forEach((button) => {
+    button.addEventListener("click", () => aplicarModoVisualizacao(button.dataset.draftView));
+  });
+  modosVisualizacao.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.draftView === draftState.view));
+  });
   limpar?.addEventListener("click", () => {
     Object.assign(draftState, { search: "", position: "", team: "", range: "", sort: "rank" });
     if (busca) busca.value = "";
