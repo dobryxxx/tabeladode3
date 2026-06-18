@@ -75,7 +75,7 @@ export const draftProspect = defineType({
       of: [defineArrayMember({type: 'string'})]
     }),
     defineField({name: 'stats', title: 'Estatísticas', type: 'text', rows: 3, group: 'scouting'}),
-    defineField({name: 'observacoes', title: 'Observações', type: 'text', rows: 3, group: 'scouting'}),
+    defineField({name: 'observacoes', title: 'Pitaco', type: 'text', rows: 3, group: 'scouting'}),
     defineField({name: 'resumo', title: 'Resumo/scouting curto', type: 'text', rows: 3, group: 'scouting'}),
     defineField({
       name: 'tags',

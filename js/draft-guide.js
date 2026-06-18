@@ -13,6 +13,19 @@ function draftData() {
   const locais = typeof draftProspects !== "undefined" ? draftProspects : [];
   const sanityOrdenado = draftSanityProspects.some((prospect) => prospect?._rankOrigem === "draftBoard");
 
+  if (draftSanityProspects.length) {
+    const sanity = draftSanityProspects.map(normalizarProspectSanity);
+
+    if (sanityOrdenado) {
+      return sanity.map((prospect, index) => ({
+        ...prospect,
+        rank: index + 1
+      }));
+    }
+
+    return sanity.sort((a, b) => (Number(a.rank) || 9999) - (Number(b.rank) || 9999));
+  }
+
   if (sanityOrdenado) {
     return mesclarProspectsOrdenados(locais, draftSanityProspects);
   }
@@ -288,7 +301,7 @@ function renderProspectCard(prospect) {
   const leituraPerfil = [
     ["Por que vale uma escolha?", prospect.motivoEscolha],
     ["Chave de desenvolvimento", prospect.chaveDesenvolvimento],
-    ["Observações", prospect.observacoes]
+    ["Pitaco", prospect.observacoes]
   ].filter(([, valor]) => valor);
 
   const fichaPerfil = [
@@ -444,7 +457,7 @@ async function iniciarFonteDraftGuide() {
     const dados = await window.T3Sanity.fetchDraftProspects();
     draftSanityProspects = Array.isArray(dados) ? dados : [];
     if (!draftSanityProspects.length) throw new Error("Sanity sem prospectos publicados");
-    window.T3Sanity?.devLog?.("Fonte do guia do draft: Sanity + fallback local");
+    window.T3Sanity?.devLog?.("Fonte do guia do draft: Sanity");
     iniciarDraftGuide();
   } catch (erro) {
     window.T3Sanity?.devLog?.("Fonte do guia do draft: fallback local");
