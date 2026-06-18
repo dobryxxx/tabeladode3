@@ -7,7 +7,8 @@ export const draftProspect = defineType({
   groups: [
     {name: 'identidade', title: 'Identidade', default: true},
     {name: 'ranking', title: 'Ranking'},
-    {name: 'scouting', title: 'Scouting'}
+    {name: 'scouting', title: 'Scouting'},
+    {name: 'visibilidade', title: 'Visibilidade'}
   ],
   fields: [
     defineField({name: 'nome', title: 'Nome do jogador', type: 'string', group: 'identidade', validation: (Rule) => Rule.required()}),
@@ -94,6 +95,14 @@ export const draftProspect = defineType({
     }),
     defineField({name: 'destaqueGuia', title: 'Destaque no Guia', type: 'boolean', group: 'ranking', initialValue: false}),
     defineField({
+      name: 'ocultoNoGuia',
+      title: 'Ocultar do Guia do Draft',
+      type: 'boolean',
+      group: 'visibilidade',
+      initialValue: false,
+      description: 'Quando marcado, este prospecto não aparece no Guia do Draft do site, mas o documento permanece no banco e em outras seções (Colmeia, rankings, etc.). Use para tirar prospectos que não estão mais elegíveis sem perder o histórico.'
+    }),
+    defineField({
       name: 'status',
       title: 'Status',
       type: 'string',
@@ -118,16 +127,18 @@ export const draftProspect = defineType({
       ranking: 'rankingGeral',
       posicao: 'posicao',
       tier: 'tier',
-      media: 'foto'
+      media: 'foto',
+      oculto: 'ocultoNoGuia'
     },
-    prepare({title, ranking, posicao, tier, media}) {
+    prepare({title, ranking, posicao, tier, media, oculto}) {
+      const info = [
+        ranking ? `#${ranking}` : null,
+        posicao,
+        tier
+      ].filter(Boolean).join(' · ') || 'Sem posição'
       return {
         title: title || 'Prospecto sem nome',
-        subtitle: [
-          ranking ? `#${ranking}` : null,
-          posicao,
-          tier
-        ].filter(Boolean).join(' · ') || 'Sem posição',
+        subtitle: oculto ? `🚫 Oculto do Guia · ${info}` : info,
         media
       }
     }

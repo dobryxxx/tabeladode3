@@ -97,7 +97,7 @@
       featured,
       order
     }`,
-    draftProspects: `*[_type == "draftProspect" && status == "publicado"] | order(rankingGeral asc) {
+    draftProspects: `*[_type == "draftProspect" && status == "publicado" && ocultoNoGuia != true] | order(rankingGeral asc) {
       "nome": nome,
       "slug": slug.current,
       "foto": coalesce(foto.asset->url, imageUrl, localImagePath),
@@ -133,7 +133,7 @@
       "status": status,
       "updatedAt": _updatedAt
     }`,
-    draftBoard: `*[_type == "draftGuideSettings"][0].draftBoard[] {
+    draftBoard: `*[_type == "draftGuideSettings"][0].draftBoard[prospecto->ocultoNoGuia != true] {
       "nome": prospecto->nome,
       "slug": prospecto->slug.current,
       "foto": coalesce(prospecto->foto.asset->url, prospecto->imageUrl, prospecto->localImagePath),

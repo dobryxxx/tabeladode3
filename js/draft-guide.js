@@ -92,7 +92,7 @@ function mesclarProspects(locais = [], sanity = []) {
     chavesPossiveis.forEach((alias) => registrar(alias, chave));
   });
 
-  return [...mapa.values()];
+  return [...mapa.values()].filter((p) => p.ocultoNoGuia !== true);
 }
 
 function mesclarProspectsOrdenados(locais = [], sanity = []) {
@@ -136,7 +136,7 @@ function mesclarProspectsOrdenados(locais = [], sanity = []) {
       rank: ordenados.length + index + 1
     }));
 
-  return [...ordenados, ...restantes];
+  return [...ordenados, ...restantes].filter((p) => p.ocultoNoGuia !== true);
 }
 
 function iniciais(nome = "") {

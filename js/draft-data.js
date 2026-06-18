@@ -20,7 +20,8 @@ const draftProspects = [
     "espelho": "Shai Gilgeous-Alexander",
     "foto": "img/draft/Darryn-Peterson.png",
     "updatedAt": "2026-01-05T01:08:29Z",
-    "id": "aac469ba-7573-463a-9819-e72cdeacfc82"
+    "id": "aac469ba-7573-463a-9819-e72cdeacfc82",
+    "ocultoNoGuia": false
   },
   {
     "rank": 2,
@@ -43,7 +44,8 @@ const draftProspects = [
     "espelho": "Kevin Love moderno",
     "foto": "img/draft/Cam-Boozer.png",
     "updatedAt": "2026-01-05T01:10:33Z",
-    "id": "c110c82a-2f8d-44dd-ac7b-44d862808e82"
+    "id": "c110c82a-2f8d-44dd-ac7b-44d862808e82",
+    "ocultoNoGuia": false
   },
   {
     "rank": 3,
