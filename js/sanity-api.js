@@ -97,7 +97,7 @@
       featured,
       order
     }`,
-    draftProspects: `*[_type == "draftProspect" && status == "publicado" && ocultoNoGuia != true] | order(rankingGeral asc) {
+    draftProspects: `*[_type == "draftProspect" && status == "publicado" && ocultoNoGuia != true && string(classeDraft) == $year] | order(rankingGeral asc) {
       "nome": nome,
       "slug": slug.current,
       "foto": coalesce(foto.asset->url, imageUrl, localImagePath),
@@ -133,7 +133,10 @@
       "status": status,
       "updatedAt": _updatedAt
     }`,
-    draftBoard: `*[_type == "draftGuideSettings"][0].draftBoard[prospecto->ocultoNoGuia != true] {
+    draftBoard: `*[_id == $settingsId][0].draftBoard[
+      prospecto->ocultoNoGuia != true &&
+      string(prospecto->classeDraft) == $year
+    ] {
       "nome": prospecto->nome,
       "slug": prospecto->slug.current,
       "foto": coalesce(prospecto->foto.asset->url, prospecto->imageUrl, prospecto->localImagePath),
@@ -200,6 +203,49 @@
       },
       "bio": resumo,
       "tags": tags
+    }`,
+    draftReview: `*[_id == $settingsId][0] {
+      titulo,
+      subtitulo,
+      dataDraft,
+      introducao,
+      "escolhas": escolhas[] | order(numeroEscolha asc) {
+        _key,
+        numeroEscolha,
+        rodada,
+        chamada,
+        opiniao,
+        "time": time->{
+          _id,
+          nome,
+          sigla,
+          "slug": slug.current,
+          "logo": coalesce(logo.asset->url, logoUrl),
+          "logoAlt": logo.alt,
+          corPrimaria,
+          conferencia
+        },
+        "prospecto": prospecto->{
+          _id,
+          nome,
+          "slug": slug.current,
+          "foto": coalesce(foto.asset->url, imageUrl, localImagePath),
+          "fotoAlt": foto.alt,
+          rankingGeral,
+          posicao,
+          time,
+          idade,
+          altura,
+          alturaImperial,
+          peso,
+          classeDraft,
+          espelho,
+          resumo,
+          motivoEscolha,
+          chaveDesenvolvimento,
+          observacoes
+        }
+      }
     }`,
     rankings: `*[_type == "ranking" && status == "publicado"] | order(data desc, titulo asc) {
       "slug": slug.current,
@@ -422,8 +468,10 @@
     fetchPostBySlug: (slug) => fetchNamed("postBySlug", {slug}),
     fetchTips: () => fetchNamed("tips"),
     fetchTipBySlug: (slug) => fetchNamed("tipBySlug", {slug}),
-    fetchDraftProspects: async () => {
-      const board = await fetchNamed("draftBoard");
+    fetchDraftProspects: async (year = 2026) => {
+      const normalizedYear = String(year);
+      const settingsId = normalizedYear === "2026" ? "draftGuideSettings" : `draftGuideSettings${normalizedYear}`;
+      const board = await fetchNamed("draftBoard", {settingsId, year: normalizedYear});
       if (Array.isArray(board) && board.length) {
         return board
           .filter((item) => item && item.nome && item.status !== "oculto")
@@ -434,9 +482,14 @@
             _rankOrigem: "draftBoard"
           }));
       }
-      return fetchNamed("draftProspects");
+      return fetchNamed("draftProspects", {year: normalizedYear});
     },
     fetchProspectBySlug: (slug) => fetchNamed("prospectBySlug", {slug}),
+    fetchDraftReview: (year = 2026) => {
+      const normalizedYear = String(year);
+      const settingsId = normalizedYear === "2026" ? "draftReviewSettings" : `draftReviewSettings${normalizedYear}`;
+      return fetchNamed("draftReview", {settingsId});
+    },
     fetchRankings: () => fetchNamed("rankings"),
     fetchRankingBySlug: (slug) => fetchNamed("rankingBySlug", {slug}),
     fetchGlossaryTerms: () => fetchNamed("glossaryTerms"),

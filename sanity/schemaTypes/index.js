@@ -8,8 +8,8 @@ import {post} from './post.js'
 import {ranking} from './ranking.js'
 import {tip} from './tip.js'
 import {tweetCard} from './tweetCard.js'
-import {colmeiaSettings, draftGuideSettings, homeSettings, siteSettings} from './settings.js'
-import {blockContent, draftBoardItem, homeCard, imageWithAlt, rankingItem, socialLink, tweetEmbed} from './objects.js'
+import {colmeiaSettings, draftGuideSettings, draftReviewSettings, homeSettings, siteSettings} from './settings.js'
+import {blockContent, draftBoardItem, draftReviewPick, homeCard, imageWithAlt, rankingItem, socialLink, tweetEmbed} from './objects.js'
 
 export const schemaTypes = [
   imageWithAlt,
@@ -19,6 +19,7 @@ export const schemaTypes = [
   socialLink,
   rankingItem,
   draftBoardItem,
+  draftReviewPick,
   author,
   category,
   nbaTeam,
@@ -32,5 +33,6 @@ export const schemaTypes = [
   homeSettings,
   siteSettings,
   draftGuideSettings,
+  draftReviewSettings,
   colmeiaSettings
 ]

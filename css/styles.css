@@ -2211,31 +2211,269 @@
     }
 
     .draft-guide-hero {
-      padding: 76px 0 48px;
+      position: relative;
+      min-height: 620px;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+      padding: 0;
       border-bottom: 1px solid var(--gray-700);
       background:
-        radial-gradient(circle at 80% 0%, rgba(186,78,37,.20), transparent 34%),
-        linear-gradient(180deg, rgba(186,78,37,.10), transparent 68%);
+        linear-gradient(90deg, rgba(20,20,20,.97) 0%, rgba(20,20,20,.9) 57%, rgba(20,20,20,.72) 100%),
+        url("../img/Textura_Guia_do_Draft.jpg");
+      background-size: auto, 620px auto;
     }
 
     .draft-guide-hero__inner {
-      display: block;
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 390px);
+      gap: 72px;
+      align-items: stretch;
+      padding-top: 42px;
+      padding-bottom: 42px;
+    }
+
+    .draft-guide-hero__copy {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .draft-guide-hero__eyebrow {
+      color: var(--laranja);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
     }
 
     .draft-guide-hero h1 {
-      margin-top: 14px;
+      max-width: 900px;
+      margin-top: 28px;
       font-family: var(--font-display);
-      font-size: clamp(76px, 12vw, 150px);
-      line-height: .86;
+      font-size: clamp(78px, 9.4vw, 138px);
+      font-weight: 400;
+      line-height: .82;
     }
 
-    .draft-guide-hero p {
-      max-width: 680px;
-      margin-top: 18px;
+    .draft-guide-hero h1 > span {
+      display: block;
+    }
+
+    .draft-guide-hero__year {
+      color: var(--laranja);
+    }
+
+    .draft-guide-hero__footer {
+      max-width: 670px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 34px;
+      margin-top: auto;
+      padding-top: 50px;
+    }
+
+    .draft-guide-hero__footer p {
+      max-width: 460px;
       color: var(--gray-300);
       font-family: var(--font-serif);
-      font-size: clamp(20px, 2.4vw, 28px);
-      line-height: 1.45;
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .draft-guide-hero__footer a {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--laranja);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .draft-guide-hero__footer a span {
+      color: var(--laranja);
+      font-size: 18px;
+      transition: transform .2s ease;
+    }
+
+    .draft-guide-hero__footer a:hover span,
+    .draft-guide-hero__footer a:focus-visible span {
+      transform: translateY(4px);
+    }
+
+    .draft-guide-hero__deck {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .draft-hero-dossier {
+      position: relative;
+      width: 100%;
+      min-height: 510px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto;
+      overflow: hidden;
+      padding: 28px 0 0 34px;
+      border-left: 1px solid rgba(244,244,241,.16);
+      color: var(--white);
+      transition: border-color .25s ease;
+    }
+
+    .draft-hero-dossier:hover,
+    .draft-hero-dossier:focus-visible {
+      border-left-color: var(--laranja);
+      outline: none;
+    }
+
+    .draft-hero-dossier__index {
+      color: transparent;
+      font-family: var(--font-display);
+      font-size: clamp(130px, 14vw, 210px);
+      font-weight: 400;
+      line-height: .68;
+      -webkit-text-stroke: 1px rgba(244,244,241,.24);
+      transition: color .25s ease, -webkit-text-stroke-color .25s ease;
+    }
+
+    .draft-hero-dossier:hover .draft-hero-dossier__index,
+    .draft-hero-dossier:focus-visible .draft-hero-dossier__index {
+      color: rgba(186,78,37,.08);
+      -webkit-text-stroke-color: var(--laranja);
+    }
+
+    .draft-hero-dossier__heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 34px;
+      padding: 14px 0;
+      border-top: 1px solid rgba(244,244,241,.16);
+      border-bottom: 1px solid rgba(244,244,241,.16);
+    }
+
+    .draft-hero-dossier__heading span,
+    .draft-hero-dossier__heading strong {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .draft-hero-dossier__heading span {
+      color: var(--laranja);
+    }
+
+    .draft-hero-dossier__heading strong {
+      color: var(--gray-300);
+    }
+
+    .draft-hero-dossier__identity {
+      align-self: end;
+      padding: 42px 0 34px;
+    }
+
+    .draft-hero-dossier__identity h2 {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 5.2vw, 76px);
+      font-weight: 400;
+      line-height: .84;
+    }
+
+    .draft-hero-dossier__identity p {
+      max-width: 340px;
+      margin-top: 16px;
+      color: var(--gray-300);
+      font-family: var(--font-serif);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .draft-hero-dossier__facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border-top: 1px solid rgba(244,244,241,.16);
+    }
+
+    .draft-hero-dossier__facts div {
+      min-width: 0;
+      padding: 16px 12px 16px 0;
+      border-bottom: 1px solid rgba(244,244,241,.16);
+    }
+
+    .draft-hero-dossier__facts div:nth-child(odd) {
+      border-right: 1px solid rgba(244,244,241,.16);
+    }
+
+    .draft-hero-dossier__facts div:nth-child(even) {
+      padding-left: 18px;
+    }
+
+    .draft-hero-dossier__facts span,
+    .draft-hero-dossier__facts strong {
+      display: block;
+    }
+
+    .draft-hero-dossier__facts span {
+      color: var(--gray-300);
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .draft-hero-dossier__facts strong {
+      margin-top: 6px;
+      overflow: hidden;
+      color: var(--white);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .draft-hero-dossier__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 18px;
+      color: var(--white);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .draft-hero-dossier__footer span:last-child {
+      color: var(--laranja);
+      font-size: 22px;
+      transition: transform .2s ease;
+    }
+
+    .draft-hero-dossier:hover .draft-hero-dossier__footer span:last-child {
+      transform: translate(4px, 4px);
+    }
+
+    .draft-hero-dossier--pending {
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .draft-hero-dossier--pending p {
+      align-self: end;
+      max-width: 320px;
+      padding-bottom: 24px;
+      color: var(--gray-300);
+      font-family: var(--font-serif);
+      font-size: 16px;
+      line-height: 1.55;
     }
 
     .draft-guide-featured,
@@ -5055,3 +5293,981 @@
         animation: none;
       }
     }
+
+/* Draft area */
+.draft-area-nav {
+  position: relative;
+  z-index: 30;
+  border-bottom: 1px solid var(--gray-700);
+  background: var(--gray-900);
+}
+
+.draft-area-nav__inner {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.draft-area-nav__season {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.draft-area-nav__season > span {
+  color: var(--laranja);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.draft-year-switcher {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--gray-700);
+  border-radius: 999px;
+  background: var(--black);
+}
+
+.draft-year-switcher a {
+  min-width: 54px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  color: var(--gray-300);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 0 10px;
+}
+
+.draft-year-switcher a:hover,
+.draft-year-switcher a:focus-visible,
+.draft-year-switcher a.active {
+  color: var(--white);
+  background: var(--laranja);
+  outline: none;
+}
+
+.draft-area-nav__sections {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+}
+
+.draft-area-nav__sections > a {
+  min-width: 150px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--gray-700);
+  color: var(--gray-300);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 0 20px;
+  text-transform: uppercase;
+  transition: color .2s ease, background .2s ease;
+}
+
+.draft-area-nav__sections > a:last-child {
+  border-right: 1px solid var(--gray-700);
+}
+
+.draft-area-nav__sections > a:hover,
+.draft-area-nav__sections > a:focus-visible,
+.draft-area-nav__sections > a.active {
+  color: var(--white);
+  background: rgba(244,244,241,.05);
+  outline: none;
+}
+
+.draft-area-nav__sections > a.active {
+  box-shadow: inset 0 -3px 0 var(--laranja);
+}
+
+.draft-area-nav__sections > a[hidden] {
+  display: none;
+}
+
+/* Draft Review */
+.draft-review-body {
+  background:
+    linear-gradient(rgba(20,20,20,.94), rgba(20,20,20,.94)),
+    url("../img/Textura_Guia_do_Draft.jpg");
+}
+
+.draft-review-page {
+  min-height: 80vh;
+  border-bottom: 1px solid var(--gray-700);
+}
+
+.draft-review-hero {
+  overflow: hidden;
+  border-bottom: 1px solid var(--gray-700);
+  background:
+    linear-gradient(115deg, rgba(186,78,37,.2), transparent 42%),
+    var(--black);
+}
+
+.draft-review-hero__inner {
+  min-height: 540px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+  gap: 70px;
+  align-items: end;
+  padding-top: 72px;
+  padding-bottom: 64px;
+}
+
+.draft-review-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.draft-review-hero__meta span {
+  border: 1px solid var(--gray-700);
+  color: var(--gray-300);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  padding: 7px 9px;
+  text-transform: uppercase;
+}
+
+.draft-review-hero__meta span:first-child {
+  border-color: var(--laranja);
+  color: var(--laranja);
+}
+
+.draft-review-hero h1 {
+  max-width: 800px;
+  font-family: var(--font-display);
+  font-size: clamp(74px, 10vw, 138px);
+  font-weight: 500;
+  line-height: .82;
+}
+
+.draft-review-hero__copy > p {
+  max-width: 680px;
+  margin-top: 26px;
+  color: var(--white);
+  font-family: var(--font-serif);
+  font-size: clamp(22px, 2.5vw, 34px);
+  line-height: 1.25;
+}
+
+.draft-review-hero__side {
+  padding: 26px 0 8px 28px;
+  border-left: 1px solid var(--laranja);
+}
+
+.draft-review-hero__side > p {
+  color: var(--gray-300);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.draft-review-progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 30px;
+  border-top: 1px solid var(--gray-700);
+}
+
+.draft-review-progress div {
+  min-width: 0;
+  padding: 18px 12px 0 0;
+}
+
+.draft-review-progress strong,
+.draft-review-progress span {
+  display: block;
+}
+
+.draft-review-progress strong {
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 30px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.draft-review-progress span {
+  margin-top: 4px;
+  color: var(--gray-300);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.draft-review-browser {
+  padding: 42px 0 70px;
+}
+
+.draft-review-toolbar {
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid var(--gray-700);
+  background: rgba(17,17,17,.94);
+  backdrop-filter: blur(14px);
+}
+
+.draft-review-rounds {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  padding: 3px;
+  border: 1px solid var(--gray-700);
+  border-radius: 999px;
+}
+
+.draft-review-rounds button,
+.draft-review-toolbar > button {
+  border: 0;
+  background: transparent;
+  color: var(--gray-300);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  padding: 0 14px;
+  text-transform: uppercase;
+}
+
+.draft-review-rounds button {
+  border-radius: 999px;
+}
+
+.draft-review-rounds button[aria-pressed="true"] {
+  background: var(--laranja);
+  color: var(--white);
+}
+
+.draft-review-toolbar label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--gray-300);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.draft-review-toolbar select,
+.draft-review-toolbar > button {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--gray-700);
+  border-radius: 0;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  padding: 0 12px;
+}
+
+.draft-review-toolbar > button {
+  width: auto;
+  color: var(--gray-300);
+}
+
+.draft-review-toolbar > button:hover,
+.draft-review-toolbar > button:focus-visible {
+  border-color: var(--laranja);
+  color: var(--white);
+  outline: none;
+}
+
+.draft-review-count {
+  margin-bottom: 18px;
+  color: var(--gray-300);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.draft-review-list {
+  display: grid;
+  gap: 28px;
+}
+
+.draft-review-pick {
+  --review-team-color: var(--laranja);
+  position: relative;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1.1fr) minmax(310px, .9fr);
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border: 1px solid var(--gray-700);
+  border-top: 3px solid var(--review-team-color);
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--review-team-color) 11%, transparent), transparent 38%),
+    var(--gray-900);
+  box-shadow: 0 18px 48px rgba(0,0,0,.22);
+}
+
+.draft-review-pick__number {
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 26px 10px;
+  border-right: 1px solid var(--gray-700);
+}
+
+.draft-review-pick__number span {
+  color: var(--gray-300);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.draft-review-pick__number strong {
+  color: var(--review-team-color);
+  font-family: var(--font-body);
+  font-size: 52px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.draft-review-pick__team {
+  position: relative;
+  grid-column: 2 / -1;
+  min-height: 128px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  overflow: hidden;
+  padding: 22px 30px;
+  border-bottom: 1px solid var(--gray-700);
+}
+
+.draft-review-pick__team::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--review-team-color);
+}
+
+.draft-review-pick__team-logo {
+  position: relative;
+  z-index: 2;
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px;
+  border: 1px solid rgba(244,244,241,.12);
+  background: rgba(244,244,241,.04);
+}
+
+.draft-review-pick__team-logo img,
+.draft-review-pick__team-watermark img,
+.draft-review-pick__logo-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.draft-review-pick__team > div:nth-child(2) {
+  position: relative;
+  z-index: 2;
+}
+
+.draft-review-pick__team span {
+  color: var(--review-team-color);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.draft-review-pick__team h2 {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 4vw, 54px);
+  font-weight: 500;
+  line-height: .9;
+}
+
+.draft-review-pick__team-watermark {
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  right: 26px;
+  top: 50%;
+  opacity: .055;
+  transform: translateY(-50%);
+  filter: grayscale(1);
+  pointer-events: none;
+}
+
+.draft-review-pick__player {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 22px;
+  padding: 28px 30px;
+}
+
+.draft-review-pick__portrait {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  border: 1px solid var(--gray-700);
+  background: var(--black);
+}
+
+.draft-review-pick__portrait > img,
+.draft-review-pick__placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+.draft-review-pick__portrait > img {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.08);
+}
+
+.draft-review-pick__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-300);
+  font-family: var(--font-display);
+  font-size: 72px;
+}
+
+.draft-review-pick__logo-badge {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 54px;
+  height: 54px;
+  padding: 7px;
+  border: 1px solid rgba(244,244,241,.2);
+  background: rgba(17,17,17,.9);
+}
+
+.draft-review-pick__identity {
+  min-width: 0;
+  align-self: center;
+}
+
+.draft-review-pick__identity > span {
+  color: var(--review-team-color);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.draft-review-pick__identity h3 {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-size: clamp(42px, 4vw, 62px);
+  font-weight: 500;
+  line-height: .84;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.draft-review-pick__identity > p {
+  margin-top: 18px;
+  color: var(--gray-300);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.draft-review-pick__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.draft-review-pick__facts div {
+  padding-left: 10px;
+  border-left: 1px solid var(--gray-700);
+}
+
+.draft-review-pick__facts span,
+.draft-review-pick__facts strong {
+  display: block;
+}
+
+.draft-review-pick__facts span {
+  color: var(--gray-300);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.draft-review-pick__facts strong {
+  margin-top: 4px;
+  color: var(--white);
+  font-size: 13px;
+}
+
+.draft-review-pick__editorial {
+  align-self: stretch;
+  padding: 34px 34px 34px 30px;
+  border-left: 1px solid var(--gray-700);
+  background: rgba(0,0,0,.16);
+}
+
+.draft-review-pick__editorial-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--review-team-color);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.draft-review-pick__editorial-label::before {
+  content: "";
+  width: 34px;
+  height: 2px;
+  background: currentColor;
+}
+
+.draft-review-pick__editorial h4 {
+  margin-top: 22px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.2vw, 46px);
+  font-weight: 500;
+  line-height: .98;
+}
+
+.draft-review-pick__editorial p {
+  margin-top: 22px;
+  color: var(--gray-100);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.draft-review-pick--pending {
+  min-height: 220px;
+  grid-template-columns: 112px minmax(320px, .65fr) minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  border-top-color: var(--gray-500);
+  background: var(--gray-900);
+}
+
+.draft-review-pick--pending .draft-review-pick__team {
+  grid-column: 2;
+  min-height: 100%;
+  border-right: 1px solid var(--gray-700);
+  border-bottom: 0;
+}
+
+.draft-review-pick--pending .draft-review-pick__team::before {
+  background: var(--gray-500);
+}
+
+.draft-review-pick__waiting {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 34px;
+}
+
+.draft-review-pick__waiting span {
+  color: var(--gray-300);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.draft-review-pick__waiting p {
+  max-width: 520px;
+  margin-top: 12px;
+  color: var(--gray-300);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.draft-review-empty {
+  padding: 70px 24px;
+  border: 1px solid var(--gray-700);
+  color: var(--gray-300);
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .draft-review-hero__inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .draft-review-hero__side {
+    max-width: 680px;
+  }
+
+  .draft-review-toolbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .draft-review-pick {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .draft-review-pick__team {
+    grid-column: 2;
+  }
+
+  .draft-review-pick__player,
+  .draft-review-pick__editorial {
+    grid-column: 2;
+  }
+
+  .draft-review-pick__editorial {
+    border-top: 1px solid var(--gray-700);
+    border-left: 0;
+  }
+
+  .draft-review-pick--pending {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .draft-review-pick--pending .draft-review-pick__team,
+  .draft-review-pick__waiting {
+    grid-column: 2;
+  }
+
+  .draft-review-pick--pending .draft-review-pick__team {
+    border-right: 0;
+    border-bottom: 1px solid var(--gray-700);
+  }
+}
+
+@media (max-width: 640px) {
+  .draft-area-nav__inner {
+    min-height: 0;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+    padding: 12px 20px 0;
+  }
+
+  .draft-area-nav__season {
+    width: 100%;
+    justify-content: space-between;
+    padding-bottom: 12px;
+  }
+
+  .draft-year-switcher {
+    flex: 1;
+    max-width: 220px;
+  }
+
+  .draft-year-switcher a {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .draft-area-nav__sections {
+    width: 100%;
+  }
+
+  .draft-area-nav__sections > a {
+    min-width: 0;
+    flex: 1;
+    min-height: 44px;
+    border-top: 1px solid var(--gray-700);
+    font-size: 9px;
+    padding: 0 8px;
+    text-align: center;
+  }
+
+  .draft-review-hero__inner {
+    min-height: 0;
+    padding-top: 54px;
+    padding-bottom: 46px;
+  }
+
+  .draft-review-hero h1 {
+    font-size: clamp(60px, 20vw, 84px);
+  }
+
+  .draft-review-hero__side {
+    padding-left: 18px;
+  }
+
+  .draft-review-progress {
+    gap: 8px;
+  }
+
+  .draft-review-progress strong {
+    font-size: 24px;
+  }
+
+  .draft-review-browser {
+    padding-top: 24px;
+  }
+
+  .draft-review-toolbar {
+    position: static;
+    grid-template-columns: 1fr;
+  }
+
+  .draft-review-toolbar > button {
+    width: 100%;
+  }
+
+  .draft-review-pick,
+  .draft-review-pick--pending {
+    grid-template-columns: 64px minmax(0, 1fr);
+    border-radius: 6px;
+  }
+
+  .draft-review-pick__number {
+    padding: 22px 5px;
+  }
+
+  .draft-review-pick__number span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .draft-review-pick__number strong {
+    font-size: 34px;
+  }
+
+  .draft-review-pick__team {
+    min-height: 104px;
+    gap: 14px;
+    padding: 16px 16px 16px 20px;
+  }
+
+  .draft-review-pick__team-logo {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+  }
+
+  .draft-review-pick__team h2 {
+    font-size: 30px;
+  }
+
+  .draft-review-pick__team-watermark {
+    display: none;
+  }
+
+  .draft-review-pick__player {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 16px;
+  }
+
+  .draft-review-pick__portrait {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .draft-review-pick__identity h3 {
+    font-size: clamp(48px, 14vw, 62px);
+  }
+
+  .draft-review-pick__editorial {
+    padding: 26px 18px;
+  }
+
+  .draft-review-pick__editorial h4 {
+    font-size: 32px;
+  }
+
+  .draft-review-pick__editorial p {
+    font-size: 16px;
+  }
+
+  .draft-review-pick__waiting {
+    padding: 26px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draft-area-nav a {
+    transition: none;
+  }
+
+  .draft-hero-dossier,
+  .draft-hero-dossier__index,
+  .draft-hero-dossier__footer span:last-child,
+  .draft-guide-hero__footer a span {
+    transition: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .draft-guide-hero {
+    min-height: 0;
+  }
+
+  .draft-guide-hero__inner {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 34px;
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .draft-guide-hero h1 {
+    font-size: clamp(72px, 12vw, 108px);
+  }
+
+  .draft-guide-hero__footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .draft-hero-dossier {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 720px) {
+  .draft-guide-hero {
+    padding: 0;
+  }
+
+  .draft-guide-hero__inner {
+    grid-template-columns: 1fr;
+    gap: 50px;
+    padding-top: 46px;
+    padding-bottom: 62px;
+  }
+
+  .draft-guide-hero h1 {
+    margin-top: 20px;
+    font-size: clamp(66px, 21vw, 94px);
+    line-height: .79;
+  }
+
+  .draft-guide-hero__footer {
+    max-width: 100%;
+    padding-top: 42px;
+  }
+
+  .draft-guide-hero__footer p {
+    font-size: 16px;
+  }
+
+  .draft-guide-hero__deck {
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .draft-hero-dossier {
+    min-height: 460px;
+    padding: 0;
+    border-top: 1px solid rgba(244,244,241,.16);
+    border-left: 0;
+  }
+
+  .draft-hero-dossier__index {
+    padding-top: 30px;
+    font-size: 132px;
+  }
+
+  .draft-hero-dossier__identity h2 {
+    font-size: 54px;
+  }
+
+  .draft-hero-dossier__facts strong {
+    white-space: normal;
+  }
+}
+
+/* Draft Guide hero: classic layout */
+.draft-guide-hero {
+  min-height: 0;
+  display: block;
+  overflow: visible;
+  padding: 76px 0 48px;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(186,78,37,.20), transparent 34%),
+    linear-gradient(180deg, rgba(186,78,37,.10), transparent 68%);
+}
+
+.draft-guide-hero__inner {
+  width: auto;
+  display: block;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.draft-guide-hero__copy {
+  display: block;
+}
+
+.draft-guide-hero h1 {
+  max-width: none;
+  margin-top: 14px;
+  font-size: clamp(76px, 12vw, 150px);
+  font-weight: 400;
+  line-height: .86;
+  text-transform: none;
+}
+
+.draft-guide-hero__copy > p {
+  max-width: 680px;
+  margin-top: 18px;
+  color: var(--gray-300);
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .draft-guide-hero {
+    padding: 48px 0 34px;
+  }
+
+  .draft-guide-hero__inner {
+    display: block;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .draft-guide-hero h1 {
+    margin-top: 14px;
+    font-size: clamp(64px, 18vw, 92px);
+    line-height: .86;
+  }
+}

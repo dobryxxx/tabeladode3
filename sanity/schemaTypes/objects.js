@@ -145,6 +145,13 @@ export const draftBoardItem = defineType({
       title: 'Prospecto',
       type: 'reference',
       to: [{type: 'draftProspect'}],
+      options: {
+        filter: ({document}) => {
+          const id = String(document?._id || '').replace(/^drafts\./, '')
+          const year = id.match(/(2025|2026|2027)$/)?.[1] || '2026'
+          return {filter: 'string(classeDraft) == $year', params: {year}}
+        }
+      },
       validation: (Rule) => Rule.required()
     }),
     defineField({
@@ -171,6 +178,77 @@ export const draftBoardItem = defineType({
           tier,
           ranking ? `Ranking original #${ranking}` : null
         ].filter(Boolean).join(' / ') || 'Sem posicao cadastrada'
+      }
+    }
+  }
+})
+
+export const draftReviewPick = defineType({
+  name: 'draftReviewPick',
+  title: 'Escolha analisada',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'numeroEscolha',
+      title: 'Numero da escolha',
+      type: 'number',
+      validation: (Rule) => Rule.required().integer().min(1)
+    }),
+    defineField({
+      name: 'rodada',
+      title: 'Rodada',
+      type: 'number',
+      initialValue: 1,
+      validation: (Rule) => Rule.required().integer().min(1).max(2)
+    }),
+    defineField({
+      name: 'time',
+      title: 'Franquia que fez a escolha',
+      type: 'reference',
+      to: [{type: 'nbaTeam'}],
+      validation: (Rule) => Rule.required()
+    }),
+    defineField({
+      name: 'prospecto',
+      title: 'Jogador escolhido',
+      type: 'reference',
+      to: [{type: 'draftProspect'}],
+      options: {
+        filter: ({document}) => {
+          const id = String(document?._id || '').replace(/^drafts\./, '')
+          const year = id.match(/(2025|2026|2027)$/)?.[1] || '2026'
+          return {filter: 'string(classeDraft) == $year', params: {year}}
+        }
+      },
+      description: 'Pode ficar vazio enquanto a escolha ainda nao foi anunciada.'
+    }),
+    defineField({
+      name: 'chamada',
+      title: 'Veredito curto',
+      type: 'string',
+      description: 'Uma frase curta que resume a leitura da escolha.',
+      validation: (Rule) => Rule.max(120)
+    }),
+    defineField({
+      name: 'opiniao',
+      title: 'Review da escolha',
+      type: 'text',
+      rows: 7,
+      description: 'Analise editorial que aparece em destaque na pagina.'
+    })
+  ],
+  preview: {
+    select: {
+      numero: 'numeroEscolha',
+      time: 'time.nome',
+      prospecto: 'prospecto.nome',
+      media: 'time.logo'
+    },
+    prepare({numero, time, prospecto, media}) {
+      return {
+        title: `${numero ? `${numero}. ` : ''}${time || 'Franquia nao definida'}`,
+        subtitle: prospecto || 'Aguardando escolha',
+        media
       }
     }
   }

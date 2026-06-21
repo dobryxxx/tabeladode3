@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="favicon.ico?v=2" sizes="any" />
+  <link rel="icon" type="image/png" href="img/favicon.png?v=2" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
+  <title>Review do Draft | Tabelado de 3</title>
+  <link rel="stylesheet" href="css/styles.css?v=draft-review-local" />
+</head>
+<body class="draft-review-body">
+  <header class="top-nav">
+    <div class="container top-nav__inner">
+      <a href="index.html" class="logo" aria-label="Tabelado de 3">
+        <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
+      </a>
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="top-nav__links" id="mobile-menu">
+        <a href="por-escrito.html">por escrito</a>
+        <a href="glossario.html">glossario</a>
+        <a href="dicas.html">dicas</a>
+        <a href="rankings.html">rankings</a>
+        <a href="guia-do-draft.html" class="active">guia do draft</a>
+        <a href="contato.html">contato</a>
+      </nav>
+      <div class="top-nav__right">
+        <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+        <div class="divider-v"></div>
+        <a href="admin/" class="btn-entrar">entrar</a>
+      </div>
+    </div>
+  </header>
+
+  <div id="barra-busca" class="search-panel" aria-hidden="true">
+    <div class="container search-panel__inner">
+      <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por titulo ou categoria" autocomplete="off" />
+    </div>
+  </div>
+
+  <nav class="draft-area-nav" aria-label="Área especial do Draft">
+    <div class="container draft-area-nav__inner">
+      <div class="draft-area-nav__season">
+        <span data-draft-year-label>Draft 2026</span>
+        <div class="draft-year-switcher" aria-label="Escolher temporada do Draft">
+          <a href="review-do-draft.html?ano=2025" data-draft-year="2025">2025</a>
+          <a href="review-do-draft.html?ano=2026" data-draft-year="2026">2026</a>
+          <a href="guia-do-draft.html?ano=2027" data-draft-year="2027">2027</a>
+        </div>
+      </div>
+      <div class="draft-area-nav__sections">
+        <a href="guia-do-draft.html" data-draft-section="guide">Guia do Draft</a>
+        <a href="review-do-draft.html" class="active" data-draft-section="review">Review das escolhas</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="draft-review-page">
+    <section class="draft-review-hero">
+      <div class="container draft-review-hero__inner">
+        <div class="draft-review-hero__copy">
+          <div class="draft-review-hero__meta">
+            <span id="draft-review-date">Draft 2026</span>
+            <span id="draft-review-source">carregando</span>
+          </div>
+          <h1 id="draft-review-title">Review do Draft</h1>
+          <p id="draft-review-subtitle">Cada escolha, um pitaco.</p>
+        </div>
+        <div class="draft-review-hero__side">
+          <p id="draft-review-intro"></p>
+          <div class="draft-review-progress" id="draft-review-progress"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="draft-review-browser">
+      <div class="container">
+        <div class="draft-review-toolbar">
+          <label>
+            <span>franquia</span>
+            <select id="draft-review-team"></select>
+          </label>
+          <button type="button" id="draft-review-clear">limpar</button>
+        </div>
+        <div class="draft-review-count" id="draft-review-count"></div>
+        <div class="draft-review-list" id="draft-review-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer__inner">
+      <div class="footer__copy">
+        <img class="footer__logo" src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
+        &copy; 2026.<br/>Todos os direitos reservados.
+      </div>
+      <div class="footer__right">Feito com amor, suor e basquete.<br/>Por quem vive o jogo.</div>
+    </div>
+  </footer>
+
+  <script src="js/sanity-config.js"></script>
+  <script src="js/sanity-api.js?v=draft-review-local"></script>
+  <script src="js/draft-area.js"></script>
+  <script src="js/draft-review-data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/draft-review.js?v=draft-years-local"></script>
+</body>
+</html>

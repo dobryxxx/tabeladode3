@@ -10,9 +10,10 @@ const draftState = {
 let draftSanityProspects = [];
 let draftEventosIniciados = false;
 let draftViewAnimationTimer;
+const draftYear = window.T3DraftArea?.year || "2026";
 
 function draftData() {
-  const locais = typeof draftProspects !== "undefined" ? draftProspects : [];
+  const locais = draftYear === "2026" && typeof draftProspects !== "undefined" ? draftProspects : [];
   const sanityOrdenado = draftSanityProspects.some((prospect) => prospect?._rankOrigem === "draftBoard");
 
   if (draftSanityProspects.length) {
@@ -420,7 +421,22 @@ function debounce(fn, delay = 160) {
 }
 
 function iniciarDraftGuide() {
-  if (draftData().length === 0) return;
+  if (draftData().length === 0) {
+    const featured = document.querySelector("#draft-featured");
+    const count = document.querySelector("#draft-count");
+    const list = document.querySelector("#draft-list");
+    if (featured) {
+      featured.innerHTML = "";
+      featured.closest("section")?.setAttribute("hidden", "");
+    }
+    if (count) count.textContent = "0 prospects encontrados";
+    if (list) {
+      list.innerHTML = `<div class="draft-empty-state">O Guia do Draft ${draftYear} ainda está sendo preparado no Studio.</div>`;
+    }
+    return;
+  }
+
+  document.querySelector("#draft-featured")?.closest("section")?.removeAttribute("hidden");
 
   try {
     const savedView = localStorage.getItem("t3-draft-view");
@@ -492,9 +508,9 @@ async function iniciarFonteDraftGuide() {
   }
 
   try {
-    const dados = await window.T3Sanity.fetchDraftProspects();
+    const dados = await window.T3Sanity.fetchDraftProspects(draftYear);
     draftSanityProspects = Array.isArray(dados) ? dados : [];
-    if (!draftSanityProspects.length) throw new Error("Sanity sem prospectos publicados");
+    if (!draftSanityProspects.length && draftYear === "2026") throw new Error("Sanity sem prospectos publicados");
     window.T3Sanity?.devLog?.("Fonte do guia do draft: Sanity");
     iniciarDraftGuide();
   } catch (erro) {

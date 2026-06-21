@@ -2,6 +2,7 @@ const hiddenTypes = new Set([
   'homeSettings',
   'siteSettings',
   'draftGuideSettings',
+  'draftReviewSettings',
   'colmeiaSettings',
   'post',
   'tip',
@@ -14,6 +15,57 @@ const hiddenTypes = new Set([
   'category',
   'author'
 ])
+
+const draftGuideDocument = (S, year) =>
+  S.listItem()
+    .title('Ordem do Guia')
+    .schemaType('draftGuideSettings')
+    .child(
+      S.document()
+        .schemaType('draftGuideSettings')
+        .documentId(year === '2026' ? 'draftGuideSettings' : `draftGuideSettings${year}`)
+        .initialValueTemplate('draftGuideSettings-year', {year})
+        .title(`Ordem do Guia ${year}`)
+    )
+
+const draftReviewDocument = (S, year) =>
+  S.listItem()
+    .title('Review do Draft')
+    .schemaType('draftReviewSettings')
+    .child(
+      S.document()
+        .schemaType('draftReviewSettings')
+        .documentId(year === '2026' ? 'draftReviewSettings' : `draftReviewSettings${year}`)
+        .initialValueTemplate('draftReviewSettings-year', {year})
+        .title(`Review do Draft ${year}`)
+    )
+
+const draftProspectsList = (S, year) =>
+  S.listItem()
+    .title('Prospectos')
+    .schemaType('draftProspect')
+    .child(
+      S.documentTypeList('draftProspect')
+        .title(`Prospectos do Draft ${year}`)
+        .filter('_type == "draftProspect" && string(classeDraft) == $year')
+        .params({year})
+        .initialValueTemplates([
+          S.initialValueTemplateItem('draftProspect-year', {year})
+        ])
+    )
+
+const draftYearSection = (S, year, hasReview = true) =>
+  S.listItem()
+    .title(year)
+    .child(
+      S.list()
+        .title(`Draft ${year}`)
+        .items([
+          draftGuideDocument(S, year),
+          ...(hasReview ? [draftReviewDocument(S, year)] : []),
+          draftProspectsList(S, year)
+        ])
+    )
 
 export const deskStructure = (S) =>
   S.list()
@@ -42,19 +94,9 @@ export const deskStructure = (S) =>
           S.list()
             .title('Guia do Draft')
             .items([
-              S.listItem()
-                .title('Ordem do Guia')
-                .schemaType('draftGuideSettings')
-                .child(
-                  S.document()
-                    .schemaType('draftGuideSettings')
-                    .documentId('draftGuideSettings')
-                    .title('Ordem do Guia do Draft')
-                ),
-              S.listItem()
-                .title('Prospectos')
-                .schemaType('draftProspect')
-                .child(S.documentTypeList('draftProspect').title('Prospectos do Draft'))
+              draftYearSection(S, '2025'),
+              draftYearSection(S, '2026'),
+              draftYearSection(S, '2027', false)
             ])
         ),
       S.listItem()

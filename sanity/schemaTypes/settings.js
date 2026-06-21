@@ -161,6 +161,51 @@ export const draftGuideSettings = defineType({
   }
 })
 
+export const draftReviewSettings = defineType({
+  name: 'draftReviewSettings',
+  title: 'Review do Draft',
+  type: 'document',
+  fields: [
+    defineField({
+      name: 'titulo',
+      title: 'Titulo da pagina',
+      type: 'string',
+      initialValue: 'Review do Draft 2026',
+      validation: (Rule) => Rule.required()
+    }),
+    defineField({
+      name: 'subtitulo',
+      title: 'Linha fina',
+      type: 'string',
+      initialValue: 'Cada escolha, um pitaco.'
+    }),
+    defineField({
+      name: 'dataDraft',
+      title: 'Data do Draft',
+      type: 'date'
+    }),
+    defineField({
+      name: 'introducao',
+      title: 'Introducao editorial',
+      type: 'text',
+      rows: 4
+    }),
+    defineField({
+      name: 'escolhas',
+      title: 'Escolhas e reviews',
+      type: 'array',
+      description: 'Adicione as escolhas na ordem do Draft. Arraste para reorganizar quando necessario.',
+      of: [defineArrayMember({type: 'draftReviewPick'})]
+    })
+  ],
+  preview: {
+    select: {title: 'titulo'},
+    prepare({title}) {
+      return {title: title || 'Review do Draft'}
+    }
+  }
+})
+
 export const colmeiaSettings = defineType({
   name: 'colmeiaSettings',
   title: 'Configuracoes da Colmeia',

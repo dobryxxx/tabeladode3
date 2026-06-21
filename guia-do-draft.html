@@ -47,11 +47,28 @@
     </div>
   </div>
 
+  <nav class="draft-area-nav" aria-label="Área especial do Draft">
+    <div class="container draft-area-nav__inner">
+      <div class="draft-area-nav__season">
+        <span data-draft-year-label>Draft 2026</span>
+        <div class="draft-year-switcher" aria-label="Escolher temporada do Draft">
+          <a href="guia-do-draft.html?ano=2025" data-draft-year="2025">2025</a>
+          <a href="guia-do-draft.html?ano=2026" data-draft-year="2026">2026</a>
+          <a href="guia-do-draft.html?ano=2027" data-draft-year="2027">2027</a>
+        </div>
+      </div>
+      <div class="draft-area-nav__sections">
+        <a href="guia-do-draft.html" class="active" data-draft-section="guide">Guia do Draft</a>
+        <a href="review-do-draft.html" data-draft-section="review">Review das escolhas</a>
+      </div>
+    </div>
+  </nav>
+
   <main class="draft-guide-page">
     <section class="draft-guide-hero">
       <div class="container draft-guide-hero__inner">
         <div class="draft-guide-hero__copy">
-          <span class="tag tag--red">especial 2026</span>
+          <span class="tag tag--red" data-draft-special-year>especial 2026</span>
           <h1>Guia do Draft</h1>
           <p>Um panorama completo dos principais nomes da classe, com ranking, perfil, contexto e leitura de jogo.</p>
         </div>
@@ -133,11 +150,12 @@
   </footer>
   <script src="js/sanity-config.js"></script>
   <script src="js/sanity-api.js"></script>
+  <script src="js/draft-area.js"></script>
   <script src="js/conteudo.js"></script>
     <script src="js/cms-posts.js"></script>
 <script src="js/rankings.js"></script>
   <script src="js/draft-data.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/draft-guide.js?v=draft-guide-polish"></script>
+  <script src="js/draft-guide.js?v=draft-years-local"></script>
 </body>
 </html>
