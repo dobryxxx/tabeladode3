@@ -26,11 +26,11 @@ export default defineConfig({
       },
       {
         id: 'draftReviewSettings-year',
-        title: 'Review do Draft por ano',
+        title: 'Inspeção por ano',
         schemaType: 'draftReviewSettings',
         parameters: [{name: 'year', title: 'Ano', type: 'string'}],
         value: ({year}) => ({
-          titulo: `Review do Draft ${year}`,
+          titulo: `Inspeção ${year}`,
           subtitulo: 'Cada escolha, um pitaco.'
         })
       },

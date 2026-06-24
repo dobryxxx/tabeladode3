@@ -1,6 +1,6 @@
 (function () {
   window.T3_DRAFT_REVIEW_FALLBACK = {
-    titulo: "Review do Draft 2026",
+    titulo: "Inspeção 2026",
     subtitulo: "A escolha foi feita. Agora vem o pitaco.",
     dataDraft: "2026-06-23",
     introducao: "Uma leitura escolha por escolha: o encaixe, o valor, o contexto e o que cada franquia está tentando construir.",

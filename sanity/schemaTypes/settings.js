@@ -163,14 +163,14 @@ export const draftGuideSettings = defineType({
 
 export const draftReviewSettings = defineType({
   name: 'draftReviewSettings',
-  title: 'Review do Draft',
+  title: 'Inspeção',
   type: 'document',
   fields: [
     defineField({
       name: 'titulo',
       title: 'Titulo da pagina',
       type: 'string',
-      initialValue: 'Review do Draft 2026',
+      initialValue: 'Inspeção 2026',
       validation: (Rule) => Rule.required()
     }),
     defineField({
@@ -201,7 +201,7 @@ export const draftReviewSettings = defineType({
   preview: {
     select: {title: 'titulo'},
     prepare({title}) {
-      return {title: title || 'Review do Draft'}
+      return {title: title || 'Inspeção'}
     }
   }
 })

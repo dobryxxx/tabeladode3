@@ -140,7 +140,7 @@
   }
 
   function renderHeader(source) {
-    document.querySelector("#draft-review-title").textContent = reviewData.titulo || "Review do Draft";
+    document.querySelector("#draft-review-title").textContent = reviewData.titulo || "Inspeção";
     document.querySelector("#draft-review-subtitle").textContent = reviewData.subtitulo || "Cada escolha, um pitaco.";
     document.querySelector("#draft-review-intro").textContent = reviewData.introducao || "";
     document.querySelector("#draft-review-date").textContent = formatDate(reviewData.dataDraft);
@@ -191,7 +191,7 @@
     try {
       reviewData = await window.T3Sanity?.fetchDraftReview?.(draftYear);
     } catch (error) {
-      console.warn("Não foi possível carregar a Review do Draft do Sanity.", error);
+      console.warn("Não foi possível carregar a Inspeção do Sanity.", error);
     }
 
     if (!reviewData?.escolhas?.length && isLocal && draftYear === "2026") {
@@ -201,7 +201,7 @@
 
     if (!reviewData) {
       reviewData = {
-        titulo: `Review do Draft ${draftYear}`,
+        titulo: `Inspeção ${draftYear}`,
         subtitulo: "A cobertura escolha por escolha entra no ar em breve.",
         introducao: "",
         escolhas: []

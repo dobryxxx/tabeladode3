@@ -30,14 +30,14 @@ const draftGuideDocument = (S, year) =>
 
 const draftReviewDocument = (S, year) =>
   S.listItem()
-    .title('Review do Draft')
+    .title('Inspeção')
     .schemaType('draftReviewSettings')
     .child(
       S.document()
         .schemaType('draftReviewSettings')
         .documentId(year === '2026' ? 'draftReviewSettings' : `draftReviewSettings${year}`)
         .initialValueTemplate('draftReviewSettings-year', {year})
-        .title(`Review do Draft ${year}`)
+        .title(`Inspeção ${year}`)
     )
 
 const draftProspectsList = (S, year) =>
