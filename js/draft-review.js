@@ -32,6 +32,10 @@
     });
   }
 
+  function draftReviewPageTitle() {
+    return `Inspeção ${draftYear}`;
+  }
+
   function fact(label, value) {
     if (!value) return "";
     return `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
@@ -140,7 +144,9 @@
   }
 
   function renderHeader(source) {
-    document.querySelector("#draft-review-title").textContent = reviewData.titulo || "Inspeção";
+    const title = draftReviewPageTitle();
+    document.querySelector("#draft-review-title").textContent = title;
+    document.title = `${title} | Tabelado de 3`;
     document.querySelector("#draft-review-subtitle").textContent = reviewData.subtitulo || "Cada escolha, um pitaco.";
     document.querySelector("#draft-review-intro").textContent = reviewData.introducao || "";
     document.querySelector("#draft-review-date").textContent = formatDate(reviewData.dataDraft);
@@ -154,8 +160,6 @@
       <div><strong>${picks.length}</strong><span>escolhas</span></div>
     `;
 
-    const sourceLabel = document.querySelector("#draft-review-source");
-    if (sourceLabel) sourceLabel.textContent = source;
   }
 
   function fillTeamFilter() {
