@@ -53,12 +53,6 @@ function glossarioDados() {
   return mesclarGlossario(glossario, glossarioSanity);
 }
 
-const nivelLabel = {
-  basico: "Essencial",
-  intermediario: "Intermediario",
-  avancado: "Avancado"
-};
-
 const categoriaClasse = {
   "Ataque": "glossario-color-ataque",
   "Arremessos": "glossario-color-arremessos",
@@ -71,6 +65,33 @@ const categoriaClasse = {
 
 function classeDaCategoria(categoria) {
   return categoriaClasse[categoria] || "glossario-color-default";
+}
+
+const categoriaLabel = {
+  "Draft/Scouting": "Scouting",
+  "Termos avancados": "Avancado"
+};
+
+const categoriaOrdem = {
+  Todos: 0,
+  Ataque: 1,
+  Defesa: 2,
+  "Draft/Scouting": 3,
+  Taticas: 4,
+  "Termos avancados": 5
+};
+
+function labelDaCategoria(categoria) {
+  return categoriaLabel[categoria] || categoria;
+}
+
+function escapeHtml(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function categoriaEhPosicao(categoria = "") {
@@ -135,24 +156,15 @@ function mesclarGlossario(locais = [], sanity = []) {
   return [...mapa.values()];
 }
 
-function resumoDefinicao(definicao) {
-  return definicao.length > 118 ? `${definicao.slice(0, 118).trim()}...` : definicao;
-}
-
 function categoriasGlossario() {
   return ["Todos", ...new Set(glossarioDados().map((item) => item.categoria))].sort((a, b) => {
     if (a === "Todos") return -1;
     if (b === "Todos") return 1;
+    const ordemA = categoriaOrdem[a] ?? 99;
+    const ordemB = categoriaOrdem[b] ?? 99;
+    if (ordemA !== ordemB) return ordemA - ordemB;
     return a.localeCompare(b);
   });
-}
-
-function niveisGlossario() {
-  return ["Todos", "basico", "intermediario", "avancado"];
-}
-
-function letrasDisponiveis() {
-  return new Set(glossarioDados().map((item) => normalizarGlossario(item.termo).charAt(0).toUpperCase()));
 }
 
 function termoCombina(item) {
@@ -178,14 +190,23 @@ function termosFiltrados() {
     .sort((a, b) => a.termo.localeCompare(b.termo));
 }
 
+function getGlossaryCardSpan(term) {
+  const normalizedTitle = normalizarGlossario(term?.termo || "");
+  const normalizedDescription = normalizarGlossario(term?.definicao || "");
+  const contentWeight = normalizedTitle.length * 1.35 + normalizedDescription.length;
+
+  if (contentWeight <= 45) return 2;
+  if (contentWeight <= 105) return 3;
+  if (contentWeight <= 175) return 4;
+  return 5;
+}
+
 function botaoFiltro(label, ativo, attrs = "") {
-  const cor = label === "Todos" ? "" : ` ${classeDaCategoria(label)}`;
-  return `<button class="glossario-chip${cor}${ativo ? " is-active" : ""}" type="button" ${attrs}>${label}</button>`;
+  return `<button class="glossario-chip glossary-filter__button editorial-subnav__item${ativo ? " is-active" : ""}" type="button" aria-pressed="${ativo ? "true" : "false"}" ${attrs}>${escapeHtml(labelDaCategoria(label))}</button>`;
 }
 
 function renderFiltros() {
   const categorias = document.querySelector("#glossario-categorias");
-  const niveis = document.querySelector("#glossario-niveis");
 
   if (categorias) {
     categorias.innerHTML = categoriasGlossario()
@@ -193,60 +214,25 @@ function renderFiltros() {
       .map((categoria) => botaoFiltro(categoria, estadoGlossario.categoria === categoria, `data-categoria="${categoria}"`))
       .join("");
   }
-
-  if (niveis) {
-    niveis.innerHTML = niveisGlossario()
-      .map((nivel) => botaoFiltro(nivel === "Todos" ? "Todos" : nivelLabel[nivel], estadoGlossario.nivel === nivel, `data-nivel="${nivel}"`))
-      .join("");
-  }
-
-}
-
-function renderPosicoesDestaque() {
-  const area = document.querySelector("#glossario-posicoes-destaque");
-  if (!area) return;
-
-  area.innerHTML = glossarioDados()
-    .filter((item) => categoriaEhPosicao(item.categoria))
-    .map((item) => `
-      <article class="glossario-position-card">
-        <span class="glossario-position-card__number">${item.termo.match(/\((.*?)\)/)?.[1] || ""}</span>
-        <div>
-          <h3>${item.termo.replace(/\s*\(.*?\)/, "")}</h3>
-          <p>${item.definicao}</p>
-          ${item.nota ? `<small>${item.nota}</small>` : ""}
-        </div>
-      </article>
-    `)
-    .join("");
 }
 
 function renderLista() {
   const lista = document.querySelector("#glossario-lista");
   const vazio = document.querySelector("#glossario-vazio");
   const contagem = document.querySelector("#glossario-contagem");
-  const total = document.querySelector("#glossario-total");
   if (!lista) return;
 
   const filtrados = termosFiltrados();
-  if (total) total.textContent = glossarioDados().length;
   if (contagem) contagem.textContent = `${filtrados.length} resultado${filtrados.length === 1 ? "" : "s"}`;
 
   lista.innerHTML = filtrados.map((item) => {
-    const longa = item.definicao.length > 120;
+    const span = getGlossaryCardSpan(item);
+    const tabletSpan = Math.min(span, 6);
     return `
-      <article class="glossario-card" data-termo="${item.termo}">
-        <div class="glossario-card__top">
-          <span class="tag glossario-category ${classeDaCategoria(item.categoria)}">${item.categoria}</span>
-          <span class="glossario-level">${nivelLabel[item.nivel]}</span>
-        </div>
-        <h3>${item.termo}</h3>
-        <p class="glossario-card__summary">${resumoDefinicao(item.definicao)}</p>
-        <p class="glossario-card__full" hidden>${item.definicao}</p>
-        <div class="glossario-card__tags">
-          ${(item.tags || []).slice(0, 4).map((tag) => `<span>${tag}</span>`).join("")}
-        </div>
-        ${longa ? '<button class="glossario-more" type="button">ver mais</button>' : ""}
+      <article class="glossario-card glossary-term-card" data-termo="${escapeHtml(item.termo)}" style="--term-span: ${span}; --term-span-tablet: ${tabletSpan};">
+        <span class="glossario-category glossary-term-card__category ${classeDaCategoria(item.categoria)}">${escapeHtml(labelDaCategoria(item.categoria))}</span>
+        <h3 class="glossary-term-card__title">${escapeHtml(item.termo)}</h3>
+        <p class="glossary-term-card__description">${escapeHtml(item.definicao)}</p>
       </article>
     `;
   }).join("");
@@ -256,57 +242,18 @@ function renderLista() {
 
 function renderGlossario() {
   renderFiltros();
-  renderPosicoesDestaque();
   renderLista();
 }
 
 function iniciarEventosGlossario() {
-  const busca = document.querySelector("#glossario-busca");
-  const limpar = document.querySelector("#glossario-limpar");
-
-  if (busca) {
-    busca.addEventListener("input", () => {
-      estadoGlossario.busca = busca.value;
-      renderLista();
-    });
-  }
-
   document.addEventListener("click", (evento) => {
     const categoria = evento.target.closest("[data-categoria]");
-    const nivel = evento.target.closest("[data-nivel]");
-    const verMais = evento.target.closest(".glossario-more");
 
     if (categoria) {
       estadoGlossario.categoria = categoria.dataset.categoria;
       renderGlossario();
     }
-
-    if (nivel) {
-      estadoGlossario.nivel = nivel.dataset.nivel;
-      renderGlossario();
-    }
-
-    if (verMais) {
-      const card = verMais.closest(".glossario-card");
-      const summary = card.querySelector(".glossario-card__summary");
-      const full = card.querySelector(".glossario-card__full");
-      const aberto = !full.hidden;
-      summary.hidden = !aberto;
-      full.hidden = aberto;
-      verMais.textContent = aberto ? "ver mais" : "ver menos";
-      card.classList.toggle("is-open", !aberto);
-    }
   });
-
-  if (limpar) {
-    limpar.addEventListener("click", () => {
-      estadoGlossario.busca = "";
-      estadoGlossario.categoria = "Todos";
-      estadoGlossario.nivel = "Todos";
-      if (busca) busca.value = "";
-      renderGlossario();
-    });
-  }
 }
 
 iniciarEventosGlossario();

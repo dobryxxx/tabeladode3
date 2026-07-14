@@ -45,7 +45,6 @@ const placeholdersUltimas = [
 
 let postsJson = [];
 let postsSanity = [];
-const prefixosDataImportacaoIndevida = ["2026-05-13T18:26:59"];
 const devModePosts = ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
 
 function slugPost(post = {}) {
@@ -73,7 +72,7 @@ function parseDataEditorial(data) {
   const meses = {
     jan: 0, janeiro: 0,
     fev: 1, fevereiro: 1,
-    mar: 2, marco: 2, março: 2,
+    mar: 2, marco: 2,
     abr: 3, abril: 3,
     mai: 4, maio: 4,
     jun: 5, junho: 5,
@@ -113,19 +112,31 @@ function timestampData(data) {
   return parsed ? parsed.getTime() : Number.NEGATIVE_INFINITY;
 }
 
+const diaImportacaoPosts = "2026-05-13";
+
+function timestampOrdenacaoPost(post = {}, dataPrincipal) {
+  const timestampPrincipal = timestampData(dataPrincipal);
+  const timestampAtualizacao = timestampData(post._updatedAt);
+
+  if (dataIsoDia(dataPrincipal) === diaImportacaoPosts && timestampAtualizacao > timestampPrincipal) {
+    return timestampAtualizacao;
+  }
+
+  return timestampPrincipal;
+}
+
 function dataBrutaPost(post = {}) {
-  return post.dataPublicacao || post.publishedAt || post.date || post.data || null;
+  return post.dataPublicacao || post.publishedAt || post.date || post.data || post._createdAt || null;
 }
 
 function dataSanityInvalidaOuImportada(dataSanity) {
   if (!dataSanity) return true;
   const dia = dataIsoDia(dataSanity);
-  if (!dia) return true;
-  return prefixosDataImportacaoIndevida.some((prefixo) => String(dataSanity).startsWith(prefixo));
+  return !dia;
 }
 
 function escolherDataPost(post = {}, fallbackLocal) {
-  const dataSanity = post.dataPublicacao || post.publishedAt || post.date || null;
+  const dataSanity = post.dataPublicacao || post.publishedAt || post.date || post._createdAt || null;
   const dataLocal = fallbackLocal ? dataBrutaPost(fallbackLocal) : null;
 
   if (post._fonte === "sanity" && dataLocal && dataSanityInvalidaOuImportada(dataSanity)) {
@@ -214,6 +225,12 @@ function normalizarPost(post = {}, fallbackLocal) {
     data: formatarDataPost(dataEscolhida.valor),
     dataPublicacao: dataEscolhida.valor,
     _dataTimestamp: timestampData(dataEscolhida.valor),
+    _sortTimestamp: timestampOrdenacaoPost(post, dataEscolhida.valor),
+    _createdAt: post._createdAt || "",
+    _updatedAt: post._updatedAt || "",
+    _createdTimestamp: timestampData(post._createdAt),
+    _updatedTimestamp: timestampData(post._updatedAt),
+    _sourceOrder: Number.isFinite(Number(post._sourceOrder)) ? Number(post._sourceOrder) : 999999,
     _dataPublicacaoSanity: dataEscolhida.dataSanity || "",
     _dataLocalOriginal: dataEscolhida.dataLocal || "",
     _dataFinal: dataEscolhida.valor || "",
@@ -243,19 +260,26 @@ function postsDoSite() {
   });
 
   const mesclados = new Map();
-  locais.forEach((post) => {
-    mesclados.set(slugPost(post), normalizarPost(post));
+  locais.forEach((post, indice) => {
+    const slug = slugPost(post);
+    if (!mesclados.has(slug)) {
+      mesclados.set(slug, normalizarPost({...post, _sourceOrder: indice}));
+    }
   });
 
-  postsSanity.forEach((post) => {
-    const postSanity = {...post, _fonte: "sanity"};
+  postsSanity.forEach((post, indice) => {
+    const postSanity = {...post, _fonte: "sanity", _sourceOrder: indice};
     const slug = slugPost(postSanity);
     if (!slug) return;
     mesclados.set(slug, normalizarPost(postSanity, locaisPorSlug.get(slug)));
   });
 
   return [...mesclados.values()].sort((a, b) => {
+    if (a._sortTimestamp !== b._sortTimestamp) return b._sortTimestamp - a._sortTimestamp;
     if (a._dataTimestamp !== b._dataTimestamp) return b._dataTimestamp - a._dataTimestamp;
+    if (a._updatedTimestamp !== b._updatedTimestamp) return b._updatedTimestamp - a._updatedTimestamp;
+    if (a._createdTimestamp !== b._createdTimestamp) return b._createdTimestamp - a._createdTimestamp;
+    if (a._sourceOrder !== b._sourceOrder) return a._sourceOrder - b._sourceOrder;
     return a.titulo.localeCompare(b.titulo, "pt-BR");
   });
 }
@@ -360,57 +384,72 @@ function imagemRanking(ranking) {
 
 function renderHeroPrincipal() {
   const area = document.querySelector("#hero-principal");
-  const post = postsDoSite().find((item) => item.destaque);
-  if (!area || !post) return;
+  if (!area) return;
 
-  const categoria = categoriaDoPost(post);
+  const todosPosts = postsDoSite();
+  const postsHero = todosPosts.slice(0, 3);
+  if (!postsHero.length) return;
+  let indiceAtual = 0;
 
-  area.innerHTML = `
-    <a class="hero__main editorial-card editorial-card--hero" href="${linkDoPost(post)}">
-      ${imagemOuPlaceholder(post, "hero__main-img", "hero")}
-      <div class="hero__main-content editorial-card__content">
-        <div class="hero__main-tag tag ${categoria.tagClasse}">${categoria.nome}</div>
-        <h1 class="hero__main-title">${post.titulo}</h1>
-        <p class="hero__main-excerpt">${post.excerpt}</p>
-        <div class="meta meta--flush">
-          <span>${post.data}</span>
-          <span>·</span>
-          <span>${post.tempoLeitura}</span>
+  function criarMarkup(post, indiceAtivo) {
+    const categoria = categoriaDoPost(post);
+    const indicadores = postsHero.length > 1
+      ? `
+        <div class="hero__indicators" role="tablist" aria-label="Alternar destaque">
+          ${postsHero.map((_, indice) => `
+            <button type="button" class="${indice === indiceAtivo ? "active" : ""}" data-hero-index="${indice}" aria-label="Ver destaque ${indice + 1}" aria-selected="${indice === indiceAtivo ? "true" : "false"}"></button>
+          `).join("")}
         </div>
-      </div>
-    </a>
-  `;
+      `
+      : "";
+
+    return `
+      <article class="hero__main editorial-card editorial-card--hero">
+        <div class="hero__main-copy featured-story__content">
+          <div class="hero__main-topline editorial-card__topline">
+            <div class="hero__main-tag tag ${categoria.tagClasse}">${categoria.nome}</div>
+            ${post.data ? `<span>${post.data}</span>` : ""}
+          </div>
+          <a href="${linkDoPost(post)}" class="hero__main-link">
+            <h2 class="hero__main-title">${post.titulo}</h2>
+          </a>
+          <p class="hero__main-excerpt">${post.excerpt}</p>
+          <div class="meta meta--flush">
+            ${post.autor ? `<span>${post.autor}</span>` : ""}
+            ${post.tempoLeitura ? `<span>${post.tempoLeitura}</span>` : ""}
+          </div>
+        </div>
+        <a class="hero__main-media" href="${linkDoPost(post)}" aria-label="Ler ${post.titulo}">
+          ${imagemOuPlaceholder(post, "hero__main-img", "hero")}
+        </a>
+        ${indicadores}
+      </article>
+    `;
+  }
+
+  function renderizar(indice = 0) {
+    indiceAtual = indice;
+    area.innerHTML = criarMarkup(postsHero[indice], indice);
+    area.querySelectorAll("[data-hero-index]").forEach((botao) => {
+      botao.addEventListener("click", () => renderizar(Number(botao.dataset.heroIndex || 0)));
+    });
+  }
+
+  renderizar(0);
+  if (postsHero.length > 1) {
+    window.clearInterval(area._td3HeroTimer);
+    area._td3HeroTimer = window.setInterval(() => {
+      indiceAtual = (indiceAtual + 1) % postsHero.length;
+      renderizar(indiceAtual);
+    }, 6500);
+  }
 }
 
 function renderHeroLaterais() {
   const area = document.querySelector("#hero-laterais");
   if (!area) return;
-
-  area.innerHTML = postsDoSite()
-    .filter((post) => post.lateral)
-    .slice(0, 2)
-    .map((post, indice) => {
-      const categoria = categoriaDoPost(post);
-
-      return `
-        <a class="card-side editorial-card editorial-card--compact" href="${linkDoPost(post)}">
-          ${imagemOuPlaceholder(post, "card-side__img", "lateral", indice)}
-          <div class="card-side__badge ${categoria.badgeClasse}">
-            ${iconeBasquete()}
-          </div>
-          <div class="card-side__content editorial-card__content">
-            <div class="tag ${categoria.tagClasse}">${categoria.nome}</div>
-            <h2 class="card-side__title">${post.titulo}</h2>
-            <div class="meta meta--spaced">
-              <span>${post.data}</span><span>·</span><span>${post.tempoLeitura}</span>
-            </div>
-          </div>
-        </a>
-      `;
-    })
-    .join("");
+  area.innerHTML = "";
 }
-
 function postCombinaComBusca(post, termoBusca) {
   if (!termoBusca) return true;
 
@@ -429,7 +468,6 @@ function renderUltimas(busca = "", categoriaAtiva = "") {
 
   const termoBusca = normalizarTexto(busca.trim());
   const postsFiltrados = postsDoSite()
-    .filter((post) => !post.destaque && !post.lateral)
     .filter((post) => postCombinaComCategoria(post, categoriaAtiva))
     .filter((post) => postCombinaComBusca(post, termoBusca));
 
@@ -486,20 +524,47 @@ function renderRankingDestaque() {
   `;
 }
 
+function categoriaAtivaPorUrl() {
+  return new URLSearchParams(window.location.search).get("categoria") || "";
+}
+
 function iniciarFiltroCategorias() {
   const links = document.querySelectorAll("[data-categoria]");
   if (links.length === 0) return;
 
+  function aplicarCategoria(categoria) {
+    links.forEach((item) => {
+      const ativo = (item.dataset.categoria || "") === categoria;
+      item.classList.toggle("active", ativo);
+      item.classList.toggle("is-active--blue", ativo);
+      if (ativo) {
+        item.setAttribute("aria-current", "true");
+      } else {
+        item.removeAttribute("aria-current");
+      }
+    });
+    renderUltimas(document.querySelector("#busca-input")?.value || "", categoria);
+  }
+
+  aplicarCategoria(categoriaAtivaPorUrl());
+
   links.forEach((link) => {
     link.addEventListener("click", (evento) => {
       evento.preventDefault();
-      links.forEach((item) => item.classList.remove("active"));
-      link.classList.add("active");
-      renderUltimas("", link.dataset.categoria || "");
+      const categoria = link.dataset.categoria || "";
+      const url = new URL(window.location.href);
+      if (categoria) {
+        url.searchParams.set("categoria", categoria);
+      } else {
+        url.searchParams.delete("categoria");
+      }
+      window.history.pushState({categoria}, "", url);
+      aplicarCategoria(categoria);
     });
   });
-}
 
+  window.addEventListener("popstate", () => aplicarCategoria(categoriaAtivaPorUrl()));
+}
 function iniciarBusca() {
   const botao = document.querySelector(".btn-search");
   const painel = document.querySelector("#barra-busca");
@@ -520,7 +585,7 @@ function iniciarBusca() {
     painel.setAttribute("aria-hidden", "true");
     botao.setAttribute("aria-expanded", "false");
     campo.value = "";
-    renderUltimas();
+    renderUltimas("", categoriaAtivaPorUrl());
   }
 
   botao.addEventListener("click", () => {
@@ -533,7 +598,7 @@ function iniciarBusca() {
   });
 
   campo.addEventListener("input", () => {
-    renderUltimas(campo.value);
+    renderUltimas(campo.value, categoriaAtivaPorUrl());
   });
 
   document.addEventListener("keydown", (evento) => {
@@ -603,27 +668,91 @@ function iniciarMenuMobile() {
 }
 
 function iniciarSplashHome() {
-  const cards = document.querySelectorAll(".splash-entry");
-  if (!cards.length) return;
+  const intro = document.querySelector("[data-td3-intro]");
+  const portal = document.querySelector("[data-td3-portal]");
+  if (!intro || !portal) return;
+  if (intro.dataset.td3IntroReady === "true") return;
+  intro.dataset.td3IntroReady = "true";
 
-  const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let timer = null;
+  let rolou = false;
+  let cancelouScroll = false;
 
-  cards.forEach((card) => {
-    card.addEventListener("click", (evento) => {
-      const destino = card.getAttribute("href");
-      if (!destino || destino.startsWith("#") || reduzirMovimento) return;
+  function animarScrollParaPortal() {
+    const inicio = window.scrollY || window.pageYOffset;
+    const destino = portal.getBoundingClientRect().top + inicio;
+    const duracao = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1550;
+    const inicioTempo = window.performance.now();
+    const raiz = document.documentElement;
+    const comportamentoAnterior = raiz.style.scrollBehavior;
 
+    function restaurarScroll() {
+      raiz.style.scrollBehavior = comportamentoAnterior;
+      window.removeEventListener("wheel", cancelarScroll);
+      window.removeEventListener("touchstart", cancelarScroll);
+      window.removeEventListener("keydown", cancelarScrollPorTecla);
+    }
+
+    function cancelarScroll() {
+      cancelouScroll = true;
+      restaurarScroll();
+    }
+
+    function cancelarScrollPorTecla(evento) {
+      if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(evento.key)) {
+        cancelarScroll();
+      }
+    }
+
+    if (!duracao) {
+      window.scrollTo(0, destino);
+      return;
+    }
+
+    raiz.style.scrollBehavior = "auto";
+    window.addEventListener("wheel", cancelarScroll, { passive: true, once: true });
+    window.addEventListener("touchstart", cancelarScroll, { passive: true, once: true });
+    window.addEventListener("keydown", cancelarScrollPorTecla);
+
+    function easing(t) {
+      return t * t * t * (t * (t * 6 - 15) + 10);
+    }
+
+    function frame(agora) {
+      if (cancelouScroll) return;
+
+      const progresso = Math.min((agora - inicioTempo) / duracao, 1);
+      window.scrollTo(0, inicio + ((destino - inicio) * easing(progresso)));
+
+      if (progresso < 1) {
+        window.requestAnimationFrame(frame);
+      } else {
+        window.scrollTo(0, destino);
+        restaurarScroll();
+      }
+    }
+
+    window.requestAnimationFrame(frame);
+  }
+
+  function rolarParaPortal() {
+    if (rolou) return;
+    rolou = true;
+    window.clearTimeout(timer);
+    animarScrollParaPortal();
+  }
+
+  intro.hidden = false;
+  portal.hidden = false;
+  timer = window.setTimeout(rolarParaPortal, 4200);
+  intro.addEventListener("click", rolarParaPortal);
+  intro.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter" || evento.key === " ") {
       evento.preventDefault();
-      card.classList.add("is-selected");
-      document.body.classList.add("is-leaving");
-
-      window.setTimeout(() => {
-        window.location.href = destino;
-      }, 320);
-    });
+      rolarParaPortal();
+    }
   });
 }
-
 function renderHomeSettings(settings) {
   if (!settings) return;
 
@@ -648,11 +777,11 @@ function renderHomeSettings(settings) {
       .filter((card) => !String(card.link || "").includes("colmeia.html"))
       .sort((a, b) => (a.ordem || 99) - (b.ordem || 99))
       .map((card, index) => `
-        <a class="splash-entry" href="${card.link || "#"}" style="--entry-index: ${index + 1}">
-          <span class="splash-entry__number">${card.numero || String(index + 1).padStart(2, "0")}</span>
-          <span class="splash-entry__label">${card.titulo || "Área"}</span>
-          <strong>${card.descricao || ""}</strong>
-          <span class="splash-entry__cta">${card.cta || "Entrar"}</span>
+        <a class="td3-portal-card" href="${card.link || "#"}" style="--portal-index: ${index + 1}">
+          <span class="td3-portal-card__icon" aria-hidden="true">${card.numero || String(index + 1).padStart(2, "0")}</span>
+          <p>${card.descricao || card.cta || ""}</p>
+          <strong>${card.titulo || "Ãrea"}</strong>
+          <span class="td3-portal-card__arrow" aria-hidden="true">&rarr;</span>
         </a>
       `)
       .join("");
@@ -662,7 +791,7 @@ function renderHomeSettings(settings) {
 }
 
 async function carregarHomeSanity() {
-  if (!document.querySelector(".splash-page") || !window.T3Sanity?.enabled) return;
+  if (!document.querySelector(".td3-entry") || !window.T3Sanity?.enabled) return;
 
   try {
     const settings = await window.T3Sanity.fetchHomeSettings();
@@ -704,12 +833,12 @@ function renderBlocoArtigo(bloco) {
 function renderConteudoDinamico() {
   renderHeroPrincipal();
   renderHeroLaterais();
-  renderUltimas();
+  renderUltimas("", categoriaAtivaPorUrl());
   renderRankingDestaque();
   renderArtigo();
 }
 
-async function carregarPostsJson(logarFonte = true) {
+async function carregarPostsJson(logarFonte = true, renderizarAoCarregar = true) {
   const usaPosts = document.querySelector("#hero-principal, #hero-laterais, #ultimas-posts, #artigo");
   if (!usaPosts) return;
 
@@ -720,7 +849,7 @@ async function carregarPostsJson(logarFonte = true) {
     const dados = await resposta.json();
     postsJson = Array.isArray(dados) ? dados : (dados.posts || []);
     if (logarFonte) window.T3Sanity?.devLog?.("Fonte de posts: fallback local");
-    renderConteudoDinamico();
+    if (renderizarAoCarregar) renderConteudoDinamico();
   } catch (erro) {
     if (logarFonte) window.T3Sanity?.devLog?.("Fonte de posts: fallback local");
     console.warn("Não foi possível carregar data/posts.json. Usando posts locais.", erro);
@@ -731,7 +860,7 @@ async function carregarPostsFontePrincipal() {
   const usaPosts = document.querySelector("#hero-principal, #hero-laterais, #ultimas-posts, #artigo");
   if (!usaPosts) return;
 
-  await carregarPostsJson(false);
+  await carregarPostsJson(false, !window.T3Sanity?.enabled);
 
   if (!window.T3Sanity?.enabled) {
     window.T3Sanity?.devLog?.("Fonte de posts: fallback local");

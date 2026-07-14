@@ -9,8 +9,10 @@
   const host = useCdn ? "apicdn.sanity.io" : "api.sanity.io";
 
   const queries = {
-    posts: `*[_type == "post" && status == "publicado"] | order(dataPublicacao desc) {
+    posts: `*[_type == "post" && !(_id in path("drafts.**")) && coalesce(status, "publicado") != "oculto"] | order(coalesce(dataPublicacao, _createdAt) desc, _updatedAt desc, _createdAt desc) {
       _id,
+      _createdAt,
+      _updatedAt,
       "titulo": titulo,
       "title": titulo,
       "slug": slug.current,
@@ -30,12 +32,15 @@
       "data": dataPublicacao,
       "tempoLeitura": tempoLeitura,
       "tags": tags,
+      "status": status,
       "destaque": posicaoDestaque == "principal" || destaqueHome == true,
       "lateral": posicaoDestaque == "lateral",
       "corpo": corpo
     }`,
-    postBySlug: `*[_type == "post" && status == "publicado" && slug.current == $slug][0] {
+    postBySlug: `*[_type == "post" && !(_id in path("drafts.**")) && coalesce(status, "publicado") != "oculto" && slug.current == $slug][0] {
       _id,
+      _createdAt,
+      _updatedAt,
       "titulo": titulo,
       "title": titulo,
       "slug": slug.current,
@@ -55,6 +60,7 @@
       "data": dataPublicacao,
       "tempoLeitura": tempoLeitura,
       "tags": tags,
+      "status": status,
       "destaque": posicaoDestaque == "principal" || destaqueHome == true,
       "lateral": posicaoDestaque == "lateral",
       "corpo": corpo
@@ -215,6 +221,7 @@
         rodada,
         chamada,
         opiniao,
+        nota,
         "time": time->{
           _id,
           nome,

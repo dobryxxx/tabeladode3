@@ -17,7 +17,7 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.title = `${isReviewPage ? "Review" : "Guia"} do Draft ${year} | Tabelado de 3`;
+    document.title = `${isReviewPage ? "Inspeção" : "Guia do Draft"} ${year} | Tabelado de 3`;
 
     document.querySelectorAll("[data-draft-year]").forEach((link) => {
       const linkYear = link.dataset.draftYear;
@@ -37,11 +37,15 @@
     });
 
     document.querySelectorAll("[data-draft-year-label]").forEach((label) => {
-      label.textContent = `Draft ${year}`;
+      label.textContent = "CLASSE";
     });
 
     document.querySelectorAll("[data-draft-special-year]").forEach((label) => {
       label.textContent = `especial ${year}`;
+    });
+
+    document.querySelectorAll("[data-draft-hero-year]").forEach((label) => {
+      label.textContent = year;
     });
 
   });

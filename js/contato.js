@@ -24,7 +24,7 @@ function iniciarContato() {
 
       form.hidden = true;
       retorno.hidden = false;
-      retorno.textContent = "Obrigado pelo envio!";
+      retorno.textContent = "Mensagem enviada. Obrigado pelo contato.";
     } catch (erro) {
       retorno.hidden = false;
       retorno.textContent = "Não foi possível enviar agora. Tente novamente em instantes.";

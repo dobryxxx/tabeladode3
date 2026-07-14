@@ -8,122 +8,118 @@
   <link rel="icon" type="image/png" href="img/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
   <title>Guia do Draft | Tabelado de 3</title>
-  <link rel="stylesheet" href="css/styles.css?v=draft-guide-polish" />
+  <link rel="stylesheet" href="css/styles.css?v=td3-global-header-20260713" />
 </head>
 <body>
-  <header class="top-nav">
-    <div class="container top-nav__inner">
-      <a href="index.html" class="logo" aria-label="Tabelado de 3">
-        <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-      </a>
-      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <nav class="top-nav__links" id="mobile-menu">
-        <a href="por-escrito.html">por escrito</a>
-        <a href="glossario.html">glossário</a>
-        <a href="dicas.html">dicas</a>
-        <a href="rankings.html">rankings</a>
-        <a href="guia-do-draft.html" class="active">guia do draft</a>
-        <a href="contato.html">contato</a>
-      </nav>
-      <div class="top-nav__right">
-        <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-        <div class="divider-v"></div>
-        <a href="admin/" class="btn-entrar">entrar</a>
-      </div>
+  <div class="td3-site-header">
+    <div class="header-nav-stage">
+      <header class="top-nav">
+        <div class="container top-nav__inner">
+          <a href="index.html" class="logo" aria-label="Tabelado de 3">
+            <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
+          </a>
+          <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <nav class="top-nav__links liquid-nav liquid-nav--primary" id="mobile-menu" aria-label="Navega&ccedil;&atilde;o principal">
+        <a href="por-escrito.html" class="liquid-nav__link">por escrito</a>
+        <a href="guia-do-draft.html" class="liquid-nav__link active is-active--orange" aria-current="page">draft</a>
+        <a href="glossario.html" class="liquid-nav__link">gloss&aacute;rio</a>
+        <a href="rankings.html" class="liquid-nav__link">rankings</a>
+        <a href="contato.html" class="liquid-nav__link">contato</a>
+          </nav>
+          <div class="top-nav__right">
+            <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+            <div class="divider-v"></div>
+            <a href="admin/" class="btn-entrar">entrar</a>
+          </div>
+        </div>
+      </header>
     </div>
-  </header>
-
-  <div id="barra-busca" class="search-panel" aria-hidden="true">
-    <div class="container search-panel__inner">
-      <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por título ou categoria" autocomplete="off" />
+    <div id="barra-busca" class="search-panel" aria-hidden="true">
+      <div class="container search-panel__inner">
+        <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por t&iacute;tulo ou categoria" autocomplete="off" aria-label="Buscar por t&iacute;tulo ou categoria" />
+      </div>
     </div>
   </div>
-
-  <nav class="draft-area-nav" aria-label="Área especial do Draft">
-    <div class="container draft-area-nav__inner">
-      <div class="draft-area-nav__season">
-        <span data-draft-year-label>Draft 2026</span>
-        <div class="draft-year-switcher" aria-label="Escolher temporada do Draft">
-          <a href="guia-do-draft.html?ano=2025" data-draft-year="2025">2025</a>
-          <a href="guia-do-draft.html?ano=2026" data-draft-year="2026">2026</a>
-          <a href="guia-do-draft.html?ano=2027" data-draft-year="2027">2027</a>
-        </div>
-      </div>
-      <div class="draft-area-nav__sections">
-        <a href="guia-do-draft.html" class="active" data-draft-section="guide">Guia do Draft</a>
-        <a href="review-do-draft.html" data-draft-section="review">Inspeção</a>
-      </div>
-    </div>
-  </nav>
-
-  <main class="draft-guide-page">
+<main class="draft-guide-page">
     <section class="draft-guide-hero">
       <div class="container draft-guide-hero__inner">
         <div class="draft-guide-hero__copy">
-          <span class="tag tag--red" data-draft-special-year>especial 2026</span>
-          <h1>Guia do Draft</h1>
-          <p>Um panorama completo dos principais nomes da classe, com ranking, perfil, contexto e leitura de jogo.</p>
+          <h1 class="draft-guide-hero__title">GUIA DO DRAFT DA<br />NBA DE <span class="draft-guide-hero__year" data-draft-hero-year>2026</span></h1>
+          <p class="draft-guide-hero__intro">Bem-vindo ao Guia do Draft da NBA do Tabelado De 3, sua fonte de refer&ecirc;ncia sobre basquete de base. Navegue entre o Big Board, com pitacos detalhados sobre mais de 80 jogadores por classe ou, se preferir, leia as inspe&ccedil;&otilde;es de todas as escolhas realizadas na noite do draft - desse ano e dos anteriores tamb&eacute;m.</p>
         </div>
-      </div>
-    </section>
-
-    <section class="draft-guide-featured">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Topo do board</h2>
-        </div>
-        <div id="draft-featured" class="draft-featured-grid"></div>
+        <div class="draft-guide-hero__artwork" data-draft-hero-artwork aria-label="Prospectos em destaque no Guia do Draft"></div>
       </div>
     </section>
 
     <section class="draft-guide-browser" id="draft-guide-list">
       <div class="container">
-        <div class="draft-view-toolbar">
-          <span class="draft-view-toolbar__label">modo de leitura</span>
-          <div class="draft-view-switcher" role="group" aria-label="Densidade de visualização do Guia do Draft">
-            <button type="button" data-draft-view="skim" aria-pressed="false">Board de bolso</button>
-            <button type="button" data-draft-view="peek" aria-pressed="false">Espiadinha</button>
-            <button type="button" data-draft-view="peruse" aria-pressed="true">Leitura de jogo</button>
-            <button type="button" data-draft-view="deep" aria-pressed="false">Perfil destrinchado</button>
-          </div>
+        <div class="draft-guide-reading-bar editorial-subnav editorial-subnav--draft" data-draft-reading-bar>
+          <nav class="draft-area-nav" aria-label="Navegação do Guia do Draft">
+            <div class="draft-area-nav__inner draft-subnav__inner">
+              <div class="draft-area-nav__sections draft-subnav__group draft-subnav__group--section">
+                <a href="guia-do-draft.html" class="draft-subnav__item active" data-draft-section="guide">Guia do Draft</a>
+                <a href="review-do-draft.html" class="draft-subnav__item" data-draft-section="review">Inspeção</a>
+              </div>
+              <div class="draft-area-nav__season draft-subnav__group draft-subnav__group--class">
+                <span class="draft-subnav__label" data-draft-year-label>Classe</span>
+                <div class="draft-year-switcher draft-subnav__items" aria-label="Escolher classe do Draft">
+                  <a href="guia-do-draft.html?ano=2025" class="draft-subnav__item" data-draft-year="2025">2025</a>
+                  <a href="guia-do-draft.html?ano=2026" class="draft-subnav__item" data-draft-year="2026">2026</a>
+                  <a href="guia-do-draft.html?ano=2027" class="draft-subnav__item" data-draft-year="2027">2027</a>
+                </div>
+              </div>
+              <div class="draft-view-toolbar draft-subnav__group draft-subnav__group--view">
+                <span class="draft-view-toolbar__label draft-subnav__label">Modo</span>
+                <div class="draft-view-switcher draft-subnav__items" role="group" aria-label="Modo de leitura do Guia do Draft">
+                  <button class="draft-subnav__item" type="button" data-draft-view="skim" aria-pressed="false">Board de Bolso</button>
+                  <button class="draft-subnav__item" type="button" data-draft-view="peek" aria-pressed="false">Espiadinha</button>
+                  <button class="draft-subnav__item" type="button" data-draft-view="deep" aria-pressed="false">Destrinchado</button>
+                </div>
+              </div>
+            </div>
+          </nav>
         </div>
-        <div class="draft-guide-controls" aria-label="Controles do Guia do Draft">
-          <label class="draft-control draft-control--search">
-            <span>buscar prospect</span>
-            <input id="draft-search" type="search" placeholder="Nome, time, posição ou espelho" autocomplete="off" />
-          </label>
-          <label class="draft-control">
-            <span>posição</span>
-            <select id="draft-position"></select>
-          </label>
-          <label class="draft-control">
-            <span>time/liga</span>
-            <select id="draft-team"></select>
-          </label>
-          <label class="draft-control">
-            <span>alcance</span>
-            <select id="draft-range"></select>
-          </label>
-          <label class="draft-control">
-            <span>ordenar</span>
-            <select id="draft-sort">
-              <option value="rank">ranking</option>
-              <option value="nome">nome</option>
-              <option value="posicao">posição</option>
-            </select>
-          </label>
-          <button id="draft-clear" class="draft-clear" type="button">limpar filtros</button>
-        </div>
+        <form class="draft-guide-controls" aria-label="Controles do Guia do Draft">
+          <fieldset>
+            <legend class="sr-only">Filtrar prospectos do Guia do Draft</legend>
+            <label class="draft-control draft-control--search">
+              <span>buscar prospecto</span>
+              <input id="draft-search" type="search" placeholder="nome do jogador" autocomplete="off" />
+            </label>
+            <label class="draft-control">
+              <span>posição</span>
+              <select id="draft-position"></select>
+            </label>
+            <label class="draft-control">
+              <span>time/liga</span>
+              <select id="draft-team"></select>
+            </label>
+            <label class="draft-control">
+              <span>encaixes</span>
+              <select id="draft-range"></select>
+            </label>
+            <label class="draft-control">
+              <span>ordenar</span>
+              <select id="draft-sort">
+                <option value="rank">ranking</option>
+                <option value="nome">nome</option>
+                <option value="posicao">posição</option>
+              </select>
+            </label>
+            <button id="draft-clear" class="draft-clear" type="button">limpar filtros</button>
+          </fieldset>
+        </form>
 
         <div class="draft-guide-count" id="draft-count"></div>
+        <h2 class="sr-only">Lista de prospectos</h2>
         <div id="draft-list" class="draft-guide-list" aria-live="polite"></div>
       </div>
     </section>
@@ -133,7 +129,7 @@
     <div class="container footer__inner">
       <div class="footer__copy">
         <img class="footer__logo" src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-        © 2025.<br/>
+        &copy; 2025.<br/>
         Todos os direitos reservados.
       </div>
       <div class="footer__social">
@@ -150,12 +146,12 @@
   </footer>
   <script src="js/sanity-config.js"></script>
   <script src="js/sanity-api.js"></script>
-  <script src="js/draft-area.js"></script>
+  <script src="js/draft-area.js?v=draft-area-controls-20260630"></script>
   <script src="js/conteudo.js"></script>
     <script src="js/cms-posts.js"></script>
 <script src="js/rankings.js"></script>
-  <script src="js/draft-data.js"></script>
+  <script src="js/draft-data.js?v=board-pocket-figma"></script>
   <script src="js/main.js"></script>
-  <script src="js/draft-guide.js?v=draft-years-local"></script>
+  <script src="js/draft-guide.js?v=draft-inline-card-20260630"></script>
 </body>
 </html>

@@ -7,10 +7,11 @@
   <link rel="icon" href="favicon.ico?v=2" sizes="any" />
   <link rel="icon" type="image/png" href="img/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
+  <link rel="preload" as="image" href="img/Texturelabs_Metal_291XL.jpg" fetchpriority="high" />
   <title>Tabelado de 3</title>
-  <link rel="stylesheet" href="css/styles.css?v=splash-home" />
+  <link rel="stylesheet" href="css/styles.css?v=td3-global-header-20260713" />
 </head>
-<body class="splash-body">
+<body class="td3-home-body">
 
   <script>
     (function () {
@@ -39,67 +40,72 @@
     })();
   </script>
 
-  <header class="splash-header" aria-label="Entrada principal">
-    <a href="index.html" class="splash-logo" aria-label="Tabelado de 3">
-      <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-    </a>
-    <nav class="splash-header__nav" aria-label="Navega&ccedil;&atilde;o r&aacute;pida">
-      <a href="por-escrito.html">Por escrito</a>
-      <a href="dicas.html">Dicas</a>
-      <a href="guia-do-draft.html">Guia do Draft</a>
-      <a href="glossario.html">Gloss&aacute;rio</a>
-      <a href="rankings.html">Rankings</a>
-    </nav>
-  </header>
-
-  <main class="splash-page">
-    <section class="splash-hero" aria-labelledby="splash-title">
-      <div class="splash-ambient" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
+  <main class="td3-entry" aria-label="Entrada do Tabelado de 3">
+    <section class="td3-intro" data-td3-intro aria-label="Abertura do site" tabindex="0">
+      <div class="td3-intro__manifesto" aria-label="feito com amor, suor, basquete">
+        <span>feito com <span class="td3-intro__word" style="--intro-word-index: 0">amor</span></span>
+        <strong><span class="td3-intro__word" style="--intro-word-index: 1">suor</span></strong>
+        <strong><span class="td3-intro__word" style="--intro-word-index: 2">basquete</span></strong>
       </div>
 
-      <div class="splash-hero__content">
-        <p class="splash-kicker">Tabelado de 3</p>
-        <h1 id="splash-title" data-sanity-home="headline">
-          <span>Feito com amor,</span>
-          <span>suor e basquete.</span>
-        </h1>
-        <p class="splash-subtitle" data-sanity-home="subheadline">Por quem vive o jogo.</p>
+      <div class="td3-intro__signature">
+        <p>por quem <strong>vive</strong> o jogo.</p>
+        <h1>Tabelado de <span>3</span></h1>
+      </div>
+    </section>
+
+    <section class="td3-portal" data-td3-portal aria-label="Categorias principais do site">
+      <div class="td3-portal__grid">
+        <a class="td3-portal-card" href="por-escrito.html" style="--portal-index: 1">
+          <img src="https://static.wixstatic.com/media/111600_200e918ac038466192be8affbd95ad7a~mv2.jpg/v1/fill/w_2500,h_1406,al_c/111600_200e918ac038466192be8affbd95ad7a~mv2.jpg" alt="Jogador de basquete em arte editorial do Por Escrito" loading="eager" />
+          <span class="td3-portal-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h2"/></svg>
+          </span>
+          <p>ensaios, an&aacute;lises e not&iacute;cias sobre o jogo.</p>
+          <strong>por escrito</strong>
+          <span class="td3-portal-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <a class="td3-portal-card" href="guia-do-draft.html" style="--portal-index: 2">
+          <img src="img/draft/Jayden-Quaintance.png" alt="Prospecto em arte editorial do Guia do Draft" loading="eager" />
+          <span class="td3-portal-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg>
+          </span>
+          <p>guia sobre os principais prospectos do mundo.</p>
+          <strong>draft</strong>
+          <span class="td3-portal-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <a class="td3-portal-card" href="glossario.html" style="--portal-index: 3">
+          <img src="img/draft/AJ-Dybansta.png" alt="Jogador em arte editorial do Gloss&aacute;rio" loading="eager" />
+          <span class="td3-portal-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
+          <p>termos e conceitos para entender o jogo.</p>
+          <strong>gloss&aacute;rio</strong>
+          <span class="td3-portal-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <a class="td3-portal-card" href="rankings.html" style="--portal-index: 4">
+          <img src="img/rankings/ranking-t25m.png" alt="Jogador em arte editorial dos rankings" loading="eager" />
+          <span class="td3-portal-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-8"/><path d="M12 21V3"/><path d="M20 21v-5"/><path d="M2 21h20"/><path d="M9 7h6"/></svg>
+          </span>
+          <p>leitura editorial dos melhores da base brasileira.</p>
+          <strong>ranking</strong>
+          <span class="td3-portal-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
       </div>
 
-      <nav class="splash-entries" aria-label="&Aacute;reas do site" data-sanity-home="cards">
-        <a class="splash-entry" href="por-escrito.html" style="--entry-index: 1">
-          <span class="splash-entry__number">01</span>
-          <span class="splash-entry__label">Blog</span>
-          <strong>Ensaios, an&aacute;lises e textos sobre o jogo.</strong>
-          <span class="splash-entry__cta">Entrar</span>
-        </a>
-        <a class="splash-entry" href="guia-do-draft.html" style="--entry-index: 2">
-          <span class="splash-entry__number">02</span>
-          <span class="splash-entry__label">Guia do Draft</span>
-          <strong>Big board, perfis e contexto dos principais prospectos.</strong>
-          <span class="splash-entry__cta">Explorar</span>
-        </a>
-        <a class="splash-entry" href="glossario.html" style="--entry-index: 3">
-          <span class="splash-entry__number">03</span>
-          <span class="splash-entry__label">Gloss&aacute;rio</span>
-          <strong>Termos, posi&ccedil;&otilde;es e conceitos para entender o jogo.</strong>
-          <span class="splash-entry__cta">Ver termos</span>
-        </a>
-        <a class="splash-entry" href="rankings.html" style="--entry-index: 4">
-          <span class="splash-entry__number">04</span>
-          <span class="splash-entry__label">Rankings</span>
-          <strong>Hierarquias, compara&ccedil;&otilde;es e leituras editoriais.</strong>
-          <span class="splash-entry__cta">Ver rankings</span>
-        </a>
-      </nav>
+      <div class="td3-portal__signature">
+        <p>por quem <strong>vive</strong> o jogo.</p>
+        <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
+      </div>
     </section>
   </main>
 
   <script src="js/sanity-config.js"></script>
   <script src="js/sanity-api.js"></script>
-  <script src="js/main.js?v=hide-colmeia"></script>
+  <script src="js/main.js?v=td3-home-scroll-20260713"></script>
 </body>
 </html>

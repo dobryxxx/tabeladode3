@@ -235,6 +235,13 @@ export const draftReviewPick = defineType({
       type: 'text',
       rows: 7,
       description: 'Analise editorial que aparece em destaque na pagina.'
+    }),
+    defineField({
+      name: 'nota',
+      title: 'Nota da escolha',
+      type: 'number',
+      description: 'Nota exibida no card da Inspecao. Se ficar vazio, o site mostra 10.',
+      validation: (Rule) => Rule.min(0).max(10)
     })
   ],
   preview: {

@@ -8,65 +8,77 @@
   <link rel="icon" type="image/png" href="img/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
   <title>Rankings | Tabelado de 3</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=td3-global-header-20260713" />
 </head>
-<body>  <header class="top-nav">
-    <div class="container top-nav__inner">
-      <a href="index.html" class="logo" aria-label="Tabelado de 3">
-        <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-      </a>
-      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <nav class="top-nav__links" id="mobile-menu">
-        <a href="por-escrito.html">por escrito</a>
-        <a href="glossario.html">glossário</a>
-        <a href="dicas.html">dicas</a>
-        <a href="rankings.html" class="active">rankings</a>
-        <a href="guia-do-draft.html">guia do draft</a>
-        <a href="contato.html">contato</a>
-      </nav>
-      <div class="top-nav__right">
-        <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-        <div class="divider-v"></div>
-        <a href="admin/" class="btn-entrar">entrar</a>
+<body>
+  <div class="td3-site-header">
+    <div class="header-nav-stage">
+      <header class="top-nav">
+        <div class="container top-nav__inner">
+          <a href="index.html" class="logo" aria-label="Tabelado de 3">
+            <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
+          </a>
+          <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <nav class="top-nav__links liquid-nav liquid-nav--primary" id="mobile-menu" aria-label="Navega&ccedil;&atilde;o principal">
+        <a href="por-escrito.html" class="liquid-nav__link">por escrito</a>
+        <a href="guia-do-draft.html" class="liquid-nav__link">draft</a>
+        <a href="glossario.html" class="liquid-nav__link">gloss&aacute;rio</a>
+        <a href="rankings.html" class="liquid-nav__link active is-active--orange" aria-current="page">rankings</a>
+        <a href="contato.html" class="liquid-nav__link">contato</a>
+          </nav>
+          <div class="top-nav__right">
+            <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+            <div class="divider-v"></div>
+            <a href="admin/" class="btn-entrar">entrar</a>
+          </div>
+        </div>
+      </header>
+    </div>
+    <div id="barra-busca" class="search-panel" aria-hidden="true">
+      <div class="container search-panel__inner">
+        <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por t&iacute;tulo ou categoria" autocomplete="off" aria-label="Buscar por t&iacute;tulo ou categoria" />
       </div>
     </div>
-  </header>
+  </div>
+  <main class="rankings-page">
+    <section class="rankings-hero" aria-labelledby="rankings-title">
+      <div class="rankings-hero__content">
+        <h1 id="rankings-title" class="rankings-hero__title"><span class="rankings-hero__title-line">As maiores promessas do</span><span class="rankings-hero__title-line">basquete brasileiro</span></h1>
+        <p class="rankings-hero__description">Bem-vindo aos rankings do Tabelado de 3, seu medidor de talento da base brasileira. Acompanhe o futuro do Brasil separado por gera&ccedil;&otilde;es, masculinas ou femininas.</p>
+      </div>
+      <figure class="rankings-hero__artwork">
+        <img id="rankings-hero-image" src="img/rankings/ranking-t20f.png" alt="Ranking feminino Tabelado de 3" />
+      </figure>
+    </section>
 
-  <div id="barra-busca" class="search-panel" aria-hidden="true">
-    <div class="container search-panel__inner">
-      <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por título ou categoria" autocomplete="off" />
-    </div>
-  </div>  <main class="rankings-page">
-    <section class="rankings-hero">
-      <div class="container">
-        <div class="rankings-hero__inner">
-          <div>
-            <span class="tag tag--red">rankings</span>
-            <h1>As maiores promessas do basquete brasileiro!</h1>
-          </div>
-          <p>Listas por geração, topo geral masculino e o ranking feminino em destaque. Uma vitrine para acompanhar quem está subindo no jogo.</p>
+    <nav class="rankings-gender-control editorial-subnav editorial-subnav--rankings" aria-label="Selecionar rankings por genero">
+      <div class="editorial-subnav__inner">
+        <div class="rankings-gender-toggle editorial-subnav__group" role="group" aria-label="Genero do ranking">
+          <button class="rankings-gender-toggle__button editorial-subnav__item is-active" type="button" data-ranking-genero="masculino" aria-pressed="true">Masculino</button>
+          <button class="rankings-gender-toggle__button editorial-subnav__item" type="button" data-ranking-genero="feminino" aria-pressed="false">Feminino</button>
         </div>
       </div>
-    </section>
+    </nav>
 
-    <section class="rankings-browser">
-      <div class="container">
-        <div id="rankings-grid"></div>
-      </div>
+    <section class="rankings-browser" aria-labelledby="rankings-list-title">
+      <h2 id="rankings-list-title" class="sr-only">Rankings disponiveis</h2>
+      <div id="rankings-grid" class="rankings-generation-grid"></div>
     </section>
-  </main>  <footer>
+  </main>
+
+  <footer>
     <div class="container footer__inner">
       <div class="footer__copy">
         <img class="footer__logo" src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-        © 2025.<br/>
+        &copy; 2025.<br/>
         Todos os direitos reservados.
       </div>
       <div class="footer__social">

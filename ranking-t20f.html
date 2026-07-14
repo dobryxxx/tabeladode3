@@ -4,43 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ranking [T20F] | Tabelado de 3</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=td3-global-header-20260713" />
 </head>
-<body>  <header class="top-nav">
-    <div class="container top-nav__inner">
-      <a href="index.html" class="logo" aria-label="Tabelado de 3">
-        <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-      </a>
-      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <nav class="top-nav__links" id="mobile-menu">
-        <a href="por-escrito.html">por escrito</a>
-        <a href="glossario.html">glossário</a>
-        <a href="dicas.html">dicas</a>
-        <a href="rankings.html" class="active">rankings</a>
-        <a href="guia-do-draft.html">guia do draft</a>
-        <a href="contato.html">contato</a>
-      </nav>
-      <div class="top-nav__right">
-        <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-        <div class="divider-v"></div>
-        <a href="admin/" class="btn-entrar">entrar</a>
+<body>
+  <div class="td3-site-header">
+    <div class="header-nav-stage">
+      <header class="top-nav">
+        <div class="container top-nav__inner">
+          <a href="index.html" class="logo" aria-label="Tabelado de 3">
+            <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
+          </a>
+          <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <nav class="top-nav__links liquid-nav liquid-nav--primary" id="mobile-menu" aria-label="Navega&ccedil;&atilde;o principal">
+        <a href="por-escrito.html" class="liquid-nav__link">por escrito</a>
+        <a href="guia-do-draft.html" class="liquid-nav__link">draft</a>
+        <a href="glossario.html" class="liquid-nav__link">gloss&aacute;rio</a>
+        <a href="rankings.html" class="liquid-nav__link active is-active--orange" aria-current="page">rankings</a>
+        <a href="contato.html" class="liquid-nav__link">contato</a>
+          </nav>
+          <div class="top-nav__right">
+            <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+            <div class="divider-v"></div>
+            <a href="admin/" class="btn-entrar">entrar</a>
+          </div>
+        </div>
+      </header>
+    </div>
+    <div id="barra-busca" class="search-panel" aria-hidden="true">
+      <div class="container search-panel__inner">
+        <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por t&iacute;tulo ou categoria" autocomplete="off" aria-label="Buscar por t&iacute;tulo ou categoria" />
       </div>
     </div>
-  </header>
-
-  <div id="barra-busca" class="search-panel" aria-hidden="true">
-    <div class="container search-panel__inner">
-      <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por título ou categoria" autocomplete="off" />
-    </div>
-  </div>  <main>
+  </div>
+<main>
     <section class="ultimas">
       <div class="container">
         <article id="ranking-individual" data-ranking="t20f"></article>
@@ -50,7 +54,7 @@
     <div class="container footer__inner">
       <div class="footer__copy">
         <img class="footer__logo" src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-        © 2025.<br/>
+        &copy; 2025.<br/>
         Todos os direitos reservados.
       </div>
       <div class="footer__social">

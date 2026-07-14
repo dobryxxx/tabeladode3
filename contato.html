@@ -8,61 +8,79 @@
   <link rel="icon" type="image/png" href="img/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
   <title>Contato | Tabelado de 3</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=td3-global-header-20260713" />
 </head>
-<body>  <header class="top-nav">
-    <div class="container top-nav__inner">
-      <a href="index.html" class="logo" aria-label="Tabelado de 3">
-        <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
-      </a>
-      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <nav class="top-nav__links" id="mobile-menu">
-        <a href="por-escrito.html">por escrito</a>
-        <a href="glossario.html">glossário</a>
-        <a href="dicas.html">dicas</a>
-        <a href="rankings.html">rankings</a>
-        <a href="guia-do-draft.html">guia do draft</a>
-        <a href="contato.html" class="active">contato</a>
-      </nav>
-      <div class="top-nav__right">
-        <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-        <div class="divider-v"></div>
-        <a href="admin/" class="btn-entrar">entrar</a>
-      </div>
-    </div>
-  </header>
-
-  <div id="barra-busca" class="search-panel" aria-hidden="true">
-    <div class="container search-panel__inner">
-      <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por título ou categoria" autocomplete="off" />
-    </div>
-  </div>  <main>
-    <section class="ultimas">
-      <div class="container">
-        <div class="section-header">
-          <h1 class="section-title">Vamos conversar!</h1>
+<body>
+  <div class="td3-site-header">
+    <div class="header-nav-stage">
+      <header class="top-nav">
+        <div class="container top-nav__inner">
+          <a href="index.html" class="logo" aria-label="Tabelado de 3">
+            <img src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />
+          </a>
+          <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <nav class="top-nav__links liquid-nav liquid-nav--primary" id="mobile-menu" aria-label="Navega&ccedil;&atilde;o principal">
+        <a href="por-escrito.html" class="liquid-nav__link">por escrito</a>
+        <a href="guia-do-draft.html" class="liquid-nav__link">draft</a>
+        <a href="glossario.html" class="liquid-nav__link">gloss&aacute;rio</a>
+        <a href="rankings.html" class="liquid-nav__link">rankings</a>
+        <a href="contato.html" class="liquid-nav__link active is-active--orange" aria-current="page">contato</a>
+          </nav>
+          <div class="top-nav__right">
+            <button class="btn-search" type="button" aria-label="Buscar" aria-expanded="false" aria-controls="barra-busca">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+            <div class="divider-v"></div>
+            <a href="admin/" class="btn-entrar">entrar</a>
+          </div>
         </div>
-        <form id="contato-form" class="artigo__corpo" name="contato" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-          <input type="hidden" name="form-name" value="contato" />
-          <p hidden><label>Não preencha este campo <input name="bot-field" /></label></p>
-          <label>Nome<br/><input class="search-panel__input" type="text" name="nome" required /></label><br/><br/>
-          <label>Sobrenome<br/><input class="search-panel__input" type="text" name="sobrenome" required /></label><br/><br/>
-          <label>Email<br/><input class="search-panel__input" type="email" name="email" required /></label><br/><br/>
-          <label>Mensagem<br/><textarea class="search-panel__input" name="mensagem" rows="6" required></textarea></label><br/><br/>
-          <button class="rankings-card__btn" type="submit">Enviar</button>
-        </form>
-        <div id="contato-retorno" class="artigo__corpo" aria-live="polite" hidden></div>
+      </header>
+    </div>
+    <div id="barra-busca" class="search-panel" aria-hidden="true">
+      <div class="container search-panel__inner">
+        <input id="busca-input" class="search-panel__input" type="search" placeholder="Buscar por t&iacute;tulo ou categoria" autocomplete="off" aria-label="Buscar por t&iacute;tulo ou categoria" />
       </div>
+    </div>
+  </div>
+  <main class="contact-page">
+    <section class="contact-shell" aria-labelledby="contact-title">
+      <h1 id="contact-title" class="contact-title">Vamos conversar!</h1>
+
+      <form id="contato-form" class="contact-form" name="contato" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="contato" />
+        <p class="contact-form__honeypot" aria-hidden="true">
+          <label>Não preencher: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+        </p>
+
+        <div class="contact-field">
+          <label for="contact-name">Nome</label>
+          <input id="contact-name" type="text" name="nome" required autocomplete="name" />
+        </div>
+
+        <div class="contact-field">
+          <label for="contact-email">E-Mail</label>
+          <input id="contact-email" type="email" name="email" required autocomplete="email" />
+        </div>
+
+        <div class="contact-field">
+          <label for="contact-message">Mensagem</label>
+          <textarea id="contact-message" name="mensagem" required></textarea>
+        </div>
+
+        <button class="contact-submit" type="submit">Enviar</button>
+      </form>
+
+      <p id="contato-retorno" class="contact-form__status" role="status" aria-live="polite" hidden></p>
     </section>
-  </main>  <footer>
+  </main>
+
+  <footer>
     <div class="container footer__inner">
       <div class="footer__copy">
         <img class="footer__logo" src="img/logos/Logtipo Tabelado de 3.png" alt="Tabelado de 3" />

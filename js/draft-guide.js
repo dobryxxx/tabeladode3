@@ -1,15 +1,18 @@
-const draftState = {
+﻿const draftState = {
   search: "",
   position: "",
   team: "",
   range: "",
   sort: "rank",
-  view: "peruse"
+  view: "skim",
+  viewTransition: "",
+  openProfileKey: ""
 };
 
 let draftSanityProspects = [];
 let draftEventosIniciados = false;
 let draftViewAnimationTimer;
+let draftReadingBarTicking = false;
 const draftYear = window.T3DraftArea?.year || "2026";
 
 function draftData() {
@@ -44,10 +47,61 @@ function normalizarDraft(valor = "") {
     .toLowerCase();
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function bindDraftImageFallback(root = document) {
+  root.querySelectorAll("[data-draft-image]").forEach((image) => {
+    image.addEventListener("error", () => image.remove(), { once: true });
+  });
+}
+
 function chaveProspect(prospect = {}) {
   if (prospect.slug) return `slug:${normalizarDraft(prospect.slug)}`;
   if (prospect.nome) return `nome:${normalizarDraft(prospect.nome)}`;
   return `composto:${normalizarDraft([prospect.nome, prospect.posicao].join("-"))}`;
+}
+
+function atualizarDraftReadingBar() {
+  const bar = document.querySelector("[data-draft-reading-bar]");
+  const browser = document.querySelector(".draft-guide-browser");
+  if (!bar || !browser) return;
+
+  const barRect = bar.getBoundingClientRect();
+  const browserRect = browser.getBoundingClientRect();
+  const ativa = barRect.top <= 1 && browserRect.bottom > bar.offsetHeight + 1;
+  document.body.classList.toggle("draft-reading-bar-active", ativa);
+}
+
+function agendarDraftReadingBar() {
+  if (draftReadingBarTicking) return;
+  draftReadingBarTicking = true;
+
+  requestAnimationFrame(() => {
+    draftReadingBarTicking = false;
+    atualizarDraftReadingBar();
+  });
+}
+
+function iniciarDraftReadingBar() {
+  const bar = document.querySelector("[data-draft-reading-bar]");
+  if (!bar) return;
+
+  if (bar.dataset.draftReadingReady) {
+    atualizarDraftReadingBar();
+    return;
+  }
+
+  bar.dataset.draftReadingReady = "true";
+  window.addEventListener("scroll", agendarDraftReadingBar, { passive: true });
+  window.addEventListener("resize", agendarDraftReadingBar);
+  atualizarDraftReadingBar();
 }
 
 function normalizarProspectSanity(prospect = {}) {
@@ -164,39 +218,65 @@ function opcoesUnicas(campo) {
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
+function opcoesEncaixes() {
+  return [...new Set(draftData().flatMap((prospect) => [
+    ...(Array.isArray(prospect.encaixesTimes) ? prospect.encaixesTimes.map((time) => time.nome || time.sigla).filter(Boolean) : []),
+    ...(Array.isArray(prospect.encaixes) ? prospect.encaixes.filter(Boolean) : [])
+  ]))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
+function prospectCombinaEncaixe(prospect, encaixe) {
+  if (!encaixe) return true;
+  const alvo = normalizarDraft(encaixe);
+  const encaixes = [
+    ...(Array.isArray(prospect.encaixesTimes) ? prospect.encaixesTimes.flatMap((time) => [time.nome, time.sigla]).filter(Boolean) : []),
+    ...(Array.isArray(prospect.encaixes) ? prospect.encaixes.filter(Boolean) : [])
+  ];
+  return encaixes.some((item) => normalizarDraft(item) === alvo);
+}
+
 function preencherSelect(id, label, opcoes) {
   const select = document.querySelector(id);
   if (!select) return;
-  select.innerHTML = `<option value="">${label}</option>${opcoes.map((opcao) => `<option value="${opcao}">${opcao}</option>`).join("")}`;
+  select.innerHTML = `<option value="">${escapeHtml(label)}</option>${opcoes.map((opcao) => `<option value="${escapeHtml(opcao)}">${escapeHtml(opcao)}</option>`).join("")}`;
 }
 
 function fotoOuPlaceholder(prospect, classe = "") {
+  const nome = prospect.nome || "Foto do prospecto";
   if (prospect.foto) {
-    return `<img class="${classe}" src="${prospect.foto}" alt="${prospect.nome || "Foto do prospecto"}" loading="lazy" onerror="this.remove()" />`;
+    return `<img class="${escapeHtml(classe)}" src="${escapeHtml(prospect.foto)}" alt="${escapeHtml(nome)}" loading="lazy" data-draft-image />`;
   }
 
   return `
-    <div class="${classe} draft-prospect-card__placeholder" aria-label="Sem foto de ${prospect.nome}">
-      <span>${iniciais(prospect.nome)}</span>
+    <div class="${escapeHtml(classe)} draft-prospect-card__placeholder" aria-label="Sem foto de ${escapeHtml(prospect.nome)}">
+      <span>${escapeHtml(iniciais(prospect.nome))}</span>
     </div>
   `;
 }
 
-function renderFeatured() {
-  const area = document.querySelector("#draft-featured");
-  if (!area) return;
+function renderHero() {
+  const artwork = document.querySelector("[data-draft-hero-artwork]");
+  const yearLabel = document.querySelector("[data-draft-hero-year]");
+  if (yearLabel) yearLabel.textContent = draftYear;
+  if (!artwork) return;
 
-  area.innerHTML = draftData().slice(0, 3).map((prospect) => `
-    <article class="draft-feature-card">
-      <div class="draft-feature-card__rank" aria-label="Ranking ${prospect.rank}">${prospect.rank}</div>
-      <div class="draft-feature-card__photo">${fotoOuPlaceholder(prospect, "draft-feature-card__img")}</div>
-      <div class="draft-feature-card__body">
-        <span>${prospect.posicao || "prospect"}</span>
-        <h3>${prospect.nome}</h3>
-        <p>${prospect.time || prospect.bio || "Contexto em atualização"}</p>
-      </div>
-    </article>
+  const prospects = draftData()
+    .filter((prospect) => prospect?.foto)
+    .slice(0, 4);
+
+  if (!prospects.length) {
+    artwork.innerHTML = "";
+    artwork.setAttribute("hidden", "");
+    return;
+  }
+
+  artwork.removeAttribute("hidden");
+  artwork.innerHTML = prospects.map((prospect, index) => `
+    <figure class="draft-guide-hero__portrait draft-guide-hero__portrait--${index + 1}">
+      <img src="${escapeHtml(prospect.foto)}" alt="${escapeHtml(prospect.fotoAlt || prospect.nome || "Prospecto do Draft")}" ${index === 0 ? 'loading="eager"' : 'loading="lazy"'} data-draft-image />
+    </figure>
   `).join("");
+  bindDraftImageFallback(artwork);
 }
 
 function prospectCombina(prospect) {
@@ -214,7 +294,7 @@ function prospectCombina(prospect) {
   return (!busca || alvo.includes(busca))
     && (!draftState.position || prospect.posicao === draftState.position)
     && (!draftState.team || prospect.time === draftState.team)
-    && (!draftState.range || prospect.alcance === draftState.range);
+    && prospectCombinaEncaixe(prospect, draftState.range);
 }
 
 function ordenarProspects(lista) {
@@ -226,13 +306,17 @@ function ordenarProspects(lista) {
 }
 
 function dadoDraft(label, valor) {
-  return valor ? `<div><span>${label}</span><strong>${valor}</strong></div>` : "";
+  return valor ? `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(valor)}</strong></div>` : "";
 }
 
-function renderEncaixes(prospect = {}) {
+function dadoDraftFixo(label, valor, fallback = "em atualização") {
+  return `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(valor || fallback)}</strong></div>`;
+}
+
+function obterEncaixes(prospect = {}) {
   const timesComLogo = Array.isArray(prospect.encaixesTimes) ? prospect.encaixesTimes : [];
   const timesTexto = Array.isArray(prospect.encaixes) ? prospect.encaixes : [];
-  const itens = [
+  return [
     ...timesComLogo.map((time) => ({
       nome: time.nome || time.name || time.sigla || "",
       sigla: time.sigla || "",
@@ -243,6 +327,10 @@ function renderEncaixes(prospect = {}) {
       .filter((nome) => !timesComLogo.some((time) => normalizarDraft(time.nome || time.sigla) === normalizarDraft(nome)))
       .map((nome) => ({ nome, sigla: "", logo: "", alt: "" }))
   ].filter((time) => time.nome || time.sigla || time.logo);
+}
+
+function renderEncaixes(prospect = {}) {
+  const itens = obterEncaixes(prospect);
 
   if (!itens.length) return "";
 
@@ -250,12 +338,13 @@ function renderEncaixes(prospect = {}) {
     <div class="draft-fit-list" aria-label="Melhores encaixes">
       ${itens.map((time) => {
         const label = time.sigla || time.nome;
+        const nomeCompleto = time.nome || label;
         return `
-          <span class="draft-fit" title="${time.nome || label}">
+          <span class="draft-fit" title="${escapeHtml(nomeCompleto)}">
             ${time.logo
-              ? `<img src="${time.logo}" alt="${time.alt}" loading="lazy" onerror="this.remove()" />`
-              : `<span class="draft-fit__fallback">${iniciais(label || time.nome)}</span>`}
-            <span>${label}</span>
+              ? `<img src="${escapeHtml(time.logo)}" alt="${escapeHtml(time.alt)}" loading="lazy" data-draft-image />`
+              : `<span class="draft-fit__fallback">${escapeHtml(iniciais(label || nomeCompleto))}</span>`}
+            <span>${escapeHtml(nomeCompleto)}</span>
           </span>
         `;
       }).join("")}
@@ -263,86 +352,159 @@ function renderEncaixes(prospect = {}) {
   `;
 }
 
-function renderDetalhePerfil(label, valor, classe = "") {
+function renderEncaixesPeek(prospect = {}) {
+  const itens = obterEncaixes(prospect).slice(0, 3);
+  if (!itens.length) return "";
+
+  const logos = itens.map((time, index) => {
+    const label = time.sigla || time.nome;
+    const nomeCompleto = time.nome || label;
+    const indice = index + 1;
+    return `
+      <span class="draft-peek-fit draft-peek-fit--${indice}" title="${escapeHtml(nomeCompleto)}">
+        ${time.logo
+          ? `<span class="draft-peek-fit__logo draft-peek-fit__logo--${indice}"><img class="draft-peek-fit__logo-img" src="${escapeHtml(time.logo)}" alt="${escapeHtml(time.alt)}" loading="lazy" data-draft-image /></span>`
+          : `<span class="draft-peek-fit__logo draft-peek-fit__fallback draft-peek-fit__logo--${indice}">${escapeHtml(iniciais(label || nomeCompleto))}</span>`}
+      </span>
+    `;
+  }).join("");
+
   return `
-    <div class="draft-prospect-card__detail ${classe}">
-      <span>${label}</span>
-      <p>${valor}</p>
+    <div class="draft-peek-fits" aria-label="Melhores encaixes">
+      ${logos}
     </div>
   `;
 }
 
-function renderProspectCard(prospect) {
-  const leituraPerfil = [
-    ["Por que vale uma escolha?", prospect.motivoEscolha],
-    ["Chave de desenvolvimento", prospect.chaveDesenvolvimento],
-    ["Pitaco", prospect.observacoes]
-  ].filter(([, valor]) => valor);
+function renderDetalhePerfil(label, valor, classe = "") {
+  return `
+    <div class="draft-prospect-card__detail ${escapeHtml(classe)}">
+      <span>${escapeHtml(label)}</span>
+      <p>${escapeHtml(valor)}</p>
+    </div>
+  `;
+}
 
-  const fichaPerfil = [
-    ["Arquétipo ofensivo", prospect.arquetipoOfensivo],
-    ["Arquétipo defensivo", prospect.arquetipoDefensivo],
-    ["Teto vs piso", prospect.tetoPiso],
-    ["espelho", prospect.espelho]
-  ].filter(([, valor]) => valor);
+function renderDetalhePerfilOpcional(label, valor, classe = "") {
+  return valor ? renderDetalhePerfil(label, valor, classe) : "";
+}
 
+function renderProspectCardVariant(prospect, index = 0) {
   const encaixesPerfil = renderEncaixes(prospect);
-  const temPerfil = leituraPerfil.length || fichaPerfil.length;
-  const expandido = draftState.view === "deep";
+  const encaixesPeek = renderEncaixesPeek(prospect);
+  const chave = chaveProspect(prospect);
+  const inlineExpandido = draftState.view !== "deep" && draftState.openProfileKey === chave;
+  const encaixesVisual = draftState.view === "peek" && !inlineExpandido ? encaixesPeek : encaixesPerfil;
+  const temPerfil = Boolean(
+    prospect.observacoes
+    || prospect.motivoEscolha
+    || prospect.chaveDesenvolvimento
+    || prospect.arquetipoOfensivo
+    || prospect.arquetipoDefensivo
+    || prospect.tetoPiso
+    || prospect.espelho
+    || encaixesPerfil
+  );
+  const expandido = draftState.view === "deep" || inlineExpandido;
+  const variante = expandido ? "deep" : draftState.view;
+  const alcanceTexto = prospect.alcance || prospect.tier || "";
+  const alturaTexto = [prospect.altura, prospect.alturaImperial].filter(Boolean).join(" / ");
+  const rankTexto = String(prospect.rank || "");
+  const nomeTexto = prospect.nome || "Prospecto sem nome";
+  const rankClasse = rankTexto.length >= 3
+    ? " draft-prospect-card__rank--triple"
+    : rankTexto.length === 2
+      ? " draft-prospect-card__rank--double"
+      : "";
 
   return `
-    <article class="draft-prospect-card${expandido ? " draft-prospect-card--expanded" : ""}" data-draft-card>
-      <div class="draft-prospect-card__rank" aria-label="Ranking ${prospect.rank}">
-        <strong>${prospect.rank}</strong>
+    <article class="draft-prospect-card draft-prospect-surface--glass draft-prospect-card--${variante}${expandido ? " draft-prospect-card--expanded" : ""}${inlineExpandido ? " draft-prospect-card--inline-deep" : ""}" data-draft-card data-draft-key="${escapeHtml(chave)}" data-draft-variant="${variante}" tabindex="-1" style="--draft-card-index: ${index};">
+      <div class="draft-prospect-card__rank${rankClasse}" aria-label="Ranking ${escapeHtml(prospect.rank)}">
+        <strong>${escapeHtml(prospect.rank)}</strong>
       </div>
       <div class="draft-prospect-card__photo">
         ${fotoOuPlaceholder(prospect, "draft-prospect-card__img")}
       </div>
       <div class="draft-prospect-card__content">
         <div class="draft-prospect-card__eyebrow">
-          <span>${prospect.posicao || "posição em aberto"}</span>
-          ${prospect.alcance ? `<span>alcance ${prospect.alcance}</span>` : ""}
+          <span>${escapeHtml(prospect.posicao || "posicao em aberto")}</span>
+          ${alcanceTexto ? `<span>alcance ${escapeHtml(alcanceTexto)}</span>` : ""}
         </div>
-        <h2>
+        <h3>
           ${temPerfil
-            ? `<button type="button" class="draft-prospect-card__name-button" data-draft-profile-trigger aria-expanded="${expandido}">${prospect.nome}</button>`
-            : prospect.nome}
-        </h2>
-        <p>${prospect.espelho ? `Espelho: ${prospect.espelho}` : prospect.bio || "Perfil em atualização."}</p>
+            ? `<button type="button" class="draft-prospect-card__name-button" data-draft-profile-trigger aria-expanded="${expandido}">${escapeHtml(nomeTexto)}</button>`
+            : escapeHtml(nomeTexto)}
+        </h3>
+        <p>${escapeHtml(prospect.espelho ? `Espelho: ${prospect.espelho}` : prospect.bio || "Perfil em atualizacao.")}</p>
         <div class="draft-prospect-card__meta">
-          ${dadoDraft("time/liga", prospect.time)}
-          ${dadoDraft("altura", [prospect.altura, prospect.alturaImperial].filter(Boolean).join(" / "))}
-          ${dadoDraft("idade", prospect.idade)}
+          ${dadoDraftFixo("posicao", prospect.posicao)}
+          ${dadoDraftFixo("time", prospect.time)}
+          ${dadoDraftFixo("altura", alturaTexto)}
+          ${dadoDraftFixo("idade", prospect.idade)}
+          ${dadoDraftFixo("alcance", alcanceTexto)}
         </div>
-      </div>
-      <div class="draft-prospect-card__aside">
-        ${prospect.tetoPiso ? `<div><span>teto/piso</span><strong>${prospect.tetoPiso}</strong></div>` : ""}
-        ${encaixesPerfil ? `
-          <div class="draft-prospect-card__fits">
-            <span>Melhores encaixes</span>
-            ${encaixesPerfil}
+        ${prospect.espelho ? `
+          <div class="draft-prospect-card__mirror">
+            <span>espelho:</span>
+            <strong>${escapeHtml(prospect.espelho)}</strong>
           </div>
         ` : ""}
-        <button type="button" class="draft-prospect-card__toggle" ${temPerfil ? "" : "disabled"}>ver perfil</button>
+      </div>
+      <div class="draft-prospect-card__aside">
+        ${prospect.tetoPiso ? `<div><span>teto/piso</span><strong>${escapeHtml(prospect.tetoPiso)}</strong></div>` : ""}
+        ${encaixesVisual ? `
+          <div class="draft-prospect-card__fits">
+            <span>Melhores encaixes</span>
+            ${encaixesVisual}
+          </div>
+        ` : ""}
       </div>
       <div class="draft-prospect-card__details">
         ${temPerfil ? `
-          ${leituraPerfil.length ? `
-            <section class="draft-prospect-card__profile-main" aria-label="Leitura do perfil">
-              <span class="draft-prospect-card__section-label">leitura do perfil</span>
-              ${leituraPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor, "draft-prospect-card__detail--reading")).join("")}
+          ${prospect.observacoes ? `
+            <section class="draft-prospect-card__editorial" aria-label="Pitaco">
+              <span class="draft-prospect-card__section-label">pitaco</span>
+              <p>${escapeHtml(prospect.observacoes)}</p>
             </section>
           ` : ""}
-          ${fichaPerfil.length ? `
-            <aside class="draft-prospect-card__profile-aside" aria-label="Ficha de scouting">
-              <span class="draft-prospect-card__section-label">ficha de scouting</span>
-              ${fichaPerfil.map(([label, valor]) => renderDetalhePerfil(label, valor)).join("")}
-            </aside>
-          ` : ""}
+          <section class="draft-prospect-card__analysis" aria-label="Analise do prospecto">
+            ${renderDetalhePerfilOpcional("Por que vale uma escolha?", prospect.motivoEscolha, "draft-prospect-card__detail--reading")}
+            ${renderDetalhePerfilOpcional("Chave de desenvolvimento", prospect.chaveDesenvolvimento, "draft-prospect-card__detail--reading")}
+          </section>
+          <aside class="draft-prospect-card__profile-aside" aria-label="Ficha de scouting">
+            ${renderDetalhePerfilOpcional("Arquetipo ofensivo", prospect.arquetipoOfensivo)}
+            ${renderDetalhePerfilOpcional("Arquetipo defensivo", prospect.arquetipoDefensivo)}
+            ${encaixesPerfil ? `
+              <div class="draft-prospect-card__detail draft-prospect-card__detail--fits">
+                <span>Melhores encaixes</span>
+                ${encaixesPerfil}
+              </div>
+            ` : ""}
+            ${renderDetalhePerfilOpcional("Espelho", prospect.espelho)}
+          </aside>
         ` : "<p>Sem detalhes adicionais no CSV.</p>"}
       </div>
     </article>
   `;
+}
+
+function ajustarEspelhosPeek(root = document) {
+  root.querySelectorAll(".draft-prospect-card--peek .draft-prospect-card__mirror").forEach((mirror) => {
+    const label = mirror.querySelector("span");
+    const value = mirror.querySelector("strong");
+    if (!label || !value) return;
+
+    value.style.fontSize = "";
+
+    const style = getComputedStyle(mirror);
+    const gap = Number.parseFloat(style.columnGap || style.gap || "0") || 0;
+    const available = mirror.clientWidth - label.offsetWidth - gap;
+    if (available <= 0 || value.scrollWidth <= available) return;
+
+    const baseSize = Number.parseFloat(style.fontSize) || 20;
+    const nextSize = Math.max(13, Math.floor(baseSize * (available / value.scrollWidth) * 10) / 10);
+    value.style.fontSize = `${nextSize}px`;
+  });
 }
 
 function renderDraftList() {
@@ -352,42 +514,61 @@ function renderDraftList() {
 
   const filtrados = ordenarProspects(draftData().filter(prospectCombina));
   contador.textContent = `${filtrados.length} ${filtrados.length === 1 ? "prospect encontrado" : "prospects encontrados"}`;
-  lista.className = `draft-guide-list draft-guide-list--${draftState.view}`;
+  lista.className = `draft-guide-list draft-guide-list--${draftState.view}${draftState.viewTransition ? ` draft-guide-list--${draftState.viewTransition}` : ""}`;
 
   if (filtrados.length === 0) {
     lista.innerHTML = '<div class="draft-empty-state">Nenhum prospect encontrado com esses filtros.</div>';
     return;
   }
 
-  lista.innerHTML = filtrados.map(renderProspectCard).join("");
+  lista.innerHTML = filtrados.map(renderProspectCardVariant).join("");
+  bindDraftImageFallback(lista);
+  requestAnimationFrame(() => ajustarEspelhosPeek(lista));
 
-  function alternarPerfil(card) {
-    const aberto = card.classList.toggle("draft-prospect-card--expanded");
-    const botao = card.querySelector(".draft-prospect-card__toggle");
-    const nome = card.querySelector("[data-draft-profile-trigger]");
-    if (botao) botao.textContent = aberto ? "fechar perfil" : "ver perfil";
-    if (nome) nome.setAttribute("aria-expanded", String(aberto));
+  if (!lista.dataset.draftSkimClickBound) {
+    lista.dataset.draftSkimClickBound = "true";
+    lista.addEventListener("click", (event) => {
+      if (draftState.view === "deep") return;
+      const card = event.target.closest("[data-draft-card]");
+      if (!card || !lista.contains(card)) return;
+      if (draftState.openProfileKey === card.dataset.draftKey) {
+        card.classList.add("draft-prospect-card--inline-closing");
+        window.setTimeout(() => {
+          if (draftState.openProfileKey !== card.dataset.draftKey) return;
+          draftState.openProfileKey = "";
+          renderDraftList();
+        }, 320);
+        return;
+      }
+
+      draftState.openProfileKey = card.dataset.draftKey;
+      renderDraftList();
+    });
   }
-
-  lista.querySelectorAll(".draft-prospect-card__toggle").forEach((botao) => {
-    botao.addEventListener("click", () => {
-      const card = botao.closest("[data-draft-card]");
-      alternarPerfil(card);
-    });
-  });
-
-  lista.querySelectorAll("[data-draft-profile-trigger]").forEach((nome) => {
-    nome.addEventListener("click", () => {
-      if (draftState.view !== "skim") return;
-      const card = nome.closest("[data-draft-card]");
-      alternarPerfil(card);
-    });
-  });
 }
 
-function aplicarModoVisualizacao(view) {
-  const modos = new Set(["skim", "peek", "peruse", "deep"]);
-  draftState.view = modos.has(view) ? view : "peruse";
+function finalizarAnimacaoModo(lista, duracao = 520) {
+  if (!lista) return;
+
+  clearTimeout(draftViewAnimationTimer);
+  lista.classList.remove("draft-guide-list--changing");
+  void lista.offsetWidth;
+  lista.classList.add("draft-guide-list--changing");
+  draftViewAnimationTimer = setTimeout(() => {
+    lista.classList.remove("draft-guide-list--changing");
+    lista.classList.remove("draft-guide-list--opening-peek", "draft-guide-list--closing-peek");
+    draftState.viewTransition = "";
+  }, duracao);
+}
+
+function aplicarEstadoModoVisualizacao(nextView, previousView, options = {}) {
+  draftState.view = nextView;
+  draftState.viewTransition = previousView === "skim" && nextView === "peek"
+    ? "opening-peek"
+    : previousView === "peek" && nextView === "skim"
+      ? "closing-peek"
+      : "";
+  if (nextView === "deep") draftState.openProfileKey = "";
 
   try {
     localStorage.setItem("t3-draft-view", draftState.view);
@@ -400,16 +581,19 @@ function aplicarModoVisualizacao(view) {
   });
 
   renderDraftList();
+}
+
+function aplicarModoVisualizacao(view, options = {}) {
+  const modos = new Set(["skim", "peek", "deep"]);
+  const previousView = draftState.view;
+  const nextView = modos.has(view) ? view : "skim";
+  if (previousView === nextView) return;
+
+  aplicarEstadoModoVisualizacao(nextView, previousView, options);
 
   const lista = document.querySelector("#draft-list");
   if (!lista) return;
-  clearTimeout(draftViewAnimationTimer);
-  lista.classList.remove("draft-guide-list--changing");
-  void lista.offsetWidth;
-  lista.classList.add("draft-guide-list--changing");
-  draftViewAnimationTimer = setTimeout(() => {
-    lista.classList.remove("draft-guide-list--changing");
-  }, 360);
+  finalizarAnimacaoModo(lista);
 }
 
 function debounce(fn, delay = 160) {
@@ -422,35 +606,30 @@ function debounce(fn, delay = 160) {
 
 function iniciarDraftGuide() {
   if (draftData().length === 0) {
-    const featured = document.querySelector("#draft-featured");
     const count = document.querySelector("#draft-count");
     const list = document.querySelector("#draft-list");
-    if (featured) {
-      featured.innerHTML = "";
-      featured.closest("section")?.setAttribute("hidden", "");
-    }
     if (count) count.textContent = "0 prospects encontrados";
     if (list) {
-      list.innerHTML = `<div class="draft-empty-state">O Guia do Draft ${draftYear} ainda está sendo preparado no Studio.</div>`;
+      list.innerHTML = `<div class="draft-empty-state">O Guia do Draft ${escapeHtml(draftYear)} ainda está sendo preparado no Studio.</div>`;
     }
     return;
   }
 
-  document.querySelector("#draft-featured")?.closest("section")?.removeAttribute("hidden");
-
   try {
     const savedView = localStorage.getItem("t3-draft-view");
-    if (["skim", "peek", "peruse", "deep"].includes(savedView)) draftState.view = savedView;
+    if (["skim", "peek", "deep"].includes(savedView)) draftState.view = savedView;
+    if (savedView === "peruse") localStorage.setItem("t3-draft-view", "skim");
   } catch {
     // Keep the default view.
   }
 
   preencherSelect("#draft-position", "todas", opcoesUnicas("posicao"));
   preencherSelect("#draft-team", "todos", opcoesUnicas("time"));
-  preencherSelect("#draft-range", "todos", opcoesUnicas("alcance"));
+  preencherSelect("#draft-range", "todos", opcoesEncaixes());
 
-  renderFeatured();
+  renderHero();
   renderDraftList();
+  iniciarDraftReadingBar();
 
   if (draftEventosIniciados) return;
   draftEventosIniciados = true;
@@ -468,6 +647,14 @@ function iniciarDraftGuide() {
   });
 
   busca?.addEventListener("input", atualizarBusca);
+  window.addEventListener("resize", debounce(() => {
+    if (draftState.openProfileKey && draftState.view !== "deep") {
+      renderDraftList();
+      return;
+    }
+
+    ajustarEspelhosPeek(document.querySelector("#draft-list") || document);
+  }, 120));
   posicao?.addEventListener("change", () => { draftState.position = posicao.value; renderDraftList(); });
   time?.addEventListener("change", () => { draftState.team = time.value; renderDraftList(); });
   alcance?.addEventListener("change", () => { draftState.range = alcance.value; renderDraftList(); });

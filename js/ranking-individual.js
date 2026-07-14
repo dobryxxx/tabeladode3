@@ -1,10 +1,10 @@
+let rankingSanityAtual = null;
+
 function slugRankingAtual() {
   const area = document.querySelector("#ranking-individual");
   const params = new URLSearchParams(window.location.search);
   return params.get("ranking") || area?.dataset.ranking || "t25m";
 }
-
-let rankingSanityAtual = null;
 
 function dadosRankingAtual() {
   if (rankingSanityAtual) {
@@ -13,14 +13,16 @@ function dadosRankingAtual() {
         slug: rankingSanityAtual.slug,
         titulo: rankingSanityAtual.titulo,
         descricao: rankingSanityAtual.descricao,
+        imagem: rankingSanityAtual.imagem,
+        imagemAlt: rankingSanityAtual.imagemAlt,
         categoria: rankingSanityAtual.categoria
       },
       jogadores: (rankingSanityAtual.itens || [])
         .map((item) => ({
           ...item,
-          posicao: `#${item.posicao || item.ordem || ""}`,
+          posicaoRanking: item.posicao,
           ordem: item.ordem || item.posicao || 999,
-          estrelas: item.nota || 0
+          avaliacao: item.nota ?? item.tier ?? null
         }))
         .sort((a, b) => a.ordem - b.ordem)
     };
@@ -35,6 +37,11 @@ function dadosRankingAtual() {
     meta: rankingsDisponiveis.find((item) => item.slug === slug),
     jogadores: rankings
       .filter((jogador) => jogador.rankingSlug === slug)
+      .map((jogador) => ({
+        ...jogador,
+        posicaoRanking: jogador.posicao,
+        avaliacao: jogador.estrelas || null
+      }))
       .sort((a, b) => a.ordem - b.ordem)
   };
 }
@@ -47,146 +54,152 @@ function renderRankingIndividual() {
   const {meta, jogadores} = dadosRankingAtual();
   if (!meta || jogadores.length === 0) return;
 
-  document.title = `${meta.titulo} | Tabelado de 3`;
-  const tipoRanking = slug === "t20f" || meta.categoria === "feminino" ? "ranking feminino" : "ranking masculino";
+  document.title = `${textoSeguro(meta.titulo)} | Tabelado de 3`;
+
+  const rotulo = rotuloRanking(meta, slug);
+  const descricao = meta.descricao || "Listagem editorial do Tabelado de 3 que apresenta, para cada jogador, posi&ccedil;&atilde;o, atributos f&iacute;sicos (altura, envergadura, etc.) e contexto institucional (clube ou programa universit&aacute;rio), consumindo dados da base de rankings j&aacute; normalizada.";
+  const genero = generoRanking(meta, slug);
+  const retorno = `rankings.html?genero=${encodeURIComponent(genero)}`;
+  const imagem = meta.imagem || "";
+  const altImagem = meta.imagemAlt || `${meta.titulo || "Ranking"} - arte da gera&ccedil;&atilde;o`;
 
   area.innerHTML = `
-    <header class="ranking-detail__hero">
-      <div class="ranking-detail__kicker">
-        <span class="tag tag--red">${tipoRanking}</span>
-        <span>${jogadores.length} nomes avaliados</span>
-      </div>
-      <h1>${meta.titulo}</h1>
-      <p>Lista editorial do Tabelado de 3 com posi&ccedil;&atilde;o, perfil f&iacute;sico e contexto de clube/programa a partir da base limpa de rankings.</p>
-    </header>
+    <div class="ranking-detail-page">
+      <a class="ranking-detail-back" href="${retorno}" aria-label="Voltar para rankings">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
 
-    <div class="ranking-detail__summary">
-      <div>
-        <strong>${jogadores[0].nome}</strong>
-        <span>primeiro nome da lista</span>
-      </div>
-      <div>
-        <strong>${contarCategorias(jogadores)}</strong>
-        <span>perfis/posi&ccedil;&otilde;es mapeados</span>
-      </div>
-      <div>
-        <strong>${contarCincoEstrelas(jogadores)}</strong>
-        <span>nomes cinco estrelas</span>
-      </div>
-    </div>
-
-    <section class="ranking-toolbar" aria-label="Filtros do ranking">
-      <div>
-        <span class="ranking-toolbar__label">filtrar por posi&ccedil;&atilde;o</span>
-        <div class="ranking-filter" id="ranking-filtros-posicao">
-          ${botoesFiltroPosicao(jogadores)}
+      <header class="ranking-detail-hero">
+        <div class="ranking-detail-hero__content">
+          <h1 class="ranking-detail-hero__title">
+            <span>Ranking</span>
+            <span class="ranking-detail-hero__year">${escapeHtml(rotulo)}</span>
+          </h1>
+          <p class="ranking-detail-hero__description">${descricao}</p>
         </div>
-      </div>
-      <strong id="ranking-contador">${jogadores.length} nomes</strong>
-    </section>
+        ${imagem ? `
+          <figure class="ranking-detail-hero__artwork">
+            <img src="${escapeHtml(imagem)}" alt="${escapeHtml(altImagem)}" />
+          </figure>
+        ` : ""}
+      </header>
 
-    <section class="ranking-list" id="ranking-lista" aria-label="${meta.titulo}">
-      ${renderRankingRows(jogadores)}
-    </section>
+      <ol class="ranking-detail-list" aria-label="${escapeHtml(meta.titulo || "Ranking")}">
+        ${renderRankingRows(jogadores)}
+      </ol>
+    </div>
   `;
-
-  iniciarFiltroPosicoes(jogadores);
 }
 
 function renderRankingRows(jogadores) {
-  return jogadores.map((jogador) => `
-    <article class="ranking-row" data-posicao="${normalizarValor(jogador.categoria)}">
-      <div class="ranking-row__position">${jogador.posicao}</div>
-      <div class="ranking-row__main">
-        <h2>${jogador.nome}</h2>
-        <div class="ranking-row__stars" aria-label="${quantidadeEstrelas(jogador.estrelas)} de 5 estrelas">
-          ${renderEstrelas(jogador.estrelas)}
+  return jogadores.map((jogador, index) => {
+    const ranking = formatarPosicaoRanking(jogador.posicaoRanking || jogador.ordem || index + 1);
+    const instituicao = separarInstituicao(jogador.time);
+    const medidas = separarMedidas(jogador.bio2);
+    const avaliacao = quantidadeEstrelas(jogador.avaliacao);
+
+    return `
+      <li class="ranking-athlete-row">
+        <div class="ranking-athlete-row__rank">${escapeHtml(ranking)}</div>
+        <div class="ranking-athlete-row__identity">
+          <h2 class="ranking-athlete-row__name">${escapeHtml(jogador.nome || "")}</h2>
+          ${avaliacao > 0 ? renderEstrelas(avaliacao) : ""}
         </div>
-      </div>
-      <div class="ranking-row__facts">
-        ${dadoRanking("posi&ccedil;&atilde;o", jogador.categoria || "Em avalia&ccedil;&atilde;o")}
-        ${dadoRanking("time/programa", jogador.time || "Em atualiza&ccedil;&atilde;o")}
-        ${dadoRanking("altura/nascimento", jogador.bio2 || "Em atualiza&ccedil;&atilde;o")}
-      </div>
-    </article>
-  `).join("");
+        <div class="ranking-athlete-row__meta-grid">
+          ${jogador.categoria ? blocoMetaRanking("Posi&ccedil;&atilde;o", jogador.categoria) : ""}
+          ${instituicao.principal ? blocoMetaRanking("Institui&ccedil;&atilde;o", instituicao.principal, instituicao.contexto) : ""}
+          ${(medidas.altura || medidas.data) ? blocoMetaRanking("Medidas", medidas.altura, medidas.data) : ""}
+        </div>
+      </li>
+    `;
+  }).join("");
 }
 
-function dadoRanking(label, valor) {
+function blocoMetaRanking(label, principal, secundario = "") {
   return `
-    <div class="ranking-row__fact">
-      <span>${label}</span>
-      <strong>${valor}</strong>
+    <div class="ranking-athlete-row__meta" aria-label="${escapeHtml(textoSeguro(label))}">
+      <span class="ranking-athlete-row__meta-label">${label}</span>
+      ${principal ? `<strong>${escapeHtml(principal)}</strong>` : ""}
+      ${secundario ? `<span class="ranking-athlete-row__meta-secondary">${escapeHtml(secundario)}</span>` : ""}
     </div>
   `;
 }
 
-function botoesFiltroPosicao(jogadores) {
-  const posicoes = [...new Set(jogadores.map((jogador) => jogador.categoria).filter(Boolean))]
-    .sort((a, b) => ordemPosicao(a) - ordemPosicao(b) || a.localeCompare(b));
-
+function renderEstrelas(total) {
   return `
-    <button class="is-active" type="button" data-posicao="">todos</button>
-    ${posicoes.map((posicao) => `
-      <button type="button" data-posicao="${normalizarValor(posicao)}">${posicao}</button>
-    `).join("")}
+    <div class="ranking-athlete-row__stars" aria-label="Avalia&ccedil;&atilde;o: ${total} de 5">
+      ${Array.from({ length: 5 }, (_, index) => `
+        <svg class="${index < total ? "is-filled" : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 2.6l2.86 5.8 6.4.93-4.63 4.51 1.09 6.37L12 17.2l-5.72 3.01 1.09-6.37-4.63-4.51 6.4-.93L12 2.6z"/>
+        </svg>
+      `).join("")}
+    </div>
   `;
 }
 
-function iniciarFiltroPosicoes(jogadores) {
-  const lista = document.querySelector("#ranking-lista");
-  const contador = document.querySelector("#ranking-contador");
-  const botoes = document.querySelectorAll("#ranking-filtros-posicao [data-posicao]");
-  if (!lista || !contador || botoes.length === 0) return;
+function quantidadeEstrelas(valor = "") {
+  if (typeof valor === "number") return Math.max(0, Math.min(5, Math.round(valor)));
+  if (typeof valor !== "string") return 0;
 
-  botoes.forEach((botao) => {
-    botao.addEventListener("click", () => {
-      const posicaoAtiva = botao.dataset.posicao;
-      const filtrados = posicaoAtiva
-        ? jogadores.filter((jogador) => normalizarValor(jogador.categoria) === posicaoAtiva)
-        : jogadores;
+  const texto = valor.trim();
+  const numero = Number(texto.replace(",", "."));
+  if (Number.isFinite(numero) && numero > 0) return Math.max(0, Math.min(5, Math.round(numero)));
 
-      botoes.forEach((item) => item.classList.toggle("is-active", item === botao));
-      lista.innerHTML = renderRankingRows(filtrados);
-      contador.textContent = `${filtrados.length} ${filtrados.length === 1 ? "nome" : "nomes"}`;
-    });
-  });
+  const estrelasUnicode = (texto.match(/★/g) || []).length;
+  const estrelasMojibake = (texto.match(/★/g) || []).length;
+  return Math.min(5, estrelasUnicode + estrelasMojibake);
 }
 
-function renderEstrelas(estrelas) {
-  const total = quantidadeEstrelas(estrelas);
-
-  return Array.from({ length: 5 }, (_, index) => `
-    <span class="${index < total ? "is-filled" : ""}" aria-hidden="true">★</span>
-  `).join("");
+function formatarPosicaoRanking(posicao) {
+  const numero = Number(String(posicao).replace(/\D+/g, ""));
+  if (!Number.isFinite(numero) || numero <= 0) return textoSeguro(posicao);
+  return String(numero).padStart(2, "0");
 }
 
-function quantidadeEstrelas(estrelas = "") {
-  if (typeof estrelas === "number") return Math.max(0, Math.min(5, Math.round(estrelas)));
-  return Math.min(5, (estrelas.match(/★/g) || []).length);
+function separarInstituicao(valor = "") {
+  const texto = textoSeguro(valor);
+  const match = texto.match(/^(.*?)\s*\((.*?)\)\s*$/);
+  if (!match) return {principal: texto, contexto: ""};
+  return {
+    principal: match[1].trim(),
+    contexto: `(${match[2].trim()})`
+  };
 }
 
-function contarCategorias(jogadores) {
-  return new Set(jogadores.map((jogador) => jogador.categoria).filter(Boolean)).size;
+function separarMedidas(valor = "") {
+  const partes = textoSeguro(valor).split("|").map((parte) => parte.trim()).filter(Boolean);
+  const altura = partes.slice(0, 2).join(" / ").replace(/m\b/i, "").replace(".", ",");
+  const data = partes.slice(2).join(" / ");
+  return {altura, data};
 }
 
-function contarCincoEstrelas(jogadores) {
-  return jogadores.filter((jogador) => quantidadeEstrelas(jogador.estrelas) === 5).length;
+function rotuloRanking(meta, slug) {
+  const origem = `${meta?.titulo || ""} ${slug || ""}`;
+  const ano = origem.match(/\b(20\d{2})\b/);
+  if (ano) return ano[1];
+  const entreColchetes = (meta?.titulo || "").match(/\[([^\]]+)\]/);
+  return (entreColchetes?.[1] || slug || "ranking").toUpperCase();
 }
 
-function normalizarValor(valor = "") {
-  return valor
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+function generoRanking(meta, slug) {
+  const categoria = textoSeguro(meta?.categoria).toLowerCase();
+  if (slug === "t20f" || categoria.includes("feminino")) return "feminino";
+  return "masculino";
 }
 
-function ordemPosicao(posicao) {
-  const ordem = ["armador", "armadora", "escolta", "lateral", "ala", "grande", "pivo"];
-  const indice = ordem.indexOf(normalizarValor(posicao));
-  return indice === -1 ? 99 : indice;
+function textoSeguro(valor = "") {
+  return String(valor ?? "");
+}
+
+function escapeHtml(valor = "") {
+  return textoSeguro(valor)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 async function carregarRankingSanity() {
@@ -198,7 +211,7 @@ async function carregarRankingSanity() {
     rankingSanityAtual = dados;
     renderRankingIndividual();
   } catch (erro) {
-    console.warn("Não foi possível carregar ranking do Sanity. Usando dados locais.", erro);
+    console.warn("Nao foi possivel carregar ranking do Sanity. Usando dados locais.", erro);
   }
 }
 
