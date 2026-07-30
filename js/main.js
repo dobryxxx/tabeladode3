@@ -772,9 +772,18 @@ function renderHomeSettings(settings) {
   }
 
   if (cards && Array.isArray(settings.cards) && settings.cards.length) {
-    cards.innerHTML = settings.cards
-      .slice()
-      .filter((card) => !String(card.link || "").includes("colmeia.html"))
+    const portalCards = settings.cards.slice();
+    if (!portalCards.some((card) => String(card.link || "").includes("colmeia.html"))) {
+      portalCards.push({
+        titulo: "colmeia",
+        descricao: "conexoes entre artigos e tweets do Tabelado de 3.",
+        cta: "explorar",
+        link: "colmeia.html",
+        ordem: 5
+      });
+    }
+
+    cards.innerHTML = portalCards
       .sort((a, b) => (a.ordem || 99) - (b.ordem || 99))
       .map((card, index) => `
         <a class="td3-portal-card" href="${card.link || "#"}" style="--portal-index: ${index + 1}">

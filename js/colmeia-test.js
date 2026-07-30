@@ -7,6 +7,7 @@
     require("./sanity-config.js");
     require("./sanity-api.js");
     require("./colmeia-data.js");
+    require("./colmeia-suggestions.js");
     require("./colmeia-graph.js");
   }
 
@@ -28,23 +29,17 @@
       acc[origem] = (acc[origem] || 0) + 1;
       return acc;
     }, { conexao: 0, relacionado: 0 });
-  const connected = new Set();
-
-  graph.links.forEach((link) => {
-    connected.add(link.source);
-    connected.add(link.target);
-  });
-
-  const isolados = graph.nodes.filter((node) => !connected.has(node.id));
-  const pctIsolamento = graph.nodes.length
-    ? ((isolados.length / graph.nodes.length) * 100).toFixed(1)
+  const catalogNodes = graph.catalogNodes || graph.nodes;
+  const isolados = graph.isolatedNodes || [];
+  const pctIsolamento = catalogNodes.length
+    ? ((isolados.length / catalogNodes.length) * 100).toFixed(1)
     : "0.0";
 
   console.log("Colmeia nodes por tipo", nodesByTipo);
   console.log("Colmeia links por kind", linksByKind);
   console.log("Colmeia manuais por origem", manualByOrigem);
-  console.log("Colmeia nos isolados", isolados.length, "de", graph.nodes.length, `(${pctIsolamento}%)`);
-  console.log("Colmeia nos conectados", graph.nodes.length - isolados.length);
+  console.log("Colmeia nos isolados", isolados.length, "de", catalogNodes.length, `(${pctIsolamento}%)`);
+  console.log("Colmeia nos conectados", catalogNodes.length - isolados.length);
 
   const synthetic = root.T3ColmeiaGraph.construirGrafo({
     posts: [

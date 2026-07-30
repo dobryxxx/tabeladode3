@@ -41,9 +41,6 @@
 
   const colecoes = [
     { campo: "posts", tipo: "post" },
-    { campo: "termos", tipo: "termo" },
-    { campo: "rankings", tipo: "ranking" },
-    { campo: "dicas", tipo: "dica" },
     { campo: "tweets", tipo: "tweet" }
   ];
 
@@ -64,7 +61,9 @@
       id: item._id || item.id,
       tipo,
       label: item.label || item.titulo || item.title || item.nome || item.termo || item._id || item.id,
-      slug: item.slug || ""
+      slug: item.slug || "",
+      href: item.href || item.link || "",
+      tags: normalizarTags(item.tags).map((tag) => tag.label)
     };
 
     if (item.body) node.body = item.body;
@@ -166,20 +165,8 @@
       });
     });
 
-    arraySeguro(dados.conexoes).forEach((conexao) => {
-      if (!conexao?.de || !conexao?.para) return;
-      if (!nodesById.has(conexao.de) || !nodesById.has(conexao.para)) return;
-
-      addManualLink({
-        source: conexao.de,
-        target: conexao.para,
-        kind: "manual",
-        via: conexao.descricao || "",
-        peso: conexao.peso || 1,
-        origem: "conexao"
-      });
-    });
-
+    // `relacionados` e a fonte editorial canonica. Ela entra primeiro para
+    // prevalecer quando existir um documento `conexao` legado para o mesmo par.
     relacionadosInline.forEach((relacionado) => {
       if (!relacionado.source || !relacionado.target) return;
       if (relacionado.source === relacionado.target) return;
@@ -195,9 +182,68 @@
       });
     });
 
+    // Compatibilidade de leitura: documentos `conexao` existentes continuam
+    // visiveis, mas nao substituem a relacao canonica definida no conteudo.
+    arraySeguro(dados.conexoes).forEach((conexao) => {
+      if (!conexao?.de || !conexao?.para) return;
+      if (conexao.de === conexao.para) return;
+      if (!nodesById.has(conexao.de) || !nodesById.has(conexao.para)) return;
+
+      addManualLink({
+        source: conexao.de,
+        target: conexao.para,
+        kind: "manual",
+        via: conexao.descricao || "",
+        peso: conexao.peso || 1,
+        origem: "conexao"
+      });
+    });
+
+    // Sugestoes locais entram por ultimo. Qualquer relacao manual para o mesmo
+    // par prevalece e remove a necessidade da conexao sugerida.
+    const suggestionPairKeys = new Set();
+    const sugestoes = Array.isArray(dados.sugestoes)
+      ? dados.sugestoes
+      : arraySeguro(window.colmeiaSuggestedRelations);
+    sugestoes.forEach((sugestao) => {
+      const source = sugestao?.source || sugestao?.de;
+      const target = sugestao?.target || sugestao?.para;
+      if (!source || !target || source === target) return;
+      if (!contentNodeIds.has(source) || !contentNodeIds.has(target)) return;
+
+      const pairKey = manualPairKey(source, target);
+      if (manualPairKeys.has(pairKey) || suggestionPairKeys.has(pairKey)) return;
+      suggestionPairKeys.add(pairKey);
+      addLink({
+        source,
+        target,
+        kind: "suggested",
+        via: sugestao.via || "curadoria editorial",
+        origem: "curadoria"
+      });
+    });
+
+    const allNodes = [...nodesById.values()];
+    const connectedIds = new Set();
+    links.forEach((link) => {
+      connectedIds.add(link.source);
+      connectedIds.add(link.target);
+    });
+
+    const catalogNodes = allNodes.filter((node) => contentNodeIds.has(node.id));
+    const isolatedNodes = catalogNodes.filter((node) => !connectedIds.has(node.id));
+    const graphNodes = allNodes.filter((node) => connectedIds.has(node.id));
+
     return {
-      nodes: [...nodesById.values()],
-      links
+      nodes: graphNodes,
+      links,
+      catalogNodes,
+      isolatedNodes,
+      stats: {
+        totalContent: catalogNodes.length,
+        connectedContent: catalogNodes.length - isolatedNodes.length,
+        isolatedContent: isolatedNodes.length
+      }
     };
   }
 

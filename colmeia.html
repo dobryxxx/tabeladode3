@@ -2,13 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <link rel="icon" href="favicon.ico?v=2" sizes="any" />
   <link rel="icon" type="image/png" href="img/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
   <title>Colmeia | Tabelado de 3</title>
-  <link rel="stylesheet" href="css/styles.css?v=td3-global-header-20260713" />
+  <link rel="stylesheet" href="css/styles.css?v=colmeia-curated-links-20260730b" />
 </head>
 <body class="colmeia-body">
   <div class="td3-site-header">
@@ -28,6 +28,7 @@
         <a href="guia-do-draft.html" class="liquid-nav__link">draft</a>
         <a href="glossario.html" class="liquid-nav__link">gloss&aacute;rio</a>
         <a href="rankings.html" class="liquid-nav__link">rankings</a>
+        <a href="colmeia.html" class="liquid-nav__link active is-active--orange" aria-current="page">colmeia</a>
         <a href="contato.html" class="liquid-nav__link">contato</a>
           </nav>
           <div class="top-nav__right">
@@ -37,7 +38,7 @@
               </svg>
             </button>
             <div class="divider-v"></div>
-            <a href="admin/" class="btn-entrar">entrar</a>
+            <a href="https://tabeladode3.sanity.studio/" class="btn-entrar">entrar</a>
           </div>
         </div>
       </header>
@@ -54,39 +55,57 @@
         <div class="brand">
           <span class="kicker">Tabelado de 3</span>
           <h1>Col<b>meia</b></h1>
-          <span class="sub">Uma vis&atilde;o macro de tudo que se conecta &mdash; textos, prospectos, termos, dicas e tweets, ligados pelos pontos em comum.</span>
+          <span class="sub">Encontre um assunto e descubra artigos e tweets relacionados.</span>
         </div>
       </header>
 
       <div class="controls">
-        <div class="search">
+        <label class="search" for="search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-          <input id="search" type="text" placeholder="Buscar na colmeia..." autocomplete="off" />
+          <span class="sr-only">Buscar conte&uacute;dos na Colmeia</span>
+          <input id="search" type="search" placeholder="Busque um assunto..." autocomplete="off" aria-controls="mobileListContent" aria-describedby="searchStatus" />
+        </label>
+        <div id="searchStatus" class="search-status" aria-live="polite"></div>
+        <details class="filter-disclosure">
+          <summary>filtrar tipos</summary>
+          <div class="chips" id="chips" role="group" aria-label="Filtrar tipos de conte&uacute;do"></div>
+        </details>
+        <div class="control-actions">
+          <button class="reset" id="reset" type="button">Limpar e recentralizar</button>
+          <button class="list-toggle" id="listToggle" type="button" aria-expanded="false" aria-controls="mobileList">ver cat&aacute;logo</button>
         </div>
-        <div class="chips" id="chips"></div>
-        <button class="reset" id="reset" type="button">Recentralizar</button>
-        <button class="list-toggle" id="listToggle" type="button" aria-expanded="false" aria-controls="mobileList">ver como lista</button>
       </div>
 
       <div class="legend" id="legend"></div>
 
-      <div class="hint">
-        arraste o fundo para mover &middot; <kbd>scroll</kbd> para zoom<br />
-        clique num n&oacute; para focar &middot; arraste um n&oacute; para reposicionar
+      <div class="hint" id="graphHelp">
+        arraste para mover &middot; use a roda ou o gesto de pin&ccedil;a para aproximar<br />
+        selecione um ponto para ver rela&ccedil;&otilde;es
       </div>
+      <p id="graphDescription" class="sr-only">O mapa &eacute; uma visualiza&ccedil;&atilde;o complementar. Para navegar por teclado ou leitor de tela, use o cat&aacute;logo de conte&uacute;dos.</p>
     </div>
 
     <div id="stage">
-      <canvas id="cv" aria-label="Mapa de conex&otilde;es da Colmeia"></canvas>
+      <canvas id="cv" role="img" aria-label="Mapa visual de conex&otilde;es da Colmeia" aria-describedby="graphDescription"></canvas>
       <div id="colmeia-loading" class="colmeia-loading" aria-live="polite">Carregando Colmeia...</div>
+      <div id="colmeia-state" class="colmeia-state" aria-live="polite" hidden></div>
     </div>
 
-    <aside id="panel">
+    <aside id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" aria-hidden="true" hidden>
       <button class="close" id="panelClose" type="button" aria-label="Fechar painel">&times;</button>
       <div id="panelContent"></div>
     </aside>
 
-    <aside id="mobileList" class="mobile-list" aria-live="polite" hidden>
+    <aside id="mobileList" class="mobile-list" role="region" aria-labelledby="catalogTitle" hidden>
+      <div class="mobile-list__head">
+        <div>
+          <span class="mobile-list__eyebrow">cat&aacute;logo</span>
+          <h2 id="catalogTitle">Conte&uacute;dos da Colmeia</h2>
+          <p class="catalog-help">Busque um assunto e selecione um conte&uacute;do para ver detalhes e rela&ccedil;&otilde;es.</p>
+        </div>
+        <button class="mobile-list__close" id="catalogClose" type="button" aria-label="Fechar cat&aacute;logo">&times;</button>
+      </div>
+      <p id="catalogSummary" class="mobile-list__summary"></p>
       <div id="mobileListContent"></div>
     </aside>
   </main>
@@ -112,11 +131,12 @@
   </footer>
 
   <script src="js/sanity-config.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/sanity-api.js"></script>
-  <script src="js/colmeia-data.js"></script>
-  <script src="js/colmeia-graph.js"></script>
-  <script src="js/colmeia-view.js?v=editorial-only"></script>
-  <script src="js/colmeia-page.js?v=editorial-only"></script>
+  <script src="js/sanity-api.js?v=colmeia-curated-links-20260730b"></script>
+  <script src="js/main.js?v=colmeia-curated-links-20260730b"></script>
+  <script src="js/colmeia-data.js?v=colmeia-curated-links-20260730b"></script>
+  <script src="js/colmeia-suggestions.js?v=colmeia-curated-links-20260730b"></script>
+  <script src="js/colmeia-graph.js?v=colmeia-curated-links-20260730b"></script>
+  <script src="js/colmeia-view.js?v=colmeia-curated-links-20260730b"></script>
+  <script src="js/colmeia-page.js?v=colmeia-curated-links-20260730b"></script>
 </body>
 </html>

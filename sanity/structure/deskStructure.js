@@ -84,10 +84,6 @@ export const deskStructure = (S) =>
         .schemaType('tweetCard')
         .child(S.documentTypeList('tweetCard').title('Cards de Tweet')),
       S.listItem()
-        .title('Conexoes')
-        .schemaType('conexao')
-        .child(S.documentTypeList('conexao').title('Conexoes editoriais')),
-      S.listItem()
         .title('Guia do Draft')
         .schemaType('draftProspect')
         .child(

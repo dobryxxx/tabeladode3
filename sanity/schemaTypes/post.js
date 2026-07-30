@@ -1,4 +1,6 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {filtroConteudosColmeia, tiposConteudoColmeia, validarRelacionados} from './colmeiaRelations.js'
+import {ColmeiaRelacionadosInput} from '../components/ColmeiaRelacionadosInput.jsx'
 
 export const post = defineType({
   name: 'post',
@@ -95,8 +97,10 @@ export const post = defineType({
       title: 'Conteúdos relacionados (Colmeia)',
       type: 'array',
       group: 'editorial',
-      description: 'Ligue este conteúdo a outros que se relacionam. Eles aparecem conectados na Colmeia.',
-      of: [defineArrayMember({type: 'reference', to: [{type: 'post'}, {type: 'draftProspect'}, {type: 'glossaryTerm'}, {type: 'ranking'}, {type: 'tip'}, {type: 'tweetCard'}]})]
+      description: 'Fonte oficial das conexoes da Colmeia. Relacione esta publicacao a artigos ou tweets.',
+      of: [defineArrayMember({type: 'reference', to: tiposConteudoColmeia, options: filtroConteudosColmeia})],
+      components: {input: ColmeiaRelacionadosInput},
+      validation: validarRelacionados
     }),
     defineField({
       name: 'destaqueHome',

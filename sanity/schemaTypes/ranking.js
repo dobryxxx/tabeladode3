@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {tiposConteudoColmeia, validarRelacionados} from './colmeiaRelations.js'
 
 export const ranking = defineType({
   name: 'ranking',
@@ -38,8 +39,10 @@ export const ranking = defineType({
       name: 'relacionados',
       title: 'Conteúdos relacionados (Colmeia)',
       type: 'array',
-      description: 'Ligue este conteúdo a outros que se relacionam. Eles aparecem conectados na Colmeia.',
-      of: [defineArrayMember({type: 'reference', to: [{type: 'post'}, {type: 'draftProspect'}, {type: 'glossaryTerm'}, {type: 'ranking'}, {type: 'tip'}, {type: 'tweetCard'}]})]
+      hidden: true,
+      description: 'Campo legado preservado apenas para manter conexoes existentes.',
+      of: [defineArrayMember({type: 'reference', to: tiposConteudoColmeia})],
+      validation: validarRelacionados
     }),
     defineField({
       name: 'status',

@@ -1,5 +1,7 @@
 {
   "scripts": {
-    "build": "node scripts/build-content.js"
+    "build": "node scripts/build-content.js",
+    "test": "node --test tests/colmeia-graph.test.js",
+    "test:colmeia:metrics": "node js/colmeia-test.js"
   }
 }

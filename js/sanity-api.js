@@ -349,39 +349,15 @@
       emailContato,
       redesSociais
     }`,
-    // Colmeia editorial: somente conteudo editorial (post, termo, ranking, dica, tweet).
+    // Colmeia editorial: somente artigos publicados e tweets.
     colmeia: `{
-      "posts": *[_type == "post" && !(_id in path("drafts.**"))] | order(dataPublicacao desc) {
+      "posts": *[_type == "post" && !(_id in path("drafts.**")) && coalesce(status, "publicado") == "publicado"] | order(dataPublicacao desc) {
         _id,
         "label": titulo,
         "body": resumo,
         "slug": slug.current,
+        "href": "artigo.html?post=" + slug.current,
         tags,
-        "relacionados": relacionados[]->_id
-      },
-      "termos": *[_type == "glossaryTerm" && !(_id in path("drafts.**"))] | order(coalesce(ordem, 9999) asc, termo asc) {
-        _id,
-        "label": termo,
-        "body": coalesce(explicacaoCompleta, definicaoCurta),
-        "slug": slug.current,
-        tags,
-        "relacionados": relacionados[]->_id
-      },
-      "rankings": *[_type == "ranking" && !(_id in path("drafts.**"))] | order(data desc, titulo asc) {
-        _id,
-        "label": titulo,
-        "body": descricao,
-        "slug": slug.current,
-        tags,
-        "relacionados": relacionados[]->_id
-      },
-      "dicas": *[_type == "tip" && !(_id in path("drafts.**"))] | order(featured desc, coalesce(order, 9999) asc, publishedAt desc) {
-        _id,
-        "label": title,
-        "body": excerpt,
-        "slug": slug.current,
-        tags,
-        "link": externalUrl,
         "relacionados": relacionados[]->_id
       },
       "tweets": *[_type == "tweetCard" && !(_id in path("drafts.**"))] | order(data desc, titulo asc) {
@@ -389,6 +365,7 @@
         "label": titulo,
         "slug": _id,
         tags,
+        "href": link,
         "relacionados": relacionados[]->_id,
         "tweet": {
           autorNome,

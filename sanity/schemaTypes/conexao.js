@@ -1,13 +1,5 @@
 import {defineField, defineType} from 'sanity'
-
-const tiposConectaveis = [
-  {type: 'post'},
-  {type: 'draftProspect'},
-  {type: 'glossaryTerm'},
-  {type: 'ranking'},
-  {type: 'tip'},
-  {type: 'tweetCard'}
-]
+import {tiposConteudoColmeia} from './colmeiaRelations.js'
 
 export const conexao = defineType({
   name: 'conexao',
@@ -18,15 +10,19 @@ export const conexao = defineType({
       name: 'de',
       title: 'De',
       type: 'reference',
-      to: tiposConectaveis,
+      to: tiposConteudoColmeia,
       validation: (Rule) => Rule.required()
     }),
     defineField({
       name: 'para',
       title: 'Para',
       type: 'reference',
-      to: tiposConectaveis,
-      validation: (Rule) => Rule.required()
+      to: tiposConteudoColmeia,
+      validation: (Rule) => Rule.required().custom((reference, context) => {
+        return reference?._ref && reference._ref === context.document?.de?._ref
+          ? 'A origem e o destino precisam ser diferentes.'
+          : true
+      })
     }),
     defineField({
       name: 'descricao',
