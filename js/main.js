@@ -753,6 +753,205 @@ function iniciarSplashHome() {
     }
   });
 }
+
+// Responsive card stacks inspired by Skiper UI 16 / StickyCard_001.
+// Free-version attribution: https://skiper-ui.com/v1/skiper16
+function iniciarPilhasDeCardsResponsivas() {
+  const configuracoes = [
+    { lista: ".td3-portal__grid", card: ".td3-portal-card" },
+    { lista: "#ultimas-posts", card: ".editorial-card" },
+    { lista: "#dicas-destaques", card: ".tip-card" },
+    { lista: "#dicas-grid", card: ".tip-card" },
+    { lista: "#rankings-grid", card: ".ranking-generation-card" },
+    { lista: ".ranking-detail-list", card: ".ranking-athlete-row" },
+    { lista: "#glossario-lista", card: ".glossary-term-card" },
+    {
+      lista: "#draft-list",
+      card: ".draft-prospect-card",
+      compativel: (lista) => !lista.classList.contains("draft-guide-list--deep")
+        && !lista.querySelector(".draft-prospect-card--expanded")
+    }
+  ];
+  const pilhas = [];
+  const listasRegistradas = new WeakSet();
+
+  const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let framePendente = false;
+
+  function registrarPilhas() {
+    configuracoes.forEach((configuracao) => {
+      document.querySelectorAll(configuracao.lista).forEach((elemento) => {
+        if (listasRegistradas.has(elemento)) return;
+        listasRegistradas.add(elemento);
+        pilhas.push({ ...configuracao, elemento });
+      });
+    });
+  }
+
+  function cardsAtuais(pilha) {
+    return Array.from(pilha.elemento.querySelectorAll(`:scope > ${pilha.card}`));
+  }
+
+  function limparPilha(pilha) {
+    pilha.elemento.classList.remove("mobile-card-stack");
+    cardsAtuais(pilha).forEach((card) => {
+      card.classList.remove("mobile-stack-card");
+      card.style.removeProperty("--mobile-stack-offset");
+      card.style.removeProperty("--mobile-stack-layer");
+      card.style.removeProperty("--mobile-stack-scale");
+    });
+  }
+
+  function atualizarPilha(pilha) {
+    const cards = cardsAtuais(pilha);
+    const compativel = !pilha.compativel || pilha.compativel(pilha.elemento);
+    if (reduzirMovimento.matches || !compativel || cards.length < 2) {
+      limparPilha(pilha);
+      return;
+    }
+
+    pilha.elemento.classList.add("mobile-card-stack");
+    const rect = pilha.elemento.getBoundingClientRect();
+    const percurso = Math.max(pilha.elemento.offsetHeight - window.innerHeight, 1);
+    const inicioVisual = Math.max(88, window.innerHeight * 0.1);
+    const progresso = Math.min(Math.max((inicioVisual - rect.top) / percurso, 0), 1);
+    const grupos = [];
+
+    cards.forEach((card) => {
+      const topoNatural = card.offsetTop;
+      let grupo = grupos.find((item) => Math.abs(item.topo - topoNatural) <= 2);
+      if (!grupo) {
+        grupo = { topo: topoNatural, cards: [] };
+        grupos.push(grupo);
+      }
+      grupo.cards.push(card);
+    });
+
+    grupos.sort((grupoA, grupoB) => grupoA.topo - grupoB.topo);
+    const divisorFaixa = Math.max(grupos.length - 1, 4);
+
+    grupos.forEach((grupo, indiceGrupo) => {
+      const inicio = Math.min(indiceGrupo / divisorFaixa, 0.99);
+      const progressoDoCard = Math.min(Math.max((progresso - inicio) / (1 - inicio), 0), 1);
+      const profundidade = Math.min(grupos.length - indiceGrupo - 1, 4);
+      const escalaFinal = 1 - (profundidade * 0.1);
+      const escala = 1 + ((escalaFinal - 1) * progressoDoCard);
+      const offset = `${Math.min(indiceGrupo, 4) * 20}px`;
+      const camada = String(indiceGrupo + 1);
+      const escalaFormatada = escala.toFixed(4);
+
+      grupo.cards.forEach((card) => {
+        card.classList.add("mobile-stack-card");
+        if (card.style.getPropertyValue("--mobile-stack-offset") !== offset) {
+          card.style.setProperty("--mobile-stack-offset", offset);
+        }
+        if (card.style.getPropertyValue("--mobile-stack-layer") !== camada) {
+          card.style.setProperty("--mobile-stack-layer", camada);
+        }
+        if (card.style.getPropertyValue("--mobile-stack-scale") !== escalaFormatada) {
+          card.style.setProperty("--mobile-stack-scale", escalaFormatada);
+        }
+      });
+    });
+  }
+
+  function atualizar() {
+    framePendente = false;
+    registrarPilhas();
+    for (let indice = pilhas.length - 1; indice >= 0; indice -= 1) {
+      if (!pilhas[indice].elemento.isConnected) pilhas.splice(indice, 1);
+    }
+    pilhas.forEach(atualizarPilha);
+  }
+
+  function solicitarAtualizacao() {
+    if (framePendente) return;
+    framePendente = true;
+    window.requestAnimationFrame(atualizar);
+  }
+
+  registrarPilhas();
+  new MutationObserver(solicitarAtualizacao).observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  window.addEventListener("scroll", solicitarAtualizacao, { passive: true });
+  window.addEventListener("resize", solicitarAtualizacao, { passive: true });
+  window.addEventListener("load", solicitarAtualizacao, { once: true });
+  reduzirMovimento.addEventListener?.("change", solicitarAtualizacao);
+  solicitarAtualizacao();
+}
+
+// Adaptação global em JavaScript do Next Smooth Scroll.
+// Componente de referência: https://framer.com/m/NextSmoothScroll-4fhrqO.js@CUL9Rnqi9k64fNtJwwEW
+function iniciarRolagemSuaveSite() {
+  const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const barra = document.createElement("div");
+  const preenchimento = document.createElement("span");
+  let rolagem = null;
+  let aoRolarLenis = null;
+
+  barra.className = "site-scroll-progress";
+  barra.setAttribute("aria-hidden", "true");
+  preenchimento.className = "site-scroll-progress__fill";
+  barra.appendChild(preenchimento);
+  document.body.appendChild(barra);
+
+  function atualizarProgresso(valor) {
+    const progresso = Math.min(1, Math.max(0, Number(valor) || 0));
+    preenchimento.style.transform = `scaleX(${progresso})`;
+  }
+
+  function atualizarProgressoNativo() {
+    const documento = document.documentElement;
+    const limite = Math.max(documento.scrollHeight - window.innerHeight, 1);
+    atualizarProgresso((window.scrollY || documento.scrollTop || 0) / limite);
+  }
+
+  function encerrar() {
+    if (rolagem && aoRolarLenis) rolagem.off?.("scroll", aoRolarLenis);
+    rolagem?.destroy();
+    rolagem = null;
+    aoRolarLenis = null;
+    window.removeEventListener("scroll", atualizarProgressoNativo);
+    window.removeEventListener("resize", atualizarProgressoNativo);
+  }
+
+  function iniciar() {
+    encerrar();
+    if (reduzirMovimento.matches || typeof window.Lenis !== "function") {
+      atualizarProgressoNativo();
+      window.addEventListener("scroll", atualizarProgressoNativo, { passive: true });
+      window.addEventListener("resize", atualizarProgressoNativo, { passive: true });
+      return;
+    }
+
+    rolagem = new window.Lenis({
+      autoRaf: true,
+      duration: 1,
+      easing: (progresso) => Math.min(1, 1.001 - Math.pow(2, -10 * progresso)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      syncTouch: false,
+      wheelMultiplier: 1,
+      touchMultiplier: 1,
+      infinite: false
+    });
+
+    aoRolarLenis = (evento) => atualizarProgresso(evento?.progress);
+    rolagem.on?.("scroll", aoRolarLenis);
+    atualizarProgresso(rolagem.progress);
+  }
+
+  reduzirMovimento.addEventListener?.("change", iniciar);
+  window.addEventListener("pagehide", () => {
+    encerrar();
+    barra.remove();
+  }, { once: true });
+  iniciar();
+}
+
 function renderHomeSettings(settings) {
   if (!settings) return;
 
@@ -1095,5 +1294,7 @@ iniciarBusca();
 iniciarHeaderSticky();
 iniciarMenuMobile();
 iniciarSplashHome();
+iniciarPilhasDeCardsResponsivas();
+iniciarRolagemSuaveSite();
 carregarHomeSanity();
 window.T3SiteVisibilityReady = carregarConfiguracoesSite();
