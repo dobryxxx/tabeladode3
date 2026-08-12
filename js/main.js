@@ -672,86 +672,161 @@ function iniciarSplashHome() {
   const portal = document.querySelector("[data-td3-portal]");
   if (!intro || !portal) return;
   if (intro.dataset.td3IntroReady === "true") return;
+
   intro.dataset.td3IntroReady = "true";
 
-  let timer = null;
-  let rolou = false;
-  let cancelouScroll = false;
+  const frame = intro.querySelector("[data-td3-preloader-frame]");
+  const contador = intro.querySelector("[data-td3-preloader-count]");
+  const palavra = intro.querySelector("[data-td3-preloader-word]");
+  const botaoPular = intro.querySelector("[data-td3-preloader-skip]");
+  const status = intro.querySelector("[data-td3-preloader-status]");
+  if (!frame || !contador || !palavra || !botaoPular) return;
 
-  function animarScrollParaPortal() {
-    const inicio = window.scrollY || window.pageYOffset;
-    const destino = portal.getBoundingClientRect().top + inicio;
-    const duracao = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1550;
-    const inicioTempo = window.performance.now();
-    const raiz = document.documentElement;
-    const comportamentoAnterior = raiz.style.scrollBehavior;
+  const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ordemQuadros = [
+    3, 2, 5, 6, 10, 12, 13, 18, 21, 24, 8,
+    9, 7, 11, 14, 17, 19, 20, 22, 23, 4, 15, 16,
+    1,
+  ];
+  const focosMobilePorImagem = [38, 50, 55, 50, 38, 48, 50, 56, 50, 50, 56, 55, 38, 50, 55, 58, 50, 50, 58, 62, 45, 58, 53, 50];
+  const caminhos = ordemQuadros.map(
+    (numero) => `img/preloader/${numero}_resultado.webp`,
+  );
+  const focosMobile = ordemQuadros.map((numero) => focosMobilePorImagem[numero - 1]);
+  const timers = new Set();
+  let encerrado = false;
 
-    function restaurarScroll() {
-      raiz.style.scrollBehavior = comportamentoAnterior;
-      window.removeEventListener("wheel", cancelarScroll);
-      window.removeEventListener("touchstart", cancelarScroll);
-      window.removeEventListener("keydown", cancelarScrollPorTecla);
-    }
-
-    function cancelarScroll() {
-      cancelouScroll = true;
-      restaurarScroll();
-    }
-
-    function cancelarScrollPorTecla(evento) {
-      if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(evento.key)) {
-        cancelarScroll();
-      }
-    }
-
-    if (!duracao) {
-      window.scrollTo(0, destino);
-      return;
-    }
-
-    raiz.style.scrollBehavior = "auto";
-    window.addEventListener("wheel", cancelarScroll, { passive: true, once: true });
-    window.addEventListener("touchstart", cancelarScroll, { passive: true, once: true });
-    window.addEventListener("keydown", cancelarScrollPorTecla);
-
-    function easing(t) {
-      return t * t * t * (t * (t * 6 - 15) + 10);
-    }
-
-    function frame(agora) {
-      if (cancelouScroll) return;
-
-      const progresso = Math.min((agora - inicioTempo) / duracao, 1);
-      window.scrollTo(0, inicio + ((destino - inicio) * easing(progresso)));
-
-      if (progresso < 1) {
-        window.requestAnimationFrame(frame);
-      } else {
-        window.scrollTo(0, destino);
-        restaurarScroll();
-      }
-    }
-
-    window.requestAnimationFrame(frame);
+  function agendar(funcao, atraso) {
+    const timer = window.setTimeout(() => {
+      timers.delete(timer);
+      funcao();
+    }, atraso);
+    timers.add(timer);
+    return timer;
   }
 
   function rolarParaPortal() {
-    if (rolou) return;
-    rolou = true;
-    window.clearTimeout(timer);
-    animarScrollParaPortal();
+    const easing = (progresso) => progresso * progresso * progresso * (progresso * (progresso * 6 - 15) + 10);
+
+    if (window.T3Lenis?.scrollTo) {
+      window.T3Lenis.scrollTo(portal, {
+        duration: reduzirMovimento ? 0 : 1.55,
+        easing,
+      });
+      return;
+    }
+
+    portal.scrollIntoView({
+      behavior: reduzirMovimento ? "auto" : "smooth",
+      block: "start",
+    });
   }
 
-  intro.hidden = false;
-  portal.hidden = false;
-  timer = window.setTimeout(rolarParaPortal, 4200);
-  intro.addEventListener("click", rolarParaPortal);
-  intro.addEventListener("keydown", (evento) => {
-    if (evento.key === "Enter" || evento.key === " ") {
-      evento.preventDefault();
-      rolarParaPortal();
+  function concluirEAvancar() {
+    if (encerrado) return;
+    encerrado = true;
+    timers.forEach((timer) => window.clearTimeout(timer));
+    timers.clear();
+    window.removeEventListener("keydown", aoPressionarTecla);
+    exibirQuadro(caminhos.length - 1);
+    botaoPular.hidden = true;
+    document.documentElement.classList.remove("td3-preloader-active");
+    if (status) status.textContent = "Abertura concluída.";
+    agendar(rolarParaPortal, reduzirMovimento ? 120 : 220);
+  }
+
+  function trocarPalavra(texto) {
+    if (palavra.textContent === texto) return;
+    palavra.textContent = texto;
+    palavra.dataset.td3Word = texto;
+
+    if (!reduzirMovimento && palavra.animate) {
+      palavra.animate(
+        [
+          { opacity: 0, filter: "blur(7px)", transform: "translateY(18px)" },
+          { opacity: 1, filter: "blur(0)", transform: "translateY(0)" },
+        ],
+        { duration: 420, easing: "cubic-bezier(.16,1,.3,1)", fill: "both" },
+      );
     }
+  }
+
+  function exibirQuadro(indice) {
+    frame.src = caminhos[indice];
+    frame.style.setProperty("--td3-frame-position-mobile", `${focosMobile[indice]}% 50%`);
+    contador.textContent = String(indice + 1).padStart(2, "0");
+
+    if (indice < 11) trocarPalavra("amor");
+    else if (indice < 23) trocarPalavra("suor");
+    else trocarPalavra("basquete");
+  }
+
+  function duracaoDoQuadro(indice) {
+    if (indice === 0 || indice === 11) return 1100;
+    if (indice === ordemQuadros.length - 1) return 1500;
+    return 155;
+  }
+
+  function iniciarSequencia() {
+    if (encerrado) return;
+
+    if (reduzirMovimento) {
+      exibirQuadro(caminhos.length - 1);
+      agendar(concluirEAvancar, 700);
+      return;
+    }
+
+    intro.classList.add("is-running");
+    let indice = 0;
+    exibirQuadro(indice);
+
+    function proximoQuadro() {
+      if (encerrado) return;
+      indice += 1;
+
+      if (indice < caminhos.length) {
+        exibirQuadro(indice);
+        agendar(proximoQuadro, duracaoDoQuadro(indice));
+        return;
+      }
+
+      concluirEAvancar();
+    }
+
+    agendar(proximoQuadro, duracaoDoQuadro(indice));
+  }
+
+  function carregarImagem(caminho) {
+    return new Promise((resolver) => {
+      const imagem = new Image();
+      imagem.decoding = "async";
+      imagem.onload = resolver;
+      imagem.onerror = resolver;
+      imagem.src = caminho;
+    });
+  }
+
+  function aoPressionarTecla(evento) {
+    if (evento.key === "Escape") concluirEAvancar();
+  }
+
+  portal.hidden = false;
+  botaoPular.addEventListener("click", concluirEAvancar);
+
+  document.documentElement.classList.add("td3-preloader-active");
+  window.scrollTo({ top: 0, behavior: "auto" });
+  window.addEventListener("keydown", aoPressionarTecla);
+
+  const caminhosPrioritarios = [...caminhos.slice(0, 11), caminhos.at(-1)];
+  const caminhosPosteriores = caminhos.slice(11, -1);
+  const primeiroAtoPronto = Promise.all(caminhosPrioritarios.map(carregarImagem));
+  const limiteDeEspera = new Promise((resolver) => agendar(resolver, 2200));
+
+  Promise.race([primeiroAtoPronto, limiteDeEspera]).then(() => {
+    caminhosPosteriores.forEach(carregarImagem);
+    iniciarSequencia();
   });
+  agendar(concluirEAvancar, 11500);
 }
 
 // Responsive card stacks inspired by Skiper UI 16 / StickyCard_001.
@@ -777,13 +852,24 @@ function iniciarPilhasDeCardsResponsivas() {
 
   const reduzirMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
   let framePendente = false;
+  let medicaoPendente = true;
 
   function registrarPilhas() {
     configuracoes.forEach((configuracao) => {
       document.querySelectorAll(configuracao.lista).forEach((elemento) => {
         if (listasRegistradas.has(elemento)) return;
         listasRegistradas.add(elemento);
-        pilhas.push({ ...configuracao, elemento });
+        pilhas.push({
+          ...configuracao,
+          elemento,
+          ativa: false,
+          grupos: [],
+          gruposAtivos: new Set(),
+          gruposFixos: new Set(),
+          topoDocumento: 0,
+          percurso: 1,
+          divisorFaixa: 4
+        });
       });
     });
   }
@@ -796,13 +882,18 @@ function iniciarPilhasDeCardsResponsivas() {
     pilha.elemento.classList.remove("mobile-card-stack");
     cardsAtuais(pilha).forEach((card) => {
       card.classList.remove("mobile-stack-card");
+      card.classList.remove("mobile-stack-card--active");
       card.style.removeProperty("--mobile-stack-offset");
       card.style.removeProperty("--mobile-stack-layer");
       card.style.removeProperty("--mobile-stack-scale");
     });
+    pilha.ativa = false;
+    pilha.grupos = [];
+    pilha.gruposAtivos.clear();
+    pilha.gruposFixos.clear();
   }
 
-  function atualizarPilha(pilha) {
+  function medirPilha(pilha) {
     const cards = cardsAtuais(pilha);
     const compativel = !pilha.compativel || pilha.compativel(pilha.elemento);
     if (reduzirMovimento.matches || !compativel || cards.length < 2) {
@@ -811,10 +902,6 @@ function iniciarPilhasDeCardsResponsivas() {
     }
 
     pilha.elemento.classList.add("mobile-card-stack");
-    const rect = pilha.elemento.getBoundingClientRect();
-    const percurso = Math.max(pilha.elemento.offsetHeight - window.innerHeight, 1);
-    const inicioVisual = Math.max(88, window.innerHeight * 0.1);
-    const progresso = Math.min(Math.max((inicioVisual - rect.top) / percurso, 0), 1);
     const grupos = [];
 
     cards.forEach((card) => {
@@ -828,31 +915,105 @@ function iniciarPilhasDeCardsResponsivas() {
     });
 
     grupos.sort((grupoA, grupoB) => grupoA.topo - grupoB.topo);
-    const divisorFaixa = Math.max(grupos.length - 1, 4);
+    pilha.ativa = true;
+    pilha.grupos = grupos;
+    pilha.gruposAtivos.clear();
+    pilha.gruposFixos.clear();
+    pilha.topoDocumento = pilha.elemento.getBoundingClientRect().top + window.scrollY;
+    pilha.percurso = Math.max(pilha.elemento.offsetHeight - window.innerHeight, 1);
+    pilha.divisorFaixa = Math.max(grupos.length - 1, 4);
 
     grupos.forEach((grupo, indiceGrupo) => {
-      const inicio = Math.min(indiceGrupo / divisorFaixa, 0.99);
-      const progressoDoCard = Math.min(Math.max((progresso - inicio) / (1 - inicio), 0), 1);
       const profundidade = Math.min(grupos.length - indiceGrupo - 1, 4);
-      const escalaFinal = 1 - (profundidade * 0.1);
-      const escala = 1 + ((escalaFinal - 1) * progressoDoCard);
       const offset = `${Math.min(indiceGrupo, 4) * 20}px`;
       const camada = String(indiceGrupo + 1);
-      const escalaFormatada = escala.toFixed(4);
 
       grupo.cards.forEach((card) => {
+        card.classList.remove("mobile-stack-card");
+        card.classList.remove("mobile-stack-card--active");
+        card.style.setProperty("--mobile-stack-offset", offset);
+        card.style.setProperty("--mobile-stack-layer", camada);
+        card.style.setProperty("--mobile-stack-scale", "1");
+      });
+
+      grupo.inicio = Math.min(indiceGrupo / pilha.divisorFaixa, 0.99);
+      grupo.escalaFinal = 1 - (profundidade * 0.1);
+    });
+  }
+
+  function definirGrupoAtivo(grupo, ativo) {
+    grupo.cards.forEach((card) => {
+      card.classList.toggle("mobile-stack-card--active", ativo);
+    });
+  }
+
+  function atualizarPilha(pilha) {
+    if (!pilha.ativa || !pilha.grupos.length) return;
+
+    const inicioVisual = Math.max(88, window.innerHeight * 0.1);
+    const topoAtual = pilha.topoDocumento - window.scrollY;
+    const progresso = Math.min(Math.max((inicioVisual - topoAtual) / pilha.percurso, 0), 1);
+    const indiceAtual = Math.min(
+      pilha.grupos.length - 1,
+      Math.max(0, Math.floor(progresso * pilha.divisorFaixa))
+    );
+    const primeiroGrupoAtivo = Math.max(0, indiceAtual - 4);
+    const ultimoGrupoFixo = Math.min(pilha.grupos.length - 1, indiceAtual + 1);
+    const novosGruposAtivos = new Set();
+    const novosGruposFixos = new Set();
+
+    for (let indice = primeiroGrupoAtivo; indice <= indiceAtual; indice += 1) {
+      novosGruposAtivos.add(indice);
+    }
+    for (let indice = primeiroGrupoAtivo; indice <= ultimoGrupoFixo; indice += 1) {
+      novosGruposFixos.add(indice);
+    }
+
+    pilha.gruposFixos.forEach((indice) => {
+      if (novosGruposFixos.has(indice)) return;
+      pilha.grupos[indice].cards.forEach((card) => {
+        card.classList.remove("mobile-stack-card");
+        card.classList.remove("mobile-stack-card--active");
+      });
+    });
+
+    novosGruposFixos.forEach((indice) => {
+      pilha.grupos[indice].cards.forEach((card) => {
         card.classList.add("mobile-stack-card");
-        if (card.style.getPropertyValue("--mobile-stack-offset") !== offset) {
-          card.style.setProperty("--mobile-stack-offset", offset);
-        }
-        if (card.style.getPropertyValue("--mobile-stack-layer") !== camada) {
-          card.style.setProperty("--mobile-stack-layer", camada);
-        }
+      });
+    });
+
+    pilha.gruposAtivos.forEach((indice) => {
+      if (novosGruposAtivos.has(indice)) return;
+      const grupo = pilha.grupos[indice];
+      definirGrupoAtivo(grupo, false);
+      if (indice < primeiroGrupoAtivo) {
+        const escalaFinal = grupo.escalaFinal.toFixed(4);
+        grupo.cards.forEach((card) => {
+          card.style.setProperty("--mobile-stack-scale", escalaFinal);
+        });
+      }
+    });
+
+    novosGruposAtivos.forEach((indice) => {
+      const grupo = pilha.grupos[indice];
+      const progressoDoCard = Math.min(
+        Math.max((progresso - grupo.inicio) / (1 - grupo.inicio), 0),
+        1
+      );
+      const escala = 1 + ((grupo.escalaFinal - 1) * progressoDoCard);
+      const escalaFormatada = escala.toFixed(4);
+
+      definirGrupoAtivo(grupo, true);
+      grupo.cards.forEach((card) => {
         if (card.style.getPropertyValue("--mobile-stack-scale") !== escalaFormatada) {
           card.style.setProperty("--mobile-stack-scale", escalaFormatada);
         }
       });
     });
+
+    pilha.gruposAtivos = novosGruposAtivos;
+    pilha.gruposFixos = novosGruposFixos;
   }
 
   function atualizar() {
@@ -860,6 +1021,10 @@ function iniciarPilhasDeCardsResponsivas() {
     registrarPilhas();
     for (let indice = pilhas.length - 1; indice >= 0; indice -= 1) {
       if (!pilhas[indice].elemento.isConnected) pilhas.splice(indice, 1);
+    }
+    if (medicaoPendente) {
+      pilhas.forEach(medirPilha);
+      medicaoPendente = false;
     }
     pilhas.forEach(atualizarPilha);
   }
@@ -870,16 +1035,21 @@ function iniciarPilhasDeCardsResponsivas() {
     window.requestAnimationFrame(atualizar);
   }
 
+  function solicitarMedicao() {
+    medicaoPendente = true;
+    solicitarAtualizacao();
+  }
+
   registrarPilhas();
-  new MutationObserver(solicitarAtualizacao).observe(document.body, {
+  new MutationObserver(solicitarMedicao).observe(document.body, {
     childList: true,
     subtree: true
   });
   window.addEventListener("scroll", solicitarAtualizacao, { passive: true });
-  window.addEventListener("resize", solicitarAtualizacao, { passive: true });
-  window.addEventListener("load", solicitarAtualizacao, { once: true });
-  reduzirMovimento.addEventListener?.("change", solicitarAtualizacao);
-  solicitarAtualizacao();
+  window.addEventListener("resize", solicitarMedicao, { passive: true });
+  window.addEventListener("load", solicitarMedicao, { once: true });
+  reduzirMovimento.addEventListener?.("change", solicitarMedicao);
+  solicitarMedicao();
 }
 
 // Adaptação global em JavaScript do Next Smooth Scroll.
@@ -910,6 +1080,7 @@ function iniciarRolagemSuaveSite() {
 
   function encerrar() {
     if (rolagem && aoRolarLenis) rolagem.off?.("scroll", aoRolarLenis);
+    if (window.T3Lenis === rolagem) window.T3Lenis = null;
     rolagem?.destroy();
     rolagem = null;
     aoRolarLenis = null;
@@ -938,6 +1109,7 @@ function iniciarRolagemSuaveSite() {
       touchMultiplier: 1,
       infinite: false
     });
+    window.T3Lenis = rolagem;
 
     aoRolarLenis = (evento) => atualizarProgresso(evento?.progress);
     rolagem.on?.("scroll", aoRolarLenis);
@@ -971,16 +1143,9 @@ function renderHomeSettings(settings) {
   }
 
   if (cards && Array.isArray(settings.cards) && settings.cards.length) {
-    const portalCards = settings.cards.slice();
-    if (!portalCards.some((card) => String(card.link || "").includes("colmeia.html"))) {
-      portalCards.push({
-        titulo: "colmeia",
-        descricao: "conexoes entre artigos e tweets do Tabelado de 3.",
-        cta: "explorar",
-        link: "colmeia.html",
-        ordem: 5
-      });
-    }
+    const portalCards = settings.cards.filter(
+      (card) => !String(card.link || "").includes("colmeia.html"),
+    );
 
     cards.innerHTML = portalCards
       .sort((a, b) => (a.ordem || 99) - (b.ordem || 99))

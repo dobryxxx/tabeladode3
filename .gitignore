@@ -33,8 +33,17 @@ server.log
 *.zip
 *.rar
 *.7z
+/img/preloader/*.jpg
+/img/preloader/sequence/
+
+# Materiais de apresentação (não fazem parte do site)
+/exports/
+/scripts/render-preloader-video.py
 
 # Sistema/editor
 .DS_Store
 Thumbs.db
 .vscode/
+.cursor/
+__pycache__/
+*.pyc
