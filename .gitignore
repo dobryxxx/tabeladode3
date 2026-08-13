@@ -47,3 +47,6 @@ Thumbs.db
 .cursor/
 __pycache__/
 *.pyc
+
+# Local Netlify folder
+.netlify
