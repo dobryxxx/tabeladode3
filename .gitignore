@@ -50,3 +50,9 @@ __pycache__/
 
 # Local Netlify folder
 .netlify
+
+# Ferramentas locais e materiais gerados dos Reels
+/.tools/
+/_reels_build/
+/_reels_build_premium/
+/_review/
