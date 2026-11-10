@@ -402,3 +402,66 @@ No dry-run de 14/05/2026, o Sanity retornou 151 prospectos no dataset e 151 publ
 - Kohl Rosario
 
 Enquanto esses dois nao forem importados/publicados no Sanity, o seed preenche 151 itens. O front publico continua com fallback local para manter a lista completa quando necessario.
+
+
+## Ajustes editoriais — outubro de 2026
+
+### Destaques do Por escrito
+
+O carrossel mostra automaticamente os **três artigos publicados mais recentes**, pela data de publicação na aba **Editorial** do Sanity. A sequência ignora marcações antigas de destaque, posição e ordem manual. Editar um artigo antigo não o promove ao topo. Ao escolher uma categoria, o carrossel mostra até três artigos dessa categoria; não há cards laterais fixos adicionais.
+
+Os campos antigos de destaque ficam somente para consulta no Studio, sem efeito nessa seleção. A lista de últimas publicações também segue a data de publicação. Uma linha na cor da categoria e o texto “Filtrando por” identificam o filtro ativo. O botão “Todos os posts” o remove.
+
+A data de publicação de “Kauan Raymundo é Brasília Basquete!” foi corrigida para 5 de julho de 2026 no Sanity e na cópia local.
+
+### Capas e texto
+
+As capas usam a mesma imagem e o mesmo recorte manual do Sanity em todos os lugares. O site preserva a imagem completa dentro dos cards, sem cortar novamente para preencher o espaço. No artigo, a altura acompanha a proporção da capa.
+
+O corpo de texto preserva negrito, itálico, links, títulos e listas do editor. Depois de editar, clique em **Publish**.
+
+Em **Publicações > matéria > Conteúdo > Imagem de compartilhamento no X**, escolha uma imagem para o preview do link. Deixe vazio para usar a imagem principal.
+
+### Títulos e legendas
+
+Acesse **Configurações gerais > Textos das páginas > Títulos e legendas das páginas**. Estão disponíveis:
+
+- Glossário: título “Vocabulário de quadra” e legenda.
+- Rankings, Colmeia e Dicas: título e legenda.
+- Por escrito: título da seção “Últimas publicações”.
+- Contato: título da página.
+
+Campos vazios mantêm o texto original. É possível inserir quebras de linha nos títulos. Publique o documento para aplicar.
+
+Os títulos e descrições dos cards da home são editáveis em **Configurações da Home > Cards principais da home**. Use o link da área (`por-escrito.html`, `guia-do-draft.html`, `glossario.html`, `rankings.html` ou `colmeia.html`) para associar o texto ao card; as imagens e a estrutura visual permanecem no site.
+
+### Rodapé
+
+**Configurações gerais > Redes sociais** controla os ícones de Instagram, X, YouTube e LinkedIn. Cadastre o nome e a URL completa. Enquanto o campo não tiver sido configurado, o site usa os três perfis oficiais fornecidos: Instagram, X e YouTube de `tabeladode3`. Uma lista vazia oculta os ícones. LinkedIn só aparece se for cadastrado. O copyright foi atualizado para 2026.
+
+### Desenvolvimento local
+
+Na raiz do projeto, execute em terminais separados:
+
+```sh
+npm run dev
+npm run dev:studio
+```
+
+O site fica em `http://127.0.0.1:8000` e o Studio com os novos campos em `http://127.0.0.1:3333`. O servidor local desativa o cache e direciona os links do editor para o Studio local. Isso não altera os links usados na publicação do site.
+
+Durante a revisão local, Rankings permanece visível mesmo com `mostrarRankings` desativado no Sanity. Isso libera o card da home, a navegação e a página de rankings em localhost; o site publicado continua respeitando a configuração do CMS.
+
+O código roda localmente, mas ambos consultam o dataset `production` do Sanity. Salvar ou publicar conteúdo pelo Studio local modifica esse dataset compartilhado. Iniciar os servidores e visualizar o site não grava conteúdo. As correções de código não exigem nenhuma gravação no Sanity.
+
+### Publicação do código
+
+Estas mudanças exigem publicar os arquivos do site no Netlify e atualizar o Studio para expor os novos campos:
+
+```sh
+cd sanity
+npm run build
+npm run deploy -- --yes
+```
+
+Não é necessário migrar ou substituir as publicações existentes. A alteração da Colmeia estabiliza a simulação e amplia o enquadramento; as relações editoriais existentes são preservadas.

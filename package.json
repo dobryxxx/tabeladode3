@@ -1,7 +1,9 @@
 {
   "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "dev:studio": "npm --prefix sanity run dev -- --host 127.0.0.1 --port 3333",
     "build": "node scripts/build-content.js",
-    "test": "node --test tests/colmeia-graph.test.js",
+    "test": "node --test tests/*.test.js",
     "test:colmeia:metrics": "node js/colmeia-test.js"
   }
 }

@@ -69,6 +69,7 @@ export const siteSettings = defineType({
   name: 'siteSettings',
   title: 'Configurações gerais do site',
   type: 'document',
+  groups: [{name: 'textos', title: 'Textos das páginas'}],
   fields: [
     defineField({name: 'nomeSite', title: 'Nome do site', type: 'string', validation: (Rule) => Rule.required()}),
     defineField({name: 'descricao', title: 'Descrição', type: 'text', rows: 3}),
@@ -123,9 +124,40 @@ export const siteSettings = defineType({
     }),
     defineField({name: 'emailContato', title: 'E-mail de contato', type: 'email'}),
     defineField({
+      name: 'textosPaginas',
+      title: 'Títulos e legendas das páginas',
+      type: 'object',
+      group: 'textos',
+      options: {collapsible: false},
+      description: 'Deixe em branco para manter os textos atuais do site. Publique para aplicar as alterações.',
+      fields: [
+        ['glossario', 'Glossário'],
+        ['rankings', 'Rankings'],
+        ['colmeia', 'Colmeia'],
+        ['dicas', 'Dicas'],
+        ['porEscrito', 'Por escrito — últimas publicações'],
+        ['contato', 'Contato']
+      ].map(([name, title]) => defineField({
+        name, title, type: 'object',
+        fields: [
+          defineField({name: 'titulo', title: 'Título', type: 'text', rows: 2,
+            placeholder: name === 'glossario' ? 'Vocabulário de quadra' : undefined}),
+          ...(['porEscrito', 'contato'].includes(name) ? [] : [
+            defineField({name: 'legenda', title: 'Legenda', type: 'text', rows: 3})
+          ])
+        ]
+      }))
+    }),
+    defineField({
       name: 'redesSociais',
       title: 'Redes sociais',
       type: 'array',
+      description: 'Use Instagram, X, YouTube ou LinkedIn no nome. Somente as redes cadastradas aparecem no rodapé.',
+      initialValue: [
+        {_key: 'instagram', _type: 'socialLink', nome: 'Instagram', url: 'https://www.instagram.com/tabeladode3/'},
+        {_key: 'x', _type: 'socialLink', nome: 'X', url: 'https://x.com/tabeladode3'},
+        {_key: 'youtube', _type: 'socialLink', nome: 'YouTube', url: 'https://www.youtube.com/@tabeladode3'}
+      ],
       of: [defineArrayMember({type: 'socialLink'})]
     })
   ],

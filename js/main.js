@@ -1,37 +1,38 @@
 const categorias = {
+  "brasil": {nome: "Brasil", tagClasse: "tag--brasil", badgeClasse: "card-side__badge--green"},
   "nba": {
     nome: "NBA",
-    tagClasse: "tag--blue",
+    tagClasse: "tag--nba",
     badgeClasse: "card-side__badge--blue"
   },
   "auto-falante": {
     nome: "Auto-Falante",
-    tagClasse: "tag--red",
+    tagClasse: "tag--brand",
     badgeClasse: "card-side__badge--blue"
   },
   "ultimas": {
     nome: "Últimas",
-    tagClasse: "tag--green",
+    tagClasse: "tag--brand",
     badgeClasse: "card-side__badge--green"
   },
   "in-english": {
     nome: "In English",
-    tagClasse: "tag--purple",
+    tagClasse: "tag--brand",
     badgeClasse: "card-side__badge--blue"
   },
   "extensos": {
     nome: "Extensos",
-    tagClasse: "tag--orange",
+    tagClasse: "tag--brand",
     badgeClasse: "card-side__badge--green"
   },
   "lapsos": {
     nome: "Lapsos",
-    tagClasse: "tag--muted-red",
+    tagClasse: "tag--brand",
     badgeClasse: "card-side__badge--green"
   },
   "mastigado": {
     nome: "Mastigado",
-    tagClasse: "tag--gold",
+    tagClasse: "tag--brand",
     badgeClasse: "card-side__badge--blue"
   }
 };
@@ -112,17 +113,10 @@ function timestampData(data) {
   return parsed ? parsed.getTime() : Number.NEGATIVE_INFINITY;
 }
 
-const diaImportacaoPosts = "2026-05-13";
-
 function timestampOrdenacaoPost(post = {}, dataPrincipal) {
-  const timestampPrincipal = timestampData(dataPrincipal);
-  const timestampAtualizacao = timestampData(post._updatedAt);
-
-  if (dataIsoDia(dataPrincipal) === diaImportacaoPosts && timestampAtualizacao > timestampPrincipal) {
-    return timestampAtualizacao;
-  }
-
-  return timestampPrincipal;
+  // Preserve publication time for posts published on the same day.
+  const instante = /^\d{4}-\d{2}-\d{2}T/.test(dataPrincipal || "") ? Date.parse(dataPrincipal) : NaN;
+  return Number.isFinite(instante) ? instante : timestampData(dataPrincipal);
 }
 
 function dataBrutaPost(post = {}) {
@@ -136,7 +130,7 @@ function dataSanityInvalidaOuImportada(dataSanity) {
 }
 
 function escolherDataPost(post = {}, fallbackLocal) {
-  const dataSanity = post.dataPublicacao || post.publishedAt || post.date || post._createdAt || null;
+  const dataSanity = dataBrutaPost(post);
   const dataLocal = fallbackLocal ? dataBrutaPost(fallbackLocal) : null;
 
   if (post._fonte === "sanity" && dataLocal && dataSanityInvalidaOuImportada(dataSanity)) {
@@ -157,7 +151,7 @@ function escolherDataPost(post = {}, fallbackLocal) {
     };
   }
 
-  const dataPreferida = post.dataPublicacao || post.publishedAt || post.date || dataLocal || null;
+  const dataPreferida = post.dataPublicacao || post.publishedAt || post.date || post.data || dataLocal || post._createdAt || null;
   return {
     valor: dataPreferida,
     origem: dataPreferida === dataLocal && post._fonte === "sanity" ? "fallback local" : (post._fonte || "local"),
@@ -182,29 +176,7 @@ function formatarDataPost(data) {
 }
 
 function normalizarCorpo(corpo) {
-  if (Array.isArray(corpo) && corpo.some((bloco) => bloco && (bloco._type === "block" || bloco._type === "tweetEmbed"))) {
-    return corpo
-      .map((bloco) => {
-        if (bloco._type === "tweetEmbed") {
-          return {
-            tipo: "tweet",
-            tweetUrl: bloco.tweetUrl || "",
-            comentario: bloco.comentario || "",
-            textoAlternativo: bloco.textoAlternativo || ""
-          };
-        }
-
-        if (bloco._type !== "block") return "";
-
-        return {
-          tipo: "texto",
-          texto: (bloco.children || []).map((child) => child.text || "").join("").trim()
-        };
-      })
-      .filter((bloco) => typeof bloco === "object" ? (bloco.tipo === "tweet" ? bloco.tweetUrl : bloco.texto) : bloco)
-      .filter(Boolean);
-  }
-
+  // Preserve Portable Text: marks, headings and annotations belong to each span.
   if (Array.isArray(corpo)) return corpo;
   if (typeof corpo !== "string") return [];
   return corpo
@@ -217,6 +189,12 @@ function normalizarPost(post = {}, fallbackLocal) {
   const titulo = post.titulo || post.title || "";
   const resumo = post.resumo || post.excerpt || post.description || "";
   const dataEscolhida = escolherDataPost(post, fallbackLocal);
+  // User-confirmed correction while CMS edits remain deferred: 5 July 2026.
+  // Match only this erroneous value so future legitimate CMS edits take precedence.
+  if (slugPost(post) === "kauan-raymundo-brasilia-basquete" && String(dataEscolhida.valor).startsWith("2028-07-05")) {
+    dataEscolhida.valor = dataEscolhida.valor.replace(/^2028/, "2026");
+    dataEscolhida.origem = "correção editorial local";
+  }
 
   return {
     ...post,
@@ -242,8 +220,8 @@ function normalizarPost(post = {}, fallbackLocal) {
     slug: post.slug || post.link || "",
     categoriaNome: post.categoriaNome || post.categoryName || "",
     corpo: normalizarCorpo(post.corpo || post.body),
-    destaque: Boolean(post.destaque ?? post.featured),
-    lateral: Boolean(post.lateral ?? post.side)
+    destaque: post.posicaoDestaque === "principal" || (post.posicaoDestaque !== "lateral" && Boolean(post.destaqueHome ?? post.destaque ?? post.featured)),
+    lateral: post.posicaoDestaque ? post.posicaoDestaque === "lateral" : Boolean(post.lateral ?? post.side)
   };
 }
 
@@ -306,7 +284,7 @@ function categoriaDoPost(post) {
 
 function imagemOuPlaceholder(post, classe, tipo, indice = 0) {
   if (post.imagem) {
-    return `<img class="${classe}" src="${post.imagem}" alt="${post.titulo || "Imagem do artigo"}" loading="lazy" onerror="this.remove()" />`;
+    return `<img class="${classe}" src="${escaparHtmlEditorial(imagemEditorial(post))}" alt="${escaparHtmlEditorial(post.imagemAlt || post.titulo || "Imagem do artigo")}" loading="lazy" onerror="this.remove()" />`;
   }
 
   if (tipo === "hero") {
@@ -382,13 +360,23 @@ function imagemRanking(ranking) {
   `;
 }
 
-function renderHeroPrincipal() {
+function destaquesDaCategoria(categoria = categoriaAtivaPorUrl()) {
+  const todos = postsDoSite().filter((post) => postCombinaComCategoria(post, categoria));
+  const editoriais = postsSanity.length ? todos.filter((post) => post._fonte === "sanity") : todos;
+  const publicados = editoriais.filter((post) => !post.status || post.status === "publicado");
+  return {principais: publicados.slice(0, 3), laterais: []};
+}
+
+function renderHeroPrincipal(categoriaAtiva = categoriaAtivaPorUrl()) {
   const area = document.querySelector("#hero-principal");
   if (!area) return;
 
-  const todosPosts = postsDoSite();
-  const postsHero = todosPosts.slice(0, 3);
-  if (!postsHero.length) return;
+  window.clearInterval(area._td3HeroTimer);
+  const postsHero = destaquesDaCategoria(categoriaAtiva).principais;
+  if (!postsHero.length) {
+    area.innerHTML = "";
+    return;
+  }
   let indiceAtual = 0;
 
   function criarMarkup(post, indiceAtivo) {
@@ -448,7 +436,15 @@ function renderHeroPrincipal() {
 function renderHeroLaterais() {
   const area = document.querySelector("#hero-laterais");
   if (!area) return;
-  area.innerHTML = "";
+  area.hidden = !destaquesDaCategoria().laterais.length;
+  area.innerHTML = destaquesDaCategoria().laterais.map((post) => `
+    <a class="card-side" href="${linkDoPost(post)}">
+      ${imagemOuPlaceholder(post, "card-side__img", "lateral")}
+      <div class="card-side__content">
+        <span class="tag ${categoriaDoPost(post).tagClasse}">${escaparHtmlEditorial(categoriaDoPost(post).nome)}</span>
+        <h3 class="card-side__title">${escaparHtmlEditorial(post.titulo)}</h3>
+      </div>
+    </a>`).join("");
 }
 function postCombinaComBusca(post, termoBusca) {
   if (!termoBusca) return true;
@@ -465,6 +461,20 @@ function postCombinaComCategoria(post, categoriaAtiva) {
 function renderUltimas(busca = "", categoriaAtiva = "") {
   const area = document.querySelector("#ultimas-posts");
   if (!area) return;
+
+  const indicador = document.querySelector("#categoria-filtrada");
+  const secao = area.closest(".ultimas");
+  const categoria = categorias[categoriaAtiva];
+  const corSanity = postsDoSite().find((post) => post.categoria === categoriaAtiva && /^#[0-9a-f]{6}$/i.test(post.categoriaCor || ""))?.categoriaCor;
+  const cores = Object.fromEntries(Object.keys(categorias).map((key) => [key, "var(--category-geral)"]));
+  cores.nba = "var(--category-nba)";
+  cores.brasil = "var(--category-brasil)";
+  secao?.classList.toggle("is-filtered", Boolean(categoriaAtiva));
+  secao?.style.setProperty("--category-accent", cores[categoriaAtiva] || corSanity || "var(--category-geral)");
+  if (indicador) {
+    indicador.hidden = !categoriaAtiva;
+    indicador.textContent = categoriaAtiva ? `Filtrando por: ${categoria?.nome || categoriaAtiva}` : "";
+  }
 
   const termoBusca = normalizarTexto(busca.trim());
   const postsFiltrados = postsDoSite()
@@ -544,6 +554,8 @@ function iniciarFiltroCategorias() {
       }
     });
     renderUltimas(document.querySelector("#busca-input")?.value || "", categoria);
+    renderHeroPrincipal(categoria);
+    renderHeroLaterais();
   }
 
   aplicarCategoria(categoriaAtivaPorUrl());
@@ -585,7 +597,7 @@ function iniciarBusca() {
     painel.setAttribute("aria-hidden", "true");
     botao.setAttribute("aria-expanded", "false");
     campo.value = "";
-    renderUltimas("", categoriaAtivaPorUrl());
+    renderUltimas(document.querySelector("#busca-input")?.value || "", categoriaAtivaPorUrl());
   }
 
   botao.addEventListener("click", () => {
@@ -839,13 +851,7 @@ function iniciarPilhasDeCardsResponsivas() {
     { lista: "#dicas-grid", card: ".tip-card" },
     { lista: "#rankings-grid", card: ".ranking-generation-card" },
     { lista: ".ranking-detail-list", card: ".ranking-athlete-row" },
-    { lista: "#glossario-lista", card: ".glossary-term-card" },
-    {
-      lista: "#draft-list",
-      card: ".draft-prospect-card",
-      compativel: (lista) => !lista.classList.contains("draft-guide-list--deep")
-        && !lista.querySelector(".draft-prospect-card--expanded")
-    }
+    { lista: "#glossario-lista", card: ".glossary-term-card" }
   ];
   const pilhas = [];
   const listasRegistradas = new WeakSet();
@@ -875,7 +881,7 @@ function iniciarPilhasDeCardsResponsivas() {
   }
 
   function cardsAtuais(pilha) {
-    return Array.from(pilha.elemento.querySelectorAll(`:scope > ${pilha.card}`));
+    return Array.from(pilha.elemento.querySelectorAll(`:scope > ${pilha.card}`)).filter((card) => !card.hidden);
   }
 
   function limparPilha(pilha) {
@@ -895,8 +901,7 @@ function iniciarPilhasDeCardsResponsivas() {
 
   function medirPilha(pilha) {
     const cards = cardsAtuais(pilha);
-    const compativel = !pilha.compativel || pilha.compativel(pilha.elemento);
-    if (reduzirMovimento.matches || !compativel || cards.length < 2) {
+    if (reduzirMovimento.matches || cards.length < 2) {
       limparPilha(pilha);
       return;
     }
@@ -1043,7 +1048,9 @@ function iniciarPilhasDeCardsResponsivas() {
   registrarPilhas();
   new MutationObserver(solicitarMedicao).observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["hidden"]
   });
   window.addEventListener("scroll", solicitarAtualizacao, { passive: true });
   window.addEventListener("resize", solicitarMedicao, { passive: true });
@@ -1129,7 +1136,7 @@ function renderHomeSettings(settings) {
 
   const headline = document.querySelector('[data-sanity-home="headline"]');
   const subheadline = document.querySelector('[data-sanity-home="subheadline"]');
-  const cards = document.querySelector('[data-sanity-home="cards"]');
+  const cards = document.querySelector(".td3-portal__grid");
 
   if (headline && settings.headline) {
     const partes = String(settings.headline).split(/\s*\/\s*|\n+/).filter(Boolean);
@@ -1143,21 +1150,13 @@ function renderHomeSettings(settings) {
   }
 
   if (cards && Array.isArray(settings.cards) && settings.cards.length) {
-    const portalCards = settings.cards.filter(
-      (card) => !String(card.link || "").includes("colmeia.html"),
-    );
-
-    cards.innerHTML = portalCards
-      .sort((a, b) => (a.ordem || 99) - (b.ordem || 99))
-      .map((card, index) => `
-        <a class="td3-portal-card" href="${card.link || "#"}" style="--portal-index: ${index + 1}">
-          <span class="td3-portal-card__icon" aria-hidden="true">${card.numero || String(index + 1).padStart(2, "0")}</span>
-          <p>${card.descricao || card.cta || ""}</p>
-          <strong>${card.titulo || "Ãrea"}</strong>
-          <span class="td3-portal-card__arrow" aria-hidden="true">&rarr;</span>
-        </a>
-      `)
-      .join("");
+    // Edit the existing cards so their artwork and accessibility stay intact.
+    settings.cards.forEach((card) => {
+      const link = Array.from(cards.querySelectorAll("a")).find((item) => item.getAttribute("href") === card.link);
+      if (!link) return;
+      if (card.titulo) link.querySelector("strong").textContent = card.titulo;
+      if (card.descricao) link.querySelector("p").textContent = card.descricao;
+    });
   }
 
   aplicarVisibilidadeSite(visibilidadeSiteAtual);
@@ -1175,6 +1174,61 @@ async function carregarHomeSanity() {
   }
 }
 
+function escaparHtmlEditorial(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[char]);
+}
+
+function urlPublica(value) {
+  try {
+    const url = new URL(value, window.location.href);
+    return ["https:", "http:"].includes(url.protocol) ? url.href : "";
+  } catch { return ""; }
+}
+
+function imagemEditorial(post) {
+  const url = urlPublica(post.imagem);
+  if (!url) return "";
+  const crop = post.imagemCrop;
+  const size = post.imagemDimensions;
+  if (!crop || !size?.width || !size?.height || new URL(url).hostname !== "cdn.sanity.io") return url;
+  const image = new URL(url);
+  const x = Math.round((crop.left || 0) * size.width);
+  const y = Math.round((crop.top || 0) * size.height);
+  const width = Math.max(1, size.width - x - Math.round((crop.right || 0) * size.width));
+  const height = Math.max(1, size.height - y - Math.round((crop.bottom || 0) * size.height));
+  image.searchParams.set("rect", [x, y, width, height].join(","));
+  return image.href;
+}
+
+function renderSpanArtigo(span, definitions = []) {
+  let text = escaparHtmlEditorial(span.text || "").replace(/\n/g, "<br />");
+  for (const mark of span.marks || []) {
+    if (mark === "strong") text = `<strong>${text}</strong>`;
+    else if (mark === "em") text = `<em>${text}</em>`;
+    else {
+      const link = definitions.find((item) => item._key === mark && item._type === "link");
+      const href = link && urlPublica(link.href);
+      if (href) text = `<a href="${escaparHtmlEditorial(href)}">${text}</a>`;
+    }
+  }
+  return text;
+}
+
+function renderCorpoArtigo(blocks) {
+  let html = "";
+  let list = "";
+  for (const block of blocks) {
+    const nextList = block?._type === "block" && block.listItem ? (block.listItem === "number" ? "ol" : "ul") : "";
+    if (list !== nextList) {
+      if (list) html += `</${list}>`;
+      if (nextList) html += `<${nextList}>`;
+      list = nextList;
+    }
+    html += renderBlocoArtigo(block);
+  }
+  return html + (list ? `</${list}>` : "");
+}
+
 function markdownBasico(texto) {
   return String(texto)
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
@@ -1184,6 +1238,21 @@ function markdownBasico(texto) {
 
 function renderBlocoArtigo(bloco) {
   if (!bloco || typeof bloco === "string") return `<p>${markdownBasico(bloco || "")}</p>`;
+
+  if (bloco._type === "block") {
+    const tag = bloco.listItem ? "li" : (["h2", "h3", "blockquote"].includes(bloco.style) ? bloco.style : "p");
+    return `<${tag}>${(bloco.children || []).map((span) => renderSpanArtigo(span, bloco.markDefs)).join("")}</${tag}>`;
+  }
+  if (bloco._type === "tweetEmbed") {
+    const href = urlPublica(bloco.tweetUrl);
+    return `<aside class="tweet-card"><span class="tweet-card__label">Tweet citado</span><p>${escaparHtmlEditorial(bloco.comentario || bloco.textoAlternativo || "")}</p>${href ? `<a href="${escaparHtmlEditorial(href)}" target="_blank" rel="noopener noreferrer">Abrir no X</a>` : ""}</aside>`;
+  }
+  if (["image", "imageWithAlt"].includes(bloco._type)) {
+    const ref = bloco.asset?._ref?.match(/^image-([a-zA-Z0-9]+)-(\d+x\d+)-(\w+)$/);
+    const config = window.T3_SANITY_CONFIG;
+    if (!ref || !config) return "";
+    return `<figure><img src="https://cdn.sanity.io/images/${config.projectId}/${config.dataset}/${ref[1]}-${ref[2]}.${ref[3]}" alt="${escaparHtmlEditorial(bloco.alt || "")}" loading="lazy" /></figure>`;
+  }
 
   if (bloco.tipo === "texto") {
     return `<p>${markdownBasico(bloco.texto || "")}</p>`;
@@ -1206,7 +1275,7 @@ function renderBlocoArtigo(bloco) {
 function renderConteudoDinamico() {
   renderHeroPrincipal();
   renderHeroLaterais();
-  renderUltimas("", categoriaAtivaPorUrl());
+  renderUltimas(document.querySelector("#busca-input")?.value || "", categoriaAtivaPorUrl());
   renderRankingDestaque();
   renderArtigo();
 }
@@ -1281,7 +1350,7 @@ function renderArtigo() {
       ${imagemOuPlaceholder(post, "artigo__capa-img", "hero")}
     </div>
     <div class="artigo__corpo">
-      ${(post.corpo.length ? post.corpo : ["Texto em atualização."]).map(renderBlocoArtigo).join("")}
+      ${renderCorpoArtigo(post.corpo.length ? post.corpo : ["Texto em atualização."])}
     </div>
   `;
 }
@@ -1348,8 +1417,37 @@ function normalizarVisibilidadeSite(settings = {}) {
   };
 }
 
+function aplicarTextosERedes(settings = {}) {
+  document.querySelectorAll("[data-sanity-text]").forEach((element) => {
+    const [page, field] = element.dataset.sanityText.split(".");
+    const text = settings.textosPaginas?.[page]?.[field];
+    if (typeof text === "string" && text.trim()) element.textContent = text;
+  });
+
+  const defaults = [
+    {nome: "Instagram", url: "https://www.instagram.com/tabeladode3/"},
+    {nome: "X", url: "https://x.com/tabeladode3"},
+    {nome: "YouTube", url: "https://www.youtube.com/@tabeladode3"}
+  ];
+  const networks = Array.isArray(settings.redesSociais) ? settings.redesSociais : defaults;
+  const aliases = {twitter: "x", youtube: "youtube", instagram: "instagram", linkedin: "linkedin", x: "x"};
+  const normalize = (name) => aliases[normalizarTexto(name || "").trim()] || normalizarTexto(name || "").trim();
+  document.querySelectorAll(".footer__social a").forEach((link) => {
+    const name = normalize(link.getAttribute("aria-label"));
+    const network = networks.find((item) => normalize(item.nome) === name);
+    const href = network?.url && urlPublica(network.url);
+    link.hidden = !href;
+    if (href) {
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    } else link.removeAttribute("href");
+  });
+}
+
 function aplicarVisibilidadeSite(settings = {}) {
   visibilidadeSiteAtual = normalizarVisibilidadeSite(settings);
+  aplicarTextosERedes(settings);
   const mostrarGuia = visibilidadeSiteAtual.showDraftGuide !== false;
   const mostrarRankings = visibilidadeSiteAtual.showRankings !== false;
   const mostrarColmeia = visibilidadeSiteAtual.showColmeia !== false;

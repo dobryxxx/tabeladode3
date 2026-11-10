@@ -21,9 +21,12 @@
       "imagem": coalesce(imagem.asset->url, imageUrl, localImagePath),
       "image": coalesce(imagem.asset->url, imageUrl, localImagePath),
       "imagemAlt": imagem.alt,
+      "imagemCrop": imagem.crop,
+      "imagemDimensions": imagem.asset->metadata.dimensions,
       "categoria": coalesce(categoria->slug.current, "ultimas"),
       "category": coalesce(categoria->slug.current, "ultimas"),
       "categoriaNome": coalesce(categoria->nome, "Últimas"),
+      "categoriaCor": categoria->cor,
       "autor": autor->nome,
       "author": autor->nome,
       dataPublicacao,
@@ -33,6 +36,8 @@
       "tempoLeitura": tempoLeitura,
       "tags": tags,
       "status": status,
+      posicaoDestaque,
+      destaqueHome,
       "destaque": posicaoDestaque == "principal" || destaqueHome == true,
       "lateral": posicaoDestaque == "lateral",
       "corpo": corpo
@@ -49,9 +54,12 @@
       "imagem": coalesce(imagem.asset->url, imageUrl, localImagePath),
       "image": coalesce(imagem.asset->url, imageUrl, localImagePath),
       "imagemAlt": imagem.alt,
+      "imagemCrop": imagem.crop,
+      "imagemDimensions": imagem.asset->metadata.dimensions,
       "categoria": coalesce(categoria->slug.current, "ultimas"),
       "category": coalesce(categoria->slug.current, "ultimas"),
       "categoriaNome": coalesce(categoria->nome, "Últimas"),
+      "categoriaCor": categoria->cor,
       "autor": autor->nome,
       "author": autor->nome,
       dataPublicacao,
@@ -61,6 +69,8 @@
       "tempoLeitura": tempoLeitura,
       "tags": tags,
       "status": status,
+      posicaoDestaque,
+      destaqueHome,
       "destaque": posicaoDestaque == "principal" || destaqueHome == true,
       "lateral": posicaoDestaque == "lateral",
       "corpo": corpo
@@ -347,7 +357,8 @@
       mostrarColmeia,
       mensagemColmeiaOculta,
       emailContato,
-      redesSociais
+      redesSociais,
+      textosPaginas
     }`,
     // Colmeia editorial: somente artigos publicados e tweets.
     colmeia: `{
@@ -401,7 +412,8 @@
     return {
       ...settings,
       showDraftGuide: settings.mostrarGuiaDoDraft !== false,
-      showRankings: settings.mostrarRankings !== false,
+      // Keep Rankings accessible during the local review, even while the live CMS hides it.
+      showRankings: devMode || settings.mostrarRankings !== false,
       showColmeia: settings.mostrarColmeia !== false,
       draftGuideHiddenMessage: sanitizeText(settings.mensagemGuiaOculto, "Estamos atualizando esta área. Volte em breve."),
       rankingsHiddenMessage: sanitizeText(settings.mensagemRankingsOculto, "Estamos atualizando esta área. Volte em breve."),
@@ -432,10 +444,16 @@
 
   async function fetchQuery(query, params = {}) {
     if (!enabled) return null;
-    const response = await fetch(buildUrl(query, params));
-    if (!response.ok) throw new Error(`Sanity retornou ${response.status}`);
-    const payload = await response.json();
-    return payload.result;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch(buildUrl(query, params), {signal: controller.signal});
+      if (!response.ok) throw new Error(`Sanity retornou ${response.status}`);
+      const payload = await response.json();
+      return payload.result;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   async function fetchNamed(name, params) {

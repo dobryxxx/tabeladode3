@@ -62,23 +62,11 @@ function atualizarToggleGenero() {
   });
 }
 
-function atualizarHeroRanking(rankings = []) {
-  const imagemHero = document.querySelector("#rankings-hero-image");
-  if (!imagemHero) return;
-
-  const rankingHero = rankings.find((ranking) => generoDoRanking(ranking) === "feminino") || rankings[0];
-  if (!rankingHero?.imagem) return;
-
-  imagemHero.src = rankingHero.imagem;
-  imagemHero.alt = rankingHero.titulo || "Ranking Tabelado de 3";
-}
-
 function renderRankingsPage() {
   const area = document.querySelector("#rankings-grid");
   const todosRankings = rankingsDisponiveisDoSite();
   if (!area || todosRankings.length === 0) return;
 
-  atualizarHeroRanking(todosRankings);
   atualizarToggleGenero();
 
   const rankingsFiltrados = todosRankings.filter((ranking) => generoDoRanking(ranking) === rankingsGeneroAtual);

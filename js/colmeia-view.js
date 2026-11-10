@@ -151,7 +151,7 @@
     let dpr = 1;
     let target = null;
     const view = { x: 0, y: 0, k: 1 };
-    const MIN_ZOOM = 0.45;
+    const MIN_ZOOM = 0.04;
     const MAX_ZOOM = 4.2;
     let frame = null;
 
@@ -240,7 +240,8 @@
           let dx = a.x - b.x;
           let dy = a.y - b.y;
           let d2 = dx * dx + dy * dy;
-          if (d2 < 0.01) d2 = 0.01;
+          // Evita impulsos enormes quando dois pontos se aproximam.
+          if (d2 < 400) d2 = 400;
           const d = Math.sqrt(d2);
           const f = REP / d2;
           const fx = (dx / d) * f;
@@ -264,7 +265,7 @@
         const dx = link.t.x - link.s.x;
         const dy = link.t.y - link.s.y;
         const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
-        const f = (d - rest) * SPRING;
+        const f = (d - rest) * SPRING / Math.sqrt(Math.max(1, hubDeg));
         const fx = (dx / d) * f;
         const fy = (dy / d) * f;
         link.s.vx += fx;
@@ -285,6 +286,11 @@
         }
         node.vx *= DAMP;
         node.vy *= DAMP;
+        const speed = Math.hypot(node.vx, node.vy);
+        if (speed > 16) {
+          node.vx *= 16 / speed;
+          node.vy *= 16 / speed;
+        }
         const mass = (type.hub ? 0.55 : 1) * al;
         node.x += node.vx * mass;
         node.y += node.vy * mass;

@@ -43,6 +43,13 @@ export const post = defineType({
       group: 'conteudo'
     }),
     defineField({
+      name: 'imagemCompartilhamento',
+      title: 'Imagem de compartilhamento no X',
+      type: 'imageWithAlt',
+      group: 'conteudo',
+      description: 'Opcional. Ao compartilhar o link da matéria, o X usa esta imagem. Deixe o campo vazio para usar a capa.'
+    }),
+    defineField({
       name: 'imageUrl',
       title: 'URL da imagem migrada',
       type: 'url',
@@ -104,17 +111,20 @@ export const post = defineType({
     }),
     defineField({
       name: 'destaqueHome',
-      title: 'Destaque na home/Por Escrito',
+      title: 'Destaque no Por escrito',
       type: 'boolean',
       group: 'home',
-      initialValue: false
+      initialValue: false,
+      readOnly: true,
+      description: 'Campo legado. O Por escrito exibe automaticamente os três últimos artigos publicados, pela data de publicação na aba Editorial.'
     }),
     defineField({
       name: 'posicaoDestaque',
       title: 'Posição de destaque',
       type: 'string',
       group: 'home',
-      description: 'Principal = hero grande. Lateral = cards menores do topo.',
+      readOnly: true,
+      description: 'Campo legado, sem efeito no Por escrito. Os destaques são os três artigos publicados mais recentes da categoria selecionada.',
       options: {
         list: [
           {title: 'Sem destaque', value: 'none'},
