@@ -1152,7 +1152,8 @@ function renderHomeSettings(settings) {
   if (cards && Array.isArray(settings.cards) && settings.cards.length) {
     // Edit the existing cards so their artwork and accessibility stay intact.
     settings.cards.forEach((card) => {
-      const link = Array.from(cards.querySelectorAll("a")).find((item) => item.getAttribute("href") === card.link);
+      const destino = caminhoPaginaSite(card.link);
+      const link = destino && Array.from(cards.querySelectorAll("a")).find((item) => caminhoPaginaSite(item.href) === destino);
       if (!link) return;
       if (card.titulo) link.querySelector("strong").textContent = card.titulo;
       if (card.descricao) link.querySelector("p").textContent = card.descricao;
@@ -1371,8 +1372,21 @@ function renderPaginaIndisponivel(titulo, mensagem) {
   `;
 }
 
+function caminhoPaginaSite(href) {
+  if (!href) return "";
+  try {
+    const url = new URL(href, window.location.href);
+    if (url.origin !== window.location.origin) return "";
+    return url.pathname.replace(/\/$/, "").replace(/\.html$/, "");
+  } catch {
+    return "";
+  }
+}
+
 function esconderLinksPagina(href) {
-  document.querySelectorAll(`a[href="${href}"], a[href^="${href}?"]`).forEach((link) => {
+  const destino = caminhoPaginaSite(href);
+  document.querySelectorAll("a[href]").forEach((link) => {
+    if (caminhoPaginaSite(link.href) !== destino) return;
     link.hidden = true;
     link.setAttribute("aria-hidden", "true");
   });
@@ -1451,7 +1465,7 @@ function aplicarVisibilidadeSite(settings = {}) {
   const mostrarGuia = visibilidadeSiteAtual.showDraftGuide !== false;
   const mostrarRankings = visibilidadeSiteAtual.showRankings !== false;
   const mostrarColmeia = visibilidadeSiteAtual.showColmeia !== false;
-  const pagina = window.location.pathname.split("/").pop() || "index.html";
+  const pagina = (caminhoPaginaSite(window.location.href).split("/").pop() || "index") + ".html";
 
   if (!mostrarGuia) esconderLinksPagina("guia-do-draft.html");
   if (!mostrarRankings) {
